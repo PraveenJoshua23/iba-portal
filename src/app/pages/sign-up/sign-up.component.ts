@@ -1,0 +1,33 @@
+import { Component } from '@angular/core'; 
+import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+
+@Component({
+  selector: 'app-sign-up',
+  templateUrl: './sign-up.component.html',
+  styleUrls: ['./sign-up.component.scss']
+})
+export class SignUpComponent {
+  myForm!: FormGroup;
+
+  constructor(private fb: FormBuilder) { }
+
+  ngOnInit(): void {
+    this.myForm = this.fb.group({
+      name: ['', Validators.required],
+      age: ['', Validators.required],
+      dob: ['', Validators.required],
+      phone: ['', Validators.required],
+      religion: ['Christian', Validators.required],
+      faith: ['', Validators.required],
+      occupation: ['', Validators.required],
+      gender: ['', Validators.required],
+      marital: ['', Validators.required],
+      language: ['English', Validators.required],
+      whyApply: ['', Validators.required],  
+      linkFrom: ['', Validators.required],
+      studying: ['', Validators.required],
+      password: ['', Validators.required],
+      confirmPassword: ['', Validators.required],
+    });
+  }
+}

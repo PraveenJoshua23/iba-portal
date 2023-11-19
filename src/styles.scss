@@ -1,1 +1,40 @@
 /* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base{
+    body{
+        @apply font-sans;
+    }
+
+    h1{
+        @apply text-4xl;
+        margin-top: 0.67em;
+        margin-bottom: 0.67em;
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    h2{
+        @apply text-2xl
+    }
+
+    h3{
+        @apply text-xl
+    }
+
+    h4{
+        @apply text-lg
+    }
+
+    h5{
+        @apply text-base
+    }
+
+    h6{
+        @apply text-sm
+    }
+}
+
+
