@@ -1,3 +1,4 @@
+import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core'; 
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 
@@ -9,14 +10,13 @@ import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 export class SignUpComponent {
   myForm!: FormGroup;
 
-  constructor(private fb: FormBuilder) { }
-
-  ngOnInit(): void {
+  constructor(private fb: FormBuilder, private http: HttpClient) { 
     this.myForm = this.fb.group({
       name: ['', Validators.required],
       age: ['', Validators.required],
       dob: ['', Validators.required],
       phone: ['', Validators.required],
+      email: ['', Validators.required],
       religion: ['Christian', Validators.required],
       faith: ['', Validators.required],
       occupation: ['', Validators.required],
@@ -29,5 +29,20 @@ export class SignUpComponent {
       password: ['', Validators.required],
       confirmPassword: ['', Validators.required],
     });
+  }
+
+  ngOnInit(): void {
+    console.log(this.myForm)
+  }
+
+  onSubmit(){
+    
+    const formData = this.myForm.value;
+    console.log(formData)
+    
+    // this.http.post('your-backend-api-url', formData)
+    //   .subscribe((response: any) => {
+    //     console.log('Backend response:', response);
+    //   });
   }
 }
