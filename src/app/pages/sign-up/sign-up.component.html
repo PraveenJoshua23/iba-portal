@@ -13,13 +13,14 @@
   <div class="flex flex-col justify-center min-w-[980px] mx-auto py-5">
     <h1 class="my-2 flex mx-auto font-bold">Registration Form</h1>
     <div class="rounded-md px-4 py-10">
-      <form class="flex flex-col space-y-10">
+      <form [formGroup]="myForm" (ngSubmit)="onSubmit()" class="flex flex-col space-y-10">
         <div class="flex w-full justify-between space-x-5">
           <div class="flex flex-col space-y-2 w-1/2">
             <label for="">Full Name</label>
             <input
               type="text"
               placeholder="Enter your full name"
+              formControlName="name"
               class="form-input border p-3 w-full"
             />
           </div>
@@ -30,6 +31,7 @@
               type="text"
               placeholder="Enter your age"
               class="form-input border p-3"
+              formControlName="age"
             />
           </div>
         </div>
@@ -41,6 +43,7 @@
               type="date"
               placeholder="dd-mm-yyyy"
               class="form-input border p-3 w-full"
+              formControlName="dob"
             />
           </div>
 
@@ -48,13 +51,18 @@
             <label for="">Religion</label>
             <div class="flex items-center space-x-3 h-[52px] px-3 w-full">
               <div class="flex items-center space-x-2">
-                <input type="radio" name="Christian" class="w-3 h-3" id="" />
-                <span>Christian</span>
+
+                <label>
+                  <input type="radio" formControlName="religion" class="w-3 h-3" value="Christian"> Christian
+                </label>
+            
               </div>
 
               <div class="flex items-center space-x-2">
-                <input type="radio" name="Non-Christian" class="w-3 h-3" id="" />
-                <span>Non-Christian</span>
+        
+                <label>
+                  <input type="radio" formControlName="religion" value="Non-Christian"> Non-Christian
+                </label>
               </div>
             </div>
           </div>
@@ -67,6 +75,7 @@
               type="text"
               placeholder="Enter your Phone Number"
               class="form-input border p-3 w-full"
+              formControlName="phone"
             />
           </div>
 
@@ -76,6 +85,7 @@
               type="email"
               placeholder="Enter your Email"
               class="form-input border p-3"
+              formControlName="email"
             />
           </div>
         </div>
@@ -87,6 +97,7 @@
               type="text"
               placeholder="Enter your Years of Faith(No. of Years)"
               class="form-input border p-3 w-full"
+              formControlName="faith"
             />
           </div>
 
@@ -96,6 +107,7 @@
               type="text"
               placeholder="Enter your Occupation"
               class="form-input border p-3"
+              formControlName="occupation"
             />
           </div>
         </div>
@@ -105,13 +117,18 @@
             <label for="">Gender</label>
             <div class="flex items-center space-x-3 h-[52px] px-3 w-full">
               <div class="flex items-center space-x-2">
-                <input type="radio" name="Male" class="w-3 h-3" id="" />
-                <span>Male</span>
+                
+                <label>
+                  <input type="radio" formControlName="gender" class="w-3 h-3" value="Male"> Male
+                </label>
+               
               </div>
 
               <div class="flex items-center space-x-2">
-                <input type="radio" name="Female" class="w-3 h-3" id="" />
-                <span>Female</span>
+                <label>
+                  <input type="radio" formControlName="gender" class="w-3 h-3" value="Female"> Female
+                </label>
+               
               </div>
             </div>
           </div>
@@ -120,13 +137,16 @@
             <label for="">Marital Status</label>
             <div class="flex items-center space-x-3 h-[52px] px-3 w-full">
               <div class="flex items-center space-x-2">
-                <input type="radio" name="Married" class="w-3 h-3" id="" />
-                <span>Married</span>
+                
+                <label>
+                  <input type="radio" formControlName="marital" class="w-3 h-3" value="Married"> Married
+                </label>
               </div>
 
               <div class="flex items-center space-x-2">
-                <input type="radio" name="Unmarried/Single" class="w-3 h-3" id="" />
-                <span>Unmarried/Single</span>
+                <label>
+                  <input type="radio" formControlName="marital" class="w-3 h-3" value="Unmarried/Single"> Unmarried/Single
+                </label>
               </div>
             </div>
           </div>
@@ -142,7 +162,7 @@
               <option value="Telugu">Telugu</option>
             </select> -->
             
-            <select id="language" name="language" autocomplete="language-name" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6">
+            <select id="language" name="language" autocomplete="language-name" formControlName="language" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6">
               <option value="English">English</option>
               <option value="Tamil">Tamil</option>
               <option value="Hindi">Hindi</option>
@@ -158,6 +178,7 @@
               type="text"
               placeholder="Your answer"
               class="form-input border p-3 w-[972px]"
+              formControlName="whyApply"
             />          
           </div>
         </div>
@@ -169,6 +190,7 @@
               type="text"
               placeholder="Your answer"
               class="form-input border p-3 w-[972px]"
+              formControlName="linkFrom"
             />          
           </div>
         </div>
@@ -177,12 +199,14 @@
           <label class="w-1/2" for="">Are you studying the online Bible class with us already?</label>
           <div class="flex items-center space-x-3 h-[52px] px-3 w-1/2">
             <div class="flex items-center space-x-2">
-              <input type="radio" name="Married" class="w-3 h-3" id="" />
-              <span>Yes</span>
+              <label>
+                <input type="radio" formControlName="studying" class="w-3 h-3" value="Yes"> Yes
+              </label>
             </div>
             <div class="flex items-center space-x-2">
-              <input type="radio" name="Unmarried/Single" class="w-3 h-3" id="" />
-              <span>No</span>
+              <label>
+                <input type="radio" formControlName="studying" class="w-3 h-3" value="No"> No
+              </label>
             </div>
           </div>
         </div>
@@ -194,6 +218,7 @@
               type="password"
               placeholder="Enter your Password"
               class="form-input border p-3 w-full"
+              formControlName="password"
             />
           </div>
 
@@ -203,6 +228,7 @@
               type="password"
               placeholder="Enter your Confirm Password"
               class="form-input border p-3"
+              formControlName="confirmPassword"
             />
           </div>
         </div>
