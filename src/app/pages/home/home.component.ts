@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppShellComponent } from 'src/app/components/app-shell/app-shell.component';
 import { RouterModule } from '@angular/router';
+import { FirebaseService } from 'src/app/shared/services/firebase.service';
 
 interface Ilessons {
   title: string;
@@ -16,8 +17,11 @@ interface Ilessons {
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit{
 
+  constructor(private fb: FirebaseService){}
+
+  allLessons= [];
   lessons: Ilessons[] = [
     {
       title: 'Word of the Beginning',
@@ -39,7 +43,16 @@ export class HomeComponent {
       status : 'Finish Previous Lesson',
       progress: 0
     },
-
-
   ]
+
+  ngOnInit(): void {
+      this.getAllLessons();
+  }
+
+  getAllLessons(){
+    this.fb.getLesson('BB').subscribe(res => {
+      this.allLessons = res
+      console.log(this.allLessons)
+    })
+  }
 }

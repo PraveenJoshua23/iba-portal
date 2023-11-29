@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient} from '@angular/common/http';
 import { Component } from '@angular/core'; 
 import { FormGroup, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FirebaseService } from 'src/app/shared/services/firebase.service';
 
 @Component({
   selector: 'app-sign-up',
@@ -13,7 +14,7 @@ import { FormGroup, FormBuilder, Validators, ReactiveFormsModule } from '@angula
 export class SignUpComponent {
   myForm!: FormGroup;
 
-  constructor(private fb: FormBuilder, private http: HttpClient) { 
+  constructor(private fb: FormBuilder, private firebase: FirebaseService) { 
     this.myForm = this.fb.group({
       name: ['', Validators.required],
       age: ['', Validators.required],
@@ -42,16 +43,18 @@ export class SignUpComponent {
     alert("hi")
     const formData = this.myForm.value;
     console.log(formData)
+
+    this.firebase.addUserToDb(formData);
     
     // this.http.post('your-backend-api-url', formData)
     //   .subscribe((response: any) => {
     //     console.log('Backend response:', response);
     //   });
 
-      this.http.post('http://localhost:3000/reg/save-reg', formData)
-      .subscribe((response: any) => {
-        console.log('Backend response:', response);
-      });
+      // this.http.post('http://localhost:3000/reg/save-reg', formData)
+      // .subscribe((response: any) => {
+      //   console.log('Backend response:', response);
+      // });
 
       // save-reg
   }
