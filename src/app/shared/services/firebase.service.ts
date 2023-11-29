@@ -28,21 +28,13 @@ export class FirebaseService {
       const userExists = usersList.find(
         (v: any) => v.email === currentUser.email
       );
-      if (!userExists)
+      if (!userExists){
+        console.log()
         this.db.list('users/').set(currentUser.userId, { ...currentUser });
-      else return;
+      }  else return;
+     
     });
   }
 
-  async register(email:string, password:string){
-    await this.auth.createUserWithEmailAndPassword(email, password)
-      .then(userCredential => {
-        // User registration successful
-        console.log('User registered:', userCredential.user);
-      })
-      .catch(error => {
-        // Handle errors
-        console.error('Error during registration:', error);
-      });
-  }
+  
 }
