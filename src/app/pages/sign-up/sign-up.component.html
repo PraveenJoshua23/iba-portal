@@ -1,4 +1,4 @@
-<section class="flex flex-col justify-center items-center">
+<section class="flex flex-col justify-center items-center bg-gray-100 pb-5">
   <div class="flex flex-col w-full">
     <div
       class="flex justify-center items-center space-x-3 py-3 border-b border-gray-200"
@@ -10,14 +10,14 @@
     </div>
   </div>
 
-  <div class="py-3">
+  <div class="py-3 mt-5">
     <app-video-player src=""></app-video-player>
   </div>
 
-  <div class="flex flex-col justify-center min-w-[980px] mx-auto py-5">
+  <div class="flex flex-col justify-center min-w-[980px] mx-auto px-3 py-4 bg-white rounded-lg mt-5">
     <h1 class="my-2 flex mx-auto font-bold">Registration Form</h1>
     <div class="rounded-md px-4 py-10">
-      <form [formGroup]="myForm" (ngSubmit)="onSubmit()" class="flex flex-col space-y-10">
+      <form [formGroup]="myForm" (ngSubmit)="onSubmit()" class="flex flex-col space-y-10 ">
         <div class="flex w-full justify-between space-x-5">
           <div class="flex flex-col space-y-2 w-1/2">
             <label for="">Full Name</label>
