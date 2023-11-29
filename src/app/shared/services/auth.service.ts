@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
+import { Router } from '@angular/router';
 import { Observable, from } from 'rxjs';
 
 type SignIn = {
@@ -12,7 +13,7 @@ type SignIn = {
 })
 export class AuthService {
 
-  constructor(private auth: AngularFireAuth) { }
+  constructor(private auth: AngularFireAuth, private route: Router) { }
 
   signIn(params: SignIn): Observable<any>{
     return from(this.auth.signInWithEmailAndPassword(
@@ -33,6 +34,8 @@ export class AuthService {
       .then(userCredential => {
         // User registration successful
         console.log('User registered:', userCredential.user);
+        this.route.navigate(['/login'])
+
       })
       .catch(error => {
         // Handle errors
