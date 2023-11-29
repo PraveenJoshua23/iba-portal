@@ -36,7 +36,7 @@ export class SignUpComponent {
   }
 
   onSubmit(){
-    
+    alert("hi")
     const formData = this.myForm.value;
     console.log(formData)
     
@@ -44,5 +44,12 @@ export class SignUpComponent {
     //   .subscribe((response: any) => {
     //     console.log('Backend response:', response);
     //   });
+
+      this.http.post('http://localhost:3000/reg/save-reg', formData)
+      .subscribe((response: any) => {
+        console.log('Backend response:', response);
+      });
+
+      // save-reg
   }
 }
