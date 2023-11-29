@@ -1,10 +1,13 @@
-import { HttpClient } from '@angular/common/http';
+import { CommonModule } from '@angular/common';
+import { HttpClient} from '@angular/common/http';
 import { Component } from '@angular/core'; 
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { FormGroup, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-sign-up',
   templateUrl: './sign-up.component.html',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
   styleUrls: ['./sign-up.component.scss']
 })
 export class SignUpComponent {

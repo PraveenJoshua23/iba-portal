@@ -1,9 +1,14 @@
+import { CommonModule } from '@angular/common';
+import { HttpClientModule } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { FormGroup, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule,
+    HttpClientModule],
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit {
