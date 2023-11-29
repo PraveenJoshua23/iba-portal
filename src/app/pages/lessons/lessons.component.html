@@ -3,10 +3,60 @@
     <div class="px-5 border-b">
       <h1>Word of the Beginning</h1>
     </div>
-    <div class="flex flex-col">
-      <!-- <plyr style="display: block; width: 640px;" plyrTitle="Video 1" [plyrPlaysInline]="true" [plyrSources]="videoSources" (plyrInit)="player = $event" (plyrPlay)="played($event)"></plyr>
+    <div class="flex flex-col items-center justify-center">
+      <!-- <div #videoPlayer class="plyr__video-embed">
 
-      <button (click)="play()">Play</button> -->
+            <iframe
+              src="https://www.youtube.com/embed/bTqVqk7FSmY?origin=https://plyr.io&amp;iv_load_policy=3&amp;modestbranding=1&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1"
+              allowfullscreen
+              allowtransparency
+              allow="autoplay"
+              width="640px"
+              height="340px"
+            ></iframe>
+          </div>
+    -->
+      <div style="width: 800px">
+        <!-- <h2>VIDEO PLAYER YT ANGULAR</h2> -->
+
+        <vg-player (onPlayerReady)="onPlayerReady($event)">
+          <vg-overlay-play></vg-overlay-play>
+          <vg-buffering vgFor="singleVideo"></vg-buffering>
+          <vg-scrub-bar>
+            <vg-scrub-bar-current-time></vg-scrub-bar-current-time>
+            <vg-scrub-bar-buffering-time></vg-scrub-bar-buffering-time>
+          </vg-scrub-bar>
+          <vg-controls>
+            <vg-play-pause></vg-play-pause>
+            <vg-playback-button></vg-playback-button>
+            <vg-time-display
+              vgProperty="current"
+              vgFormat="mm:ss"
+            ></vg-time-display>
+            <vg-scrub-bar style="pointer-events: none"></vg-scrub-bar>
+            <!-- <vg-time-display
+              vgProperty="left"
+              vgFormat="mm:ss"
+            ></vg-time-display> -->
+            <vg-time-display
+              vgProperty="total"
+              vgFormat="mm:ss"
+            ></vg-time-display>
+            <!-- <vg-track-selector></vg-track-selector> -->
+            <vg-mute></vg-mute>
+            <vg-volume></vg-volume>
+            <vg-fullscreen></vg-fullscreen>
+          </vg-controls>
+          <video
+            [vgMedia]="$any(media)"
+            #media
+            id="singleVideo"
+            preload="auto"
+            src="../../../assets/videos/screen.mov"
+            crossorigin
+          ></video>
+        </vg-player>
+      </div>
     </div>
   </section>
 </main>

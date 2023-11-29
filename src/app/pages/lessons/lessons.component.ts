@@ -1,34 +1,50 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PlyrComponent } from 'ngx-plyr';
+import { VgApiService, VgCoreModule } from '@videogular/ngx-videogular/core';
+import {VgControlsModule} from '@videogular/ngx-videogular/controls';
+import {VgOverlayPlayModule} from '@videogular/ngx-videogular/overlay-play';
+import {VgBufferingModule} from '@videogular/ngx-videogular/buffering';
 
 @Component({
   selector: 'app-lessons',
   standalone: true,
-  imports: [CommonModule ],
+  imports: [CommonModule, VgCoreModule, VgControlsModule,
+    VgOverlayPlayModule,
+    VgBufferingModule ],
   templateUrl: './lessons.component.html',
-  styleUrls: ['./lessons.component.scss']
+  styleUrls: ['./lessons.component.scss'],
 })
-export class LessonsComponent {
-// get the component instance to have access to plyr instance
-// @ViewChild(PlyrComponent)
-// plyr!: PlyrComponent;
+export class LessonsComponent implements OnDestroy{
+  preload: string = 'auto';
+  api: VgApiService = new VgApiService();
 
-// // or get it from plyrInit event
-// player!: Plyr;
+  private subscriptions: any[] = [];
 
-// videoSources: Plyr.Source[] = [
-//   {
-//     src: 'bTqVqk7FSmY',
-//     provider: 'youtube',
-//   },
-// ];
+  onPlayerReady(source: VgApiService){
+    this.api = source;
+    console.log("Player Ready")
+      const autoplaySubscription = this.api.getDefaultMedia().subscriptions.loadedMetadata.subscribe(
+        this.autoplay.bind(this)
+      )
+      const endSubscription = this.api.getDefaultMedia().subscriptions.ended.subscribe(() => {
+        // Handle the video end event
+        this.onVideoEnd();
+      });
 
-// played(event: Plyr.PlyrEvent) {
-//   console.log('played', event);
-// }
+      this.subscriptions.push(endSubscription);
+  }
 
-// play(): void {
-//   this.player.play(); // or this.plyr.player.play()
-// }
+  autoplay() {
+    this.api.play();
+  }
+
+
+  onVideoEnd() {
+    // Your logic when the video ends
+    console.log('Video ended');
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(subscription => subscription.unsubscribe());
+  }
 }
