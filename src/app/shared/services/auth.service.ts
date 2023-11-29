@@ -27,4 +27,16 @@ export class AuthService {
   signOut(){
     return from(this.auth.signOut());
   }
+
+  async register(email:string, password:string){
+    await this.auth.createUserWithEmailAndPassword(email, password)
+      .then(userCredential => {
+        // User registration successful
+        console.log('User registered:', userCredential.user);
+      })
+      .catch(error => {
+        // Handle errors
+        console.error('Error during registration:', error);
+      });
+  }
 }
