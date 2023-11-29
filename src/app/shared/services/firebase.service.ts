@@ -28,9 +28,10 @@ export class FirebaseService {
       const userExists = usersList.find(
         (v: any) => v.email === currentUser.email
       );
+      console.log(userExists, currentUser.email)
       if (!userExists){
-        console.log()
-        this.db.list('users/').set(currentUser.userId, { ...currentUser });
+        console.log("User doesnt exist")
+        // this.db.list('users/').set(currentUser.userId, { ...currentUser });
       }  else return;
      
     });

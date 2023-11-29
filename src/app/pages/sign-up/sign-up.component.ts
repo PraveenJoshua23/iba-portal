@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient} from '@angular/common/http';
 import { Component } from '@angular/core'; 
 import { FormGroup, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { VideoPlayerComponent } from 'src/app/components/video-player/video-player.component';
 import { AuthService } from 'src/app/shared/services/auth.service';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
 
@@ -9,7 +10,7 @@ import { FirebaseService } from 'src/app/shared/services/firebase.service';
   selector: 'app-sign-up',
   templateUrl: './sign-up.component.html',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, VideoPlayerComponent],
   styleUrls: ['./sign-up.component.scss']
 })
 export class SignUpComponent {
@@ -41,13 +42,16 @@ export class SignUpComponent {
   }
 
   async onSubmit(){
-    
+
     const formData = this.myForm.value;
     console.log(formData)
+
+    if(this.myForm.invalid ) return
 
     this.firebase.addUserToDb(formData);
     await this.auth.register(formData.email, formData.password);
     
+<<<<<<< HEAD
     // this.http.post('your-backend-api-url', formData)
     //   .subscribe((response: any) => {
     //     console.log('Backend response:', response);
@@ -59,5 +63,7 @@ export class SignUpComponent {
       // });
 
       // save-reg
+=======
+>>>>>>> 5ee580b5afc56e59daeb4a8120e84762503b414a
   }
 }
