@@ -1,16 +1,17 @@
 import { Injectable } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
-import { AngularFireAuth } from '@angular/fire/compat/auth';
-import { Observable } from 'rxjs';
+import { AngularFireStorage } from '@angular/fire/compat/storage';
+import { Observable, from, lastValueFrom } from 'rxjs';
 import { ref, onValue, getDatabase, update, Database } from 'firebase/database';
+import { HttpHeaders } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FirebaseService {
 
-  constructor(public db: AngularFireDatabase, private auth: AngularFireAuth) { }
-
+  constructor(public db: AngularFireDatabase, private storage: AngularFireStorage) { }
+  src!: any;
 
   getLesson(category: string): Observable<any>{
     return this.db.list(`lessons/${category}`).valueChanges();
@@ -37,5 +38,21 @@ export class FirebaseService {
     });
   }
 
+
+  async getVideo(){
+    const ref = this.storage.ref('lessons/bb/en/[Basic Lesson 1] The Word Since the Beginning l Shincheonji Church of Jesus.mp4');
+    const vid = ref.getDownloadURL()
+    return lastValueFrom(vid)
+      .then(url => {
+        this.src = url;
+        console.log("src", this.src);
+        return this.src;
+      })
+      .catch(error => {
+        console.error("Error getting video URL:", error);
+        // Handle the error or throw it if you want to handle it outside of this function.
+        throw error;
+      });
+  }
   
 }

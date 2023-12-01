@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VideoPlayerComponent } from 'src/app/components/video-player/video-player.component';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AngularFireStorage } from '@angular/fire/compat/storage';
+import { FirebaseService } from 'src/app/shared/services/firebase.service';
 
 @Component({
   selector: 'app-lessons',
@@ -46,13 +48,16 @@ export class LessonsComponent implements OnInit {
 
   userAnswers: number[] = [];
   showCorrectAnswer = false;
+  videoSrc: any;
 
-  constructor(private active: ActivatedRoute, private route: Router ){}
+  constructor(private active: ActivatedRoute, private route: Router, private firebase: FirebaseService ){}
 
   ngOnInit(): void {
       const encoded = this.route.url.split('/')[3]
       this.title = decodeURIComponent(encoded);
       this.initializeUserAnswers();
+      // this.getVideoFromFirebase();
+      this.getVideoFromFirebase().then(url => this.videoSrc = url)
   }
 
   initializeUserAnswers() {
@@ -89,5 +94,9 @@ export class LessonsComponent implements OnInit {
 
   isChoiceSelected(): boolean {
     return this.userAnswers[this.currentQuizIndex] === -1;
+  }
+
+  async getVideoFromFirebase(){
+    return await this.firebase.getVideo()
   }
 }
