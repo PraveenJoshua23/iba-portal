@@ -8,7 +8,7 @@
             <div class="flex items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600">BB Lessons</div>
         
             <ng-container *ngFor="let lessons of allLessons; let last = last">
-                <div class="flex justify-between px-4 py-3 rounded-sm cursor-pointer" [ngClass]="{ 'border-b' : !last}" [routerLink]="['/lesson/bb',1]">
+                <div class="flex justify-between px-4 py-3 rounded-sm cursor-pointer" [ngClass]="{ 'border-b' : !last}" [routerLink]="['/lesson/bb',lessons['lessonName']]">
                     <span class=" ">{{lessons['lessonName']}}</span>
                     <div class="flex space-x-3 items-center">
                         

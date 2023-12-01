@@ -75,6 +75,9 @@ module.exports = {
       fontSize: {
         ...rem(12),
         ...rem(13),
+      },
+      backgroundImage: {
+        'hero': "assets/images/photo_6289767026041928454_y.jpg"
       }
     
     },

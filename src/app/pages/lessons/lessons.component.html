@@ -1,11 +1,54 @@
 <main class="bg-gray-100 flex">
-  <section class="flex flex-col w-full py-8 px-[10%] space-y-5">
+  <section class="flex flex-col w-full h-full py-8 px-[10%] space-y-5">
+    
     <div class="px-5 border-b">
-      <h1>The Word of Revelation from Heaven</h1>
+        <h1>{{title}}</h1>
     </div>
+
+    <ng-container *ngIf="!isQuizOpen">
     <div class="flex flex-col items-center justify-center">
-      
-      <app-video-player src="../../../assets/videos/video1.mp4"></app-video-player>
+        <app-video-player src="../../../assets/videos/video1.mp4" (videoEnded)="onVideoEnd()"></app-video-player>
     </div>
+    </ng-container>
+
+    <ng-container *ngIf="isQuizOpen">
+        <div class="flex justify-center items-center px-6 py-5 w-[800px] bg-white rounded-lg m-auto">
+            <div *ngIf="currentQuizIndex < questions.length && !showCorrectAnswer" class="w-full p-6 relative">
+                <div class="absolute right-5 top-3 bg-gray-200 rounded-full px-5 py-1 tracking-wider">{{currentQuizIndex+1}}/{{questions.length}}</div>
+                <h3 class="">{{currentQuizIndex+1}}. {{ questions[currentQuizIndex].question }}</h3>
+                <ul class="py-4 space-y-2">
+                    <li *ngFor="let choice of questions[currentQuizIndex].choices; let i = index" class="flex space-x-2">
+                    <input type="radio" [name]="'q' + currentQuizIndex" [checked]="userAnswers[currentQuizIndex] === i"
+                            (change)="userAnswers[currentQuizIndex] = i"
+                            class="cursor-pointer"><span>{{ choice }}</span>
+                    </li>
+                </ul>
+                <div class="flex justify-end space-x-3 w-full">
+                    <button (click)="prevQuestion()" [disabled]="currentQuizIndex === 0" [ngClass]="{'hidden': currentQuizIndex === 0}" class="px-5 border border-golden-600 text-golden-600 py-2 rounded-md">Previous</button>
+                    <button (click)="nextQuestion()" [disabled]="isChoiceSelected()" [ngClass]="{'hidden':currentQuizIndex === questions.length-1}" class="px-5 border border-golden-600 py-2 rounded-md text-golden-600 disabled:cursor-not-allowed">Next</button>
+                    <button (click)="submitQuiz()" class="px-3 bg-golden-600 py-2 rounded-md text-white disabled:cursor-not-allowed disabled:opacity-50" [disabled]="isChoiceSelected()"  [ngClass]="{'hidden': currentQuizIndex < questions.length-1}" >Submit</button>
+                </div>
+            </div>
+            
+            <div *ngIf="showCorrectAnswer" class="px-6 w-full">
+                <h3>Quiz Results</h3>
+                <ul class="py-3">
+                    <li *ngFor="let question of questions; let i = index" class="flex flex-col space-y-1">
+                        <span>{{ question.question }}</span>
+                        <p class="flex"><span class="text-semibold">Correct Answer: </span> {{ question.correctAnswer + 1 }}. <span>Your Answer:</span> {{ userAnswers[i] + 1 }}</p>
+                    </li>
+                </ul>
+                <div class="flex justify-center items-center">
+                    <button (click)="retryQuiz()" class="px-3 bg-golden-600 py-2 rounded-md text-white">Retry Quiz</button>
+                </div>
+                
+            </div>
+        </div>
+    </ng-container>
+
+
+    
+    
+    
   </section>
 </main>
