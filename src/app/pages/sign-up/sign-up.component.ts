@@ -51,19 +51,5 @@ export class SignUpComponent {
     this.firebase.addUserToDb(formData);
     await this.auth.register(formData.email, formData.password);
     
-<<<<<<< HEAD
-    // this.http.post('your-backend-api-url', formData)
-    //   .subscribe((response: any) => {
-    //     console.log('Backend response:', response);
-    //   });
-
-      // this.http.post('http://localhost:3000/reg/save-reg', formData)
-      // .subscribe((response: any) => {
-      //   console.log('Backend response:', response);
-      // });
-
-      // save-reg
-=======
->>>>>>> 5ee580b5afc56e59daeb4a8120e84762503b414a
   }
 }
