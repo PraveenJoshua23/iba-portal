@@ -47,6 +47,8 @@ export class HomeComponent implements OnInit{
 
   ngOnInit(): void {
       this.getAllLessons();
+      // this.seedData();
+      this.getlesson()
   }
 
   getAllLessons(){
@@ -55,4 +57,17 @@ export class HomeComponent implements OnInit{
       console.log(this.allLessons)
     })
   }
+
+  seedData(){
+    this.fb.seedLessons();
+    // this.fb.seedUsers();
+  }
+
+  getlesson(){
+    this.fb.getLessonbyCategory('bb', 'bb/lesson1').subscribe( lesson => {
+      console.log(lesson)
+    })
+  }
+
+
 }

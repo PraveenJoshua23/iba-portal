@@ -34,6 +34,7 @@ export class SignUpComponent {
       studying: ['', Validators.required],
       password: ['', Validators.required],
       confirmPassword: ['', Validators.required],
+      networker: ['', Validators.required]
     });
   }
 
@@ -46,10 +47,33 @@ export class SignUpComponent {
     const formData = this.myForm.value;
     console.log(formData)
 
+    const signUpData = {
+      name: formData.name,
+      age: formData.age,
+      dob: formData.dob,
+      phone: formData.phone,
+      email: formData.email,
+      religion: formData.religion,
+      faith: formData.faith,
+      occupation: formData.occupation,
+      gender: formData.gender,
+      marital: formData.marital,
+      language: formData.marital,
+      whyApply: formData.whyApply,
+      linkFrom: formData.linkFrom,
+      studying: formData.studying,
+    }
+
     if(this.myForm.invalid ) return
 
-    this.firebase.addUserToDb(formData);
-    await this.auth.register(formData.email, formData.password);
-    
+    try {
+      const addUserPromise = this.firebase.addUserToDb(signUpData);
+      const registerPromise = this.auth.register(formData.email, formData.password);
+
+      await Promise.all([addUserPromise, registerPromise]);
+    } catch (error) {
+        console.error('Error during form submission:', error);
+        // Handle the error, e.g., show a user-friendly message
+    }
   }
 }
