@@ -18,6 +18,8 @@ export class NavbarComponent {
         this.route.navigate(['/login'])
       }
     })
+
+    localStorage.clear(); 
   }
 
 }

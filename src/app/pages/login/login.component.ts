@@ -10,6 +10,7 @@ import {
 import { Router } from '@angular/router';
 // import { AuthService } from 'src/app/auth.service';
 import { AuthService as Auth } from 'src/app/shared/services/auth.service';
+import { FirebaseService } from 'src/app/shared/services/firebase.service';
 
 @Component({
   selector: 'app-login',
@@ -22,11 +23,13 @@ export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
   isLoggingIn: boolean = false;
   isForgotten: boolean = false;
+  userData: any;
 
   constructor(
     private fb: FormBuilder,
     private auth: Auth,
-    private route: Router
+    private route: Router,
+    private firebase: FirebaseService
   ) {}
 
   ngOnInit() {
@@ -34,6 +37,9 @@ export class LoginComponent implements OnInit {
       email: ['', Validators.required],
       password: ['', Validators.required],
     });
+
+    this.getUser();
+
   }
 
   onSubmit() {
@@ -70,5 +76,18 @@ export class LoginComponent implements OnInit {
     });
   }
 
+  getUser(){
+    const email = "johndoe@gmail.com";
+    this.firebase.getUserByEmail(email).subscribe(user => {
+      this.userData = user[0]
+      console.log(this.userData)
+
+      localStorage.setItem('username', this.userData.name)
+      localStorage.setItem('email', this.userData.email)
+      localStorage.setItem('language', this.userData.userDetails.language)
+
+    })
+    
+  }
   
 }
