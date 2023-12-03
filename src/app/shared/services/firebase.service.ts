@@ -7,11 +7,6 @@ import { Observable, from, lastValueFrom } from 'rxjs';
 import { ref, onValue, getDatabase, update, Database } from 'firebase/database';
 import { HttpHeaders } from '@angular/common/http';
 
-<<<<<<< HEAD
-import { updateDoc } from 'firebase/firestore';
-
-
-=======
 interface Ilessons {
   name: string;
   id: string;
@@ -22,7 +17,6 @@ interface Ilessons {
   path:  string;
   locked: boolean;
 }
->>>>>>> 128c9acfcbc48ced0779e9a0356c6929829cbb10
 @Injectable({
   providedIn: 'root'
 })
@@ -251,87 +245,7 @@ export class FirebaseService {
     return this.firestore.collection('lessons').doc(category).collection('lesson', ref => ref.where('id', '==', lessonId)).valueChanges();
   }
   
-<<<<<<< HEAD
-
-//   // save lessons
-//   saveLessons(lesson: any[]){
-
-//     const email = localStorage.getItem('email');
-    
-//     return docRef.update({
-//       items: this.firestore.FieldValue.arrayUnion(item)
-//     })
-    
-    
-    
-    
-//     if (!email) {
-//       console.error('Email not found in localStorage');
-//       return;
-//     }
-
-//     // Reference to the 'users' collection
-//     const usersCollection = this.firestore.collection('users');
-
-//     // Reference to the specific document in the 'users' collection
-//     // this.firestore.collection('users').doc(lesson).collection('lesson', ref => ref.where('email', '==', email)
-
-//     const userDocumentRef = this.firestore.collection('users').doc(lesson).collection('lesson', ref => ref.where('email', '==', email)
-// //const userDocumentRef = doc(this.firestore.collection, 'users', email);
-//     // Update the document by adding a new object to the 'data' array
-//     try {
-//       const kjbjk = updateDoc(userDocumentRef, {
-//         data: arrayUnion(lesson)
-//       });
-
-//       console.log('Document successfully updated!');
-//     } catch (error) {
-//       console.error('Error updating document: ', error);
-//     }
-//   }
-
-
-// Update the document by adding a new object to the 'data' array
-// userDocument.update({
-//   data: this.firestore.FieldValue.arrayUnion(lesson)
-// })
-//   .then(() => {
-//     console.log('Document successfully updated!');
-//   })
-//   .catch((error) => {
-//     console.error('Error updating document: ', error);
-//   });
-// }
-
-
-
-
-    // const email = localStorage.getItem('email');
-    // //return this.firestore.collection('users').doc(lesson).collection('lesson', ref => ref.where('email', '==', email)).valueChanges();
   
-    // // Get ref to document that contains array
-    // const docRef = this.firestore.collection('users'); // , ref => ref.where('email', '==', email)
-    // docRef.add({'email': email})
-    // .then((docRef) => {
-    //   console.log('Document written with ID: ', docRef.id);
-    // })
-    // .catch((error) => {
-    //   console.error('Error adding document: ', error);
-    // });
-
-    // // Update document, append new item to array field
-    // return docRef.update({
-    //   items: this.firestore.FieldValue.arrayUnion(item)
-    // })
-  
-  //}
-
-
-=======
-  // getAllLessons(){
-  //   return this.firestore.collectionGroup('lesson').valueChanges()
-  // }
-
   getAllLessonByCategory(category: string){
     return this.firestore
       .collection('lessons')
@@ -359,7 +273,6 @@ export class FirebaseService {
         console.error("Error updating lessonsWatched array:", error);
     });
   }
->>>>>>> 128c9acfcbc48ced0779e9a0356c6929829cbb10
 }
 function doc(arg0: any, arg1: string, email: string) {
   throw new Error('Function not implemented.');

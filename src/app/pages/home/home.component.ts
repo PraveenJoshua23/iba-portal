@@ -67,9 +67,6 @@ export class HomeComponent implements OnInit{
   }
 
   getlesson(){
-    this.fb.getLessonbyCategory('bb', 'bb/lesson1').subscribe( lesson => {
-      console.log(lesson)
-      //this.saveLessons(lesson);
     this.fb.getLessonbyCategory('bb', 'bb/lesson2').subscribe( lesson => {
       
      this.currentLesson.push(lesson[0] as Ilessons)
