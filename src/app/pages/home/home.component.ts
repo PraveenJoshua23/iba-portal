@@ -19,7 +19,7 @@ interface Ilessons {
 })
 export class HomeComponent implements OnInit{
 
-  constructor(private fb: FirebaseService){}
+  constructor(private fb: FirebaseService, ){}
 
   allLessons= [];
   lessons: Ilessons[] = [
@@ -66,8 +66,18 @@ export class HomeComponent implements OnInit{
   getlesson(){
     this.fb.getLessonbyCategory('bb', 'bb/lesson1').subscribe( lesson => {
       console.log(lesson)
+      //this.saveLessons(lesson);
     })
   }
+
+  
+
+  // saveLessons(lesson: any[]) {
+  //   console.log(lesson);
+  //   this.fb.saveLessons(lesson)
+  //   // console.log("jojojoojojooojojojoj");
+    
+  // }
 
 
 }
