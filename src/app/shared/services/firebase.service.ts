@@ -104,50 +104,115 @@ export class FirebaseService {
       {
         id: "bb/lesson1",
         category: 'bb',
-        name: "BB Lesson 1",
+        name: "Lesson 1 sealed book and revelation",
         locked: true,
         progress: 0,
-        path: "BB Lesson 1"
+        path: "BB Lesson 1",
+        language:"en",
+        instructor:"joshua"
       },
       {
         id: "bb/lesson2",
         category: 'bb',
-        name: "BB Lesson 2",
+        name: "Lesson 2 seed and harvest (sign of Second coming) ",
         locked: true,
         progress: 0,
-        path: "BB Lesson 2"
+        path: "BB Lesson 2",
+        language:"en",
+        instructor:"thomas"
       },
       {
         id: "bb/lesson3",
         category: 'bb',
-        name: "BB Lesson 3",
+        name: "Lesson 3 how to read prophecy (prophecy and secrets of the kingdom of heaven in parable) ",
         locked: true,
         progress: 0,
-        path: "BB Lesson 3"
+        path: "BB Lesson 3",
+        language:"en",
+        instructor:"joshua"
       },
+
+
+      {
+        id: "bb/lesson4",
+        category: 'bb',
+        name: "Lesson 4 introduction to Revelation",
+        locked: true,
+        progress: 0,
+        path: "BB Lesson 4",
+        language:"en",
+        instructor:"joshua"
+      },
+      {
+        id: "bb/lesson5",
+        category: 'bb',
+        name: "Lesson 5 Moses’s tabernacle and copy and shadow/ reality",
+        locked: true,
+        progress: 0,
+        path: "BB Lesson 5",
+        language:"en",
+        instructor:"joshua"
+      },
+      {
+        id: "bb/lesson6",
+        category: 'bb',
+        name: "Lesson 6 elementary teaching and teaching of righteousness for the mature ",
+        locked: true,
+        progress: 0,
+        path: "BB Lesson 6",
+        language:"en",
+        instructor:"joshua"
+      },
+      {
+        id: "bb/lesson7",
+        category: 'bb',
+        name: "Lesson 7 God’s covenants (OT and NT)",
+        locked: true,
+        progress: 0,
+        path: "BB Lesson 7",
+        language:"en",
+        instructor:"joshua"
+      },
+      {
+        id: "bb/lesson8",
+        category: 'bb',
+        name: "Lesson 8 God’s will and purpose (6,000 years of God’s work and history)",
+        locked: true,
+        progress: 0,
+        path: "BB Lesson 8",
+        language:"en",
+        instructor:"joshua"
+      },
+
       {
         id: "intro/lesson1",
         category: 'intro',
-        name: "BB Lesson 1",
+        name: "Intro Lesson 1 The Two Kinds of Spirits (God and Satan) ",
         locked: true,
         progress: 0,
-        path: "BB Lesson 1"
+        path: "Intro Lesson 1",
+        language:"en",
+        instructor:"thomas"
       },
       {
         id: "intro/lesson2",
         category: 'intro',
-        name: "BB Lesson 2",
+        name: "Intro Lesson 2 The Basics of the Bible",
         locked: true,
         progress: 0,
-        path: "BB Lesson 2"
+        path: "Intro Lesson 2",
+        language:"en",
+        instructor:"joshua"
       },
       {
         id: "intro/lesson1",
         category: 'intro',
-        name: "BB Lesson 3",
+        name: "Intro Lesson 3 The Figurative Language of the Secrets of the Kingdom of Heaven",
         locked: true,
         progress: 0,
-        path: "BB Lesson 3"
+        path: "Intro Lesson 3",
+        language:"en",
+        instructor:"thomas"
       }
     ];
   
