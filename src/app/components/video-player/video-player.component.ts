@@ -54,7 +54,7 @@ export class VideoPlayerComponent implements OnDestroy {
   }
 
   autoplay() {
-    this.api.play();
+    // this.api.play();
   }
 
   onTimeUpdate(){

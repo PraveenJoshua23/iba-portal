@@ -1,14 +1,28 @@
 import { Injectable } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { AngularFirestore  } from '@angular/fire/compat/firestore';
+import * as fire from 'firebase/app';
 import { Observable, from, lastValueFrom } from 'rxjs';
 import { ref, onValue, getDatabase, update, Database } from 'firebase/database';
 import { HttpHeaders } from '@angular/common/http';
 
+<<<<<<< HEAD
 import { updateDoc } from 'firebase/firestore';
 
 
+=======
+interface Ilessons {
+  name: string;
+  id: string;
+  progress: number;
+  category: string;
+  instructor: string;
+  language: string;
+  path:  string;
+  locked: boolean;
+}
+>>>>>>> 128c9acfcbc48ced0779e9a0356c6929829cbb10
 @Injectable({
   providedIn: 'root'
 })
@@ -84,14 +98,7 @@ export class FirebaseService {
           studying: "sdfsdffds",
           networker: "Jane"
         },
-        lessonsWatched: [{
-          id: "bb/lesson1",
-          category: 'bb',
-          name: "BB Lesson 1",
-          locked: true,
-          progress: 10,
-          path: "BB Lesson 1"
-        }],
+        lessonsWatched: [],
         overallProgress: 0
       }
     ];
@@ -231,10 +238,20 @@ export class FirebaseService {
     return this.firestore.collection('users', ref => ref.where('email', '==', email)).valueChanges();
   }
 
+  getUserCollection(email: string){
+    // Reference to the collection in Firestore
+    const usersCollection = this.firestore.collection('users', ref =>
+    ref.where('email', '==', email)
+  );
+
+   return usersCollection
+  }
+
   getLessonbyCategory(category: string, lessonId: string){
     return this.firestore.collection('lessons').doc(category).collection('lesson', ref => ref.where('id', '==', lessonId)).valueChanges();
   }
   
+<<<<<<< HEAD
 
 //   // save lessons
 //   saveLessons(lesson: any[]){
@@ -310,6 +327,39 @@ export class FirebaseService {
   //}
 
 
+=======
+  // getAllLessons(){
+  //   return this.firestore.collectionGroup('lesson').valueChanges()
+  // }
+
+  getAllLessonByCategory(category: string){
+    return this.firestore
+      .collection('lessons')
+      .doc(category)  
+      .collection('lesson')
+      .valueChanges();
+  }
+
+
+  updateLesson(lessonObj: Ilessons[]){
+    const newLessonObject = lessonObj;
+    newLessonObject.map(lesson => lesson.locked = false) 
+    
+    const docId = localStorage.getItem('userId') || ''
+    const userRef = this.firestore.collection('users').doc(docId);
+
+    // Update the lessonsWatched array
+    userRef.update({
+      lessonsWatched: newLessonObject,
+      })
+      .then(() => {
+        console.log("Lessons watched array updated successfully");
+      })
+      .catch((error) => {
+        console.error("Error updating lessonsWatched array:", error);
+    });
+  }
+>>>>>>> 128c9acfcbc48ced0779e9a0356c6929829cbb10
 }
 function doc(arg0: any, arg1: string, email: string) {
   throw new Error('Function not implemented.');
