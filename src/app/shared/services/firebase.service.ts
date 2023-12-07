@@ -2,10 +2,9 @@ import { Injectable } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { AngularFirestore  } from '@angular/fire/compat/firestore';
-import * as fire from 'firebase/app';
-import { Observable, from, lastValueFrom } from 'rxjs';
+import { Observable, from, lastValueFrom, take, tap } from 'rxjs';
 import { ref, onValue, getDatabase, update, Database } from 'firebase/database';
-import { HttpHeaders } from '@angular/common/http';
+import { Lesson } from '../models/lesson.model';
 
 interface Ilessons {
   name: string;
@@ -51,9 +50,9 @@ export class FirebaseService {
   }
 
 
-  async getVideo(){
-    const ref = this.storage.ref('lessons/bb/en/[Basic Lesson 1] The Word Since the Beginning l Shincheonji Church of Jesus.mp4');
-    const vid = ref.getDownloadURL()
+  async getVideo(category:string, lang: string, path: string){
+    const ref = this.storage.ref(`lessons/${category}/${lang}/${path}.mp4`);
+    const vid = ref.getDownloadURL().pipe(take(1))
     return lastValueFrom(vid)
       .then(url => {
         this.src = url;
@@ -67,7 +66,7 @@ export class FirebaseService {
       });
   }
 
-  seedUsers() {
+  addUser() {
     const users = [
       // User data objects
       {
@@ -100,6 +99,42 @@ export class FirebaseService {
     users.forEach(user => {
       this.firestore.collection('users').add(user);
     });
+  }
+
+  addQuiz(lessons: Lesson[]){
+    const questions = [
+      {
+        question: "What is the spiritual meaning of the Light and the Darkness? ( Jn1:1-5, Ps119:105, 130)",
+        choices: ["Light = Christians / Darkness = Non-Christians", "Light = Revealed word of God / Darkness = Ignorance of God’s word(Sealed word)"],
+        correctAnswer: 1
+      },
+      {
+        question: "Jesus prophesied the night is coming (Jn9:4). And he is coming back in the night time(Mt24:29-31, 1Th5:1-3). When he comes back, he will send us the true light(=open word) to lead us to Kingdom of heaven.",
+        choices: ["Darkness of not knowing the secret of N.T prophecy", "Darkness of not believing in Jesus as savior", "Darkness of absense of peace on this earth"],
+        correctAnswer: 0
+      },
+      {
+        question: "what time do we live in today according to the signs?",
+        choices: ["time of the O.T. prophecy (sealed book)", "time of the open word of the O.T prophecy at the first coming", "time of the N.T. prophecy (seal book)"],
+        correctAnswer: 0
+      },
+      {
+        question: "What is the spiritual meaning of the lampstands? ",
+        choices: ["Spirit", " Person (worker)", "Both A and B"],
+        correctAnswer: 0
+      },
+      {
+        question: "Moses' Tabernacle was copy and Shadow (Heb8:5) And the true reality appeared at the 1st coming! Who was the true reality of Lampstand of Holy Place?",
+        choices: ["time of the O.T. prophecy (sealed book)", "time of the open word of the O.T prophecy at the first coming", "time of the N.T. prophecy (seal book)"],
+        correctAnswer: 0
+      },
+    ]
+    
+    // lessons.forEach(lesson => {
+    //   this.firestore.collection('lesson').where()
+    // })
+  
+
   }
 
   seedLessons() {
@@ -180,9 +215,6 @@ export class FirebaseService {
     return this.firestore.collection('lessons').doc(category).collection('lesson', ref => ref.where('id', '==', lessonId)).valueChanges();
   }
   
-  // getAllLessons(){
-  //   return this.firestore.collectionGroup('lesson').valueChanges()
-  // }
 
   getAllLessonByCategory(category: string){
     return this.firestore

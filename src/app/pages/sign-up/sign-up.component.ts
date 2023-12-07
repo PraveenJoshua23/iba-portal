@@ -62,6 +62,7 @@ export class SignUpComponent {
       whyApply: formData.whyApply,
       linkFrom: formData.linkFrom,
       studying: formData.studying,
+      networker: formData.networker
     }
 
     if(this.myForm.invalid ) return

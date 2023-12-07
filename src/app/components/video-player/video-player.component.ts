@@ -31,7 +31,7 @@ export class VideoPlayerComponent implements OnDestroy {
   onPlayerReady(source: VgApiService){
     this.api = source;
     const media = this.api.getDefaultMedia();
-    console.log("Player Ready, src:", this.src)
+    // console.log("Player Ready, src:", this.src)
       const autoplay$ = media.subscriptions.loadedMetadata.subscribe(
         this.autoplay.bind(this)
       );
@@ -44,7 +44,7 @@ export class VideoPlayerComponent implements OnDestroy {
       const progress$= media.subscriptions.timeUpdate.subscribe(() => {
         this.currentTime = media.currentTime;
         this.duration = media.duration;
-        // this.onTimeUpdate()
+        this.onTimeUpdate()
       });
       
 

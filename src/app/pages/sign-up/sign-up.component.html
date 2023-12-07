@@ -14,9 +14,9 @@
     <app-video-player src=""></app-video-player>
   </div>
 
-  <div class="flex flex-col justify-center min-w-[980px] mx-auto px-3 py-4 bg-white rounded-lg mt-5">
+  <div class="flex flex-col justify-center min-w-[980px] mx-auto px-3 py-4 bg-white rounded-lg shadow-lg mt-5">
     <h1 class="my-2 flex mx-auto font-bold">Registration Form</h1>
-    <div class="rounded-md px-4 py-10">
+    <div class=" px-4 py-10">
       <form [formGroup]="myForm" (ngSubmit)="onSubmit()" class="flex flex-col space-y-10 ">
         <div class="flex w-full justify-between space-x-5">
           <div class="flex flex-col space-y-2 w-1/2">
@@ -25,7 +25,7 @@
               type="text"
               placeholder="Enter your full name"
               formControlName="name"
-              class="form-input border p-3 w-full"
+              class="form-input rounded-md  border p-3 w-full"
             />
           </div>
 
@@ -34,7 +34,7 @@
             <input
               type="text"
               placeholder="Enter your age"
-              class="form-input border p-3"
+              class="form-input rounded-md  border p-3"
               formControlName="age"
             />
           </div>
@@ -46,7 +46,7 @@
             <input
               type="date"
               placeholder="dd-mm-yyyy"
-              class="form-input border p-3 w-full"
+              class="form-input rounded-md  border p-3 w-full"
               formControlName="dob"
             />
           </div>
@@ -78,7 +78,7 @@
             <input
               type="text"
               placeholder="Enter your Phone Number"
-              class="form-input border p-3 w-full"
+              class="form-input  rounded-md border p-3 w-full"
               formControlName="phone"
             />
           </div>
@@ -88,7 +88,7 @@
             <input
               type="email"
               placeholder="Enter your Email"
-              class="form-input border p-3"
+              class="form-input rounded-md  border p-3"
               formControlName="email"
             />
           </div>
@@ -100,7 +100,7 @@
             <input
               type="text"
               placeholder="Enter your Years of Faith(No. of Years)"
-              class="form-input border p-3 w-full"
+              class="form-input rounded-md  border p-3 w-full"
               formControlName="faith"
             />
           </div>
@@ -110,7 +110,7 @@
             <input
               type="text"
               placeholder="Enter your Occupation"
-              class="form-input border p-3"
+              class="form-input rounded-md  border p-3"
               formControlName="occupation"
             />
           </div>
@@ -158,20 +158,23 @@
 
         <div class="flex w-full justify-between space-x-5">
           <div class="flex flex-col space-y-2 w-1/2">
-            <label for="language">Select Language</label>
-            <!-- <select id="language" class="form-select border p-3 w-full">
-              <option value="English">English</option>
-              <option value="Tamil">Tamil</option>
-              <option value="Hindi">Hindi</option>
-              <option value="Telugu">Telugu</option>
-            </select> -->
-            
-            <select id="language" name="language" autocomplete="language-name" formControlName="language" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6">
+            <label for="language">Select Language</label>            
+            <select id="language" name="language" autocomplete="language-name" formControlName="language" class="block w-full rounded-md border-0 py-2.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6">
               <option value="English">English</option>
               <option value="Tamil">Tamil</option>
               <option value="Hindi">Hindi</option>
               <option value="Telugu">Telugu</option>
             </select>
+          </div>
+
+          <div class="flex flex-col space-y-2 w-1/2">
+            <label for="networker">Networker</label>
+            <input
+              type="text"
+              placeholder="Enter the name of the person who sent you this link"
+              class="form-input rounded-md  border p-3 w-full"
+              formControlName="phone"
+            />
           </div>
         </div>
 
@@ -181,7 +184,7 @@
             <input
               type="text"
               placeholder="Your answer"
-              class="form-input border p-3 w-[972px]"
+              class="form-input rounded-md  border p-3 w-[972px]"
               formControlName="whyApply"
             />          
           </div>
@@ -193,7 +196,7 @@
             <input
               type="text"
               placeholder="Your answer"
-              class="form-input border p-3 w-[972px]"
+              class="form-input rounded-md  border p-3 w-[972px]"
               formControlName="linkFrom"
             />          
           </div>
@@ -221,7 +224,7 @@
             <input
               type="password"
               placeholder="Enter your Password"
-              class="form-input border p-3 w-full"
+              class="form-input rounded-md  border p-3 w-full"
               formControlName="password"
             />
           </div>
@@ -231,7 +234,7 @@
             <input
               type="password"
               placeholder="Enter your Confirm Password"
-              class="form-input border p-3"
+              class="form-input rounded-md  border p-3"
               formControlName="confirmPassword"
             />
           </div>

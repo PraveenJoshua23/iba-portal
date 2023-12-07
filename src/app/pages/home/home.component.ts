@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { AppShellComponent } from 'src/app/components/app-shell/app-shell.component';
 import { RouterModule } from '@angular/router';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
+import { lastValueFrom } from 'rxjs';
 
 interface Ilessons {
   name: string;
@@ -27,18 +28,20 @@ export class HomeComponent implements OnInit{
   constructor(private fb: FirebaseService){}
 
   bbLessons: any[]= [];
+  initialLesson: Ilessons[] = []; 
   currentLesson: Ilessons[] = [];
 
   ngOnInit(): void {
       this.getAllLessons();
       // this.seedData();
-      this.getlesson()
+     
       this.getUser()
   }
 
   getAllLessons(){
      this.fb.getAllLessonByCategory('bb').subscribe( lesson => {
       this.bbLessons = lesson
+      console.log(this.bbLessons)
       this.sortLessons(this.bbLessons)
     })
     // this.fb.getLesson('BB').subscribe(res => {
@@ -66,15 +69,19 @@ export class HomeComponent implements OnInit{
     // this.fb.seedUsers();
   }
 
-  getlesson(){
-    this.fb.getLessonbyCategory('bb', 'bb/lesson2').subscribe( lesson => {
-      
-     this.currentLesson.push(lesson[0] as Ilessons)
-
-    })
-
-   
-  }
+  // getLesson(category: string, id: string): Promise<Ilessons> {
+  //   const res = this.fb.getLessonbyCategory(category, id)
+  //   return lastValueFrom(res)
+  //     .then(lesson => {
+  //       this.currentLesson.push(lesson[0] as Ilessons);
+  //       return lesson[0] as Ilessons;
+  //     })
+  //     .catch(error => {
+  //       // Handle errors here
+  //       console.error(error);
+  //       throw error; // rethrowing the error if needed
+  //     });
+  // }
 
   getUser(){
     this.fb.getUserCollection("johndoe@gmail.com").get().subscribe(querySnapshot => {
@@ -91,8 +98,13 @@ export class HomeComponent implements OnInit{
     // })
   }
 
-  selectLesson(){
-    this.fb.updateLesson(this.currentLesson)
+  selectLesson(id: string){
+    const les = this.bbLessons.filter(lesson => lesson.id === id)
+    const currentLes = JSON.stringify(les)
+    localStorage.setItem('currentLesson',currentLes)
+    console.log(les)
+  
+    this.fb.updateLesson(les)
   }
 
 }
