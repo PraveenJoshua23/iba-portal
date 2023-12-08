@@ -25,8 +25,12 @@
               type="text"
               placeholder="Enter your full name"
               formControlName="name"
-              class="form-input rounded-md  border p-3 w-full"
+              class="form-input rounded-md border p-3 w-full"
+              [ngClass]="{'border-red-500': myForm.get('name')?.hasError('required') && myForm.get('name')?.touched}"
             />
+            <div *ngIf="myForm.get('name')?.hasError('required') && myForm.get('name')?.touched" class="text-sm text-red-500">
+              Name is required.
+            </div>
           </div>
 
           <div class="flex flex-col space-y-2 w-1/2">
@@ -36,7 +40,11 @@
               placeholder="Enter your age"
               class="form-input rounded-md  border p-3"
               formControlName="age"
+              [ngClass]="{'border-red-500': myForm.get('age')?.hasError('required') && myForm.get('age')?.touched}"
             />
+            <div *ngIf="myForm.get('age')?.hasError('required') && myForm.get('age')?.touched" class="text-sm text-red-500">
+              Age is required.
+            </div>
           </div>
         </div>
 
@@ -46,28 +54,33 @@
             <input
               type="date"
               placeholder="dd-mm-yyyy"
-              class="form-input rounded-md  border p-3 w-full"
+              class="form-input rounded-md border p-3 w-full"
               formControlName="dob"
+              [ngClass]="{'border-red-500': myForm.get('dob')?.hasError('dobFormatValidator')  && myForm.get('dob')?.touched}"
             />
+            <!-- Display if date format is incorrect -->
+            <div *ngIf="myForm.get('dob')?.hasError('passwordStrength') && myForm.get('dob')?.touched" class="text-sm text-red-500">
+              Password must contain at least one uppercase letter, one lowercase letter, and one numeric digit.
+            </div>
           </div>
 
           <div class="flex flex-col space-y-2 w-1/2">
             <label for="">Religion</label>
             <div class="flex items-center space-x-3 h-[52px] px-3 w-full">
               <div class="flex items-center space-x-2">
-
                 <label>
                   <input type="radio" formControlName="religion" class="w-3 h-3" value="Christian"> Christian
                 </label>
-            
               </div>
 
               <div class="flex items-center space-x-2">
-        
                 <label>
                   <input type="radio" formControlName="religion" value="Non-Christian"> Non-Christian
                 </label>
               </div>
+            </div>
+            <div *ngIf="myForm.get('religion')?.hasError('required') && myForm.get('religion')?.touched" class="text-sm text-red-500">
+              Religion is required.
             </div>
           </div>
         </div>
@@ -80,7 +93,11 @@
               placeholder="Enter your Phone Number"
               class="form-input  rounded-md border p-3 w-full"
               formControlName="phone"
+              [ngClass]="{'border-red-500': myForm.get('phone')?.hasError('required') && myForm.get('phone')?.touched}"
             />
+            <div *ngIf="myForm.get('phone')?.hasError('required') && myForm.get('phone')?.touched" class="text-sm text-red-500">
+              Phone is required.
+            </div>
           </div>
 
           <div class="flex flex-col space-y-2 w-1/2">
@@ -90,7 +107,11 @@
               placeholder="Enter your Email"
               class="form-input rounded-md  border p-3"
               formControlName="email"
+              [ngClass]="{'border-red-500': myForm.get('email')?.hasError('required') && myForm.get('email')?.touched}"
             />
+            <div *ngIf="myForm.get('email')?.hasError('required') && myForm.get('email')?.touched" class="text-sm text-red-500">
+              Email is required.
+            </div>
           </div>
         </div>
 
@@ -102,7 +123,11 @@
               placeholder="Enter your Years of Faith(No. of Years)"
               class="form-input rounded-md  border p-3 w-full"
               formControlName="faith"
+              [ngClass]="{'border-red-500': myForm.get('faith')?.hasError('required') && myForm.get('faith')?.touched}"
             />
+            <div *ngIf="myForm.get('faith')?.hasError('required') && myForm.get('faith')?.touched" class="text-sm text-red-500">
+              Faith is required.
+            </div>
           </div>
 
           <div class="flex flex-col space-y-2 w-1/2">
@@ -112,7 +137,11 @@
               placeholder="Enter your Occupation"
               class="form-input rounded-md  border p-3"
               formControlName="occupation"
+              [ngClass]="{'border-red-500': myForm.get('occupation')?.hasError('required') && myForm.get('occupation')?.touched}"
             />
+            <div *ngIf="myForm.get('occupation')?.hasError('required') && myForm.get('occupation')?.touched" class="text-sm text-red-500">
+              Occupation is required.
+            </div>
           </div>
         </div>
 
@@ -135,13 +164,15 @@
                
               </div>
             </div>
+            <div *ngIf="myForm.get('gender')?.hasError('required') && myForm.get('gender')?.touched" class="text-sm text-red-500">
+              Gender is required.
+            </div>
           </div>
 
           <div class="flex flex-col space-y-2 w-1/2">
             <label for="">Marital Status</label>
             <div class="flex items-center space-x-3 h-[52px] px-3 w-full">
               <div class="flex items-center space-x-2">
-                
                 <label>
                   <input type="radio" formControlName="marital" class="w-3 h-3" value="Married"> Married
                 </label>
@@ -152,6 +183,9 @@
                   <input type="radio" formControlName="marital" class="w-3 h-3" value="Unmarried/Single"> Unmarried/Single
                 </label>
               </div>
+            </div>
+            <div *ngIf="myForm.get('marital')?.hasError('required') && myForm.get('marital')?.touched" class="text-sm text-red-500">
+              Marital is required.
             </div>
           </div>
         </div>
@@ -173,32 +207,44 @@
               type="text"
               placeholder="Enter the name of the person who sent you this link"
               class="form-input rounded-md  border p-3 w-full"
-              formControlName="phone"
+              formControlName="networker"
+              [ngClass]="{'border-red-500': myForm.get('networker')?.hasError('required') && myForm.get('networker')?.touched}"
             />
+            <div *ngIf="myForm.get('networker')?.hasError('required') && myForm.get('networker')?.touched" class="text-sm text-red-500">
+              Networker is required.
+            </div>
           </div>
         </div>
 
         <div class="flex w-full justify-between space-x-5">
           <div class="flex flex-col space-y-2">
-            <label for="">Why did you apply for this Course?</label>
+            <label for="whyApply">Why did you apply for this Course?</label>
             <input
               type="text"
               placeholder="Your answer"
               class="form-input rounded-md  border p-3 w-[972px]"
               formControlName="whyApply"
-            />          
+              [ngClass]="{'border-red-500': myForm.get('whyApply')?.hasError('required') && myForm.get('whyApply')?.touched}"
+            /> 
+            <div *ngIf="myForm.get('whyApply')?.hasError('required') && myForm.get('whyApply')?.touched" class="text-sm text-red-500">
+              This is required.
+            </div>         
           </div>
         </div>
 
         <div class="flex w-full justify-between space-x-5">
           <div class="flex flex-col space-y-2">
-            <label for="">Who sent you the registration link?</label>
+            <label for="linkFrom">Who sent you the registration link?</label>
             <input
               type="text"
               placeholder="Your answer"
               class="form-input rounded-md  border p-3 w-[972px]"
               formControlName="linkFrom"
-            />          
+              [ngClass]="{'border-red-500': myForm.get('linkFrom')?.hasError('required') && myForm.get('linkFrom')?.touched}"
+            />
+            <div *ngIf="myForm.get('linkFrom')?.hasError('required') && myForm.get('linkFrom')?.touched" class="text-sm text-red-500">
+              This is required.
+            </div>             
           </div>
         </div>
 
@@ -216,6 +262,10 @@
               </label>
             </div>
           </div>
+          
+          <div *ngIf="myForm.get('studying')?.hasError('required') && myForm.get('studying')?.touched" class="text-sm text-red-500">
+            This is required.
+          </div>   
         </div>
         
         <div class="flex w-full justify-between space-x-5">
@@ -226,7 +276,15 @@
               placeholder="Enter your Password"
               class="form-input rounded-md  border p-3 w-full"
               formControlName="password"
+              [ngClass]="{'border-red-500': myForm.get('password')?.hasError('required') && myForm.get('password')?.touched}"
             />
+            <div *ngIf="myForm.get('password')?.hasError('required') && myForm.get('password')?.touched" class="text-sm text-red-500">
+              Password is required.
+            </div>  
+            <!-- Display password strength error message -->
+            <div *ngIf="myForm.get('password')?.hasError('passwordStrength')" class="text-sm text-red-500">
+              Password must contain at least one uppercase letter, one lowercase letter, and one numeric digit.
+            </div>
           </div>
 
           <div class="flex flex-col space-y-2 w-1/2">
@@ -236,12 +294,22 @@
               placeholder="Enter your Confirm Password"
               class="form-input rounded-md  border p-3"
               formControlName="confirmPassword"
+              [ngClass]="{'border-red-500': myForm.get('confirmPassword')?.touched}"
             />
+             
+            <!-- Display password match error message -->
+            <div *ngIf="myForm.hasError('passwordMismatch') && myForm.get('confirmPassword')?.touched" class="text-sm text-red-500">
+              Passwords do not match.
+            </div>
           </div>
+          
         </div>
 
+        <div *ngIf=" myForm.invalid && myForm.get('confirmPassword')?.dirty" class="text-sm text-red-500">
+          Please check if all entries are correct.
+        </div>
         <div class="flex justify-end w-full">
-          <button type="submit" class="bg-golden-500 rounded-md px-3 py-2">Submit</button>
+          <button type="submit" class="bg-golden-500 rounded-md px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed" [disabled]="myForm.invalid">Submit</button>
         </div>
 
       </form>

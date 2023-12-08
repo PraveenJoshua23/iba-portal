@@ -38,8 +38,6 @@ export class LoginComponent implements OnInit {
       password: ['', Validators.required],
     });
 
-    this.getUser();
-
   }
 
   onSubmit() {
@@ -50,7 +48,10 @@ export class LoginComponent implements OnInit {
       this.isLoggingIn = true;
 
       this.auth.signIn({ email: email, password: password }).subscribe({
-        next: () => this.route.navigate(['/home']),
+        next: () => {
+          this.getUser();
+          this.route.navigate(['/home'])
+        },
         error: (error) => {
           this.isLoggingIn = false;
         },

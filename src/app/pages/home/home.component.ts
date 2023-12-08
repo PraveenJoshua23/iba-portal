@@ -4,6 +4,7 @@ import { AppShellComponent } from 'src/app/components/app-shell/app-shell.compon
 import { RouterModule } from '@angular/router';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
 import { lastValueFrom } from 'rxjs';
+import { DocumentData, QuerySnapshot } from '@angular/fire/firestore';
 
 interface Ilessons {
   name: string;
@@ -30,11 +31,12 @@ export class HomeComponent implements OnInit{
   bbLessons: any[]= [];
   initialLesson: Ilessons[] = []; 
   currentLesson: Ilessons[] = [];
+  usersList: any = []
 
   ngOnInit(): void {
       this.getAllLessons();
       // this.seedData();
-     
+      this.getAllUser();
       this.getUser()
   }
 
@@ -44,10 +46,6 @@ export class HomeComponent implements OnInit{
       console.log(this.bbLessons)
       this.sortLessons(this.bbLessons)
     })
-    // this.fb.getLesson('BB').subscribe(res => {
-    //   this.allLessons = res;
-    //   // console.log(this.allLessons)
-    // })
   }
 
   extractLessonNumber(lesson: { name: string; }) {
@@ -64,24 +62,17 @@ export class HomeComponent implements OnInit{
     });
   }
 
-  seedData(){
-    this.fb.seedLessons();
-    // this.fb.seedUsers();
+  async getAllUser(){
+    const snapshot = await this.fb.getStudents();
+    this.updateUserList(snapshot)
   }
 
-  // getLesson(category: string, id: string): Promise<Ilessons> {
-  //   const res = this.fb.getLessonbyCategory(category, id)
-  //   return lastValueFrom(res)
-  //     .then(lesson => {
-  //       this.currentLesson.push(lesson[0] as Ilessons);
-  //       return lesson[0] as Ilessons;
-  //     })
-  //     .catch(error => {
-  //       // Handle errors here
-  //       console.error(error);
-  //       throw error; // rethrowing the error if needed
-  //     });
-  // }
+  updateUserList(snapshot: QuerySnapshot<DocumentData>){
+    snapshot.docs.forEach( student => {
+      this.usersList.push({...student.data()})
+    })
+    console.log(this.usersList)
+  }
 
   getUser(){
     this.fb.getUserCollection("johndoe@gmail.com").get().subscribe(querySnapshot => {

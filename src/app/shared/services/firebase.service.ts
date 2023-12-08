@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { AngularFirestore  } from '@angular/fire/compat/firestore';
-import { Observable, from, lastValueFrom, take, tap } from 'rxjs';
-import { ref, onValue, getDatabase, update, Database } from 'firebase/database';
+import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { addDoc, arrayUnion, collection, CollectionReference, DocumentData, getDocs, getFirestore, query, where} from '@angular/fire/firestore';
+import { Observable, from, lastValueFrom, take } from 'rxjs';
+import { ref, onValue, getDatabase } from 'firebase/database';
 import { Lesson } from '../models/lesson.model';
 
 interface Ilessons {
@@ -20,9 +21,19 @@ interface Ilessons {
   providedIn: 'root'
 })
 export class FirebaseService {
+  firestoreDb!:any;
+  studentCol!: CollectionReference<DocumentData>;
 
-  constructor(public db: AngularFireDatabase, private storage: AngularFireStorage, private firestore: AngularFirestore) { }
+  constructor(public db: AngularFireDatabase, private storage: AngularFireStorage, private firestore: AngularFirestore) {
+     this.firestoreDb = getFirestore(); 
+     this.studentCol = collection(this.firestoreDb, 'users');
+   }
   src!: any;
+
+  async getStudents() {
+    const snapshot = await getDocs(this.studentCol);
+    return snapshot;
+  }
 
   getLesson(category: string): Observable<any>{
     return this.db.list(`lessons/${category}`).valueChanges();
@@ -66,7 +77,13 @@ export class FirebaseService {
       });
   }
 
-  addUser() {
+  async addUser(data: unknown){
+    await addDoc(this.studentCol, data).then(() => console.log("Added user: ", data)).catch(err => {
+      console.error("Error adding user:", err)
+    })
+  }
+
+  seedUser() {
     const users = [
       // User data objects
       {
@@ -196,6 +213,16 @@ export class FirebaseService {
     });
   }
 
+  async getStudentByEmail(email: string) {
+    const querySnapshot = await getDocs(query(this.studentCol, where('email', '==', email)));
+  
+    if (!querySnapshot.empty) {
+      return querySnapshot.docs.map(doc => doc.data());
+    } else {
+      // No matching documents
+      return [];
+    }
+  }
 
   getUserByEmail(email: string): Observable<any[]> {
     // Use 'ref' to create a query based on the 'email' field

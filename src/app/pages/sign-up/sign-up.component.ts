@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient} from '@angular/common/http';
 import { Component } from '@angular/core'; 
-import { FormGroup, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormBuilder, Validators, ReactiveFormsModule, AbstractControlOptions, FormControl, FormControlName } from '@angular/forms';
 import { VideoPlayerComponent } from 'src/app/components/video-player/video-player.component';
 import { AuthService } from 'src/app/shared/services/auth.service';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
+import { createPasswordStrengthValidator, dobFormatValidator, passwordMatchValidator } from '../../shared/utils/validators';
+
 
 @Component({
   selector: 'app-sign-up',
@@ -20,9 +22,9 @@ export class SignUpComponent {
     this.myForm = this.fb.group({
       name: ['', Validators.required],
       age: ['', Validators.required],
-      dob: ['', Validators.required],
+      dob: ['', [Validators.required, dobFormatValidator()]],
       phone: ['', Validators.required],
-      email: ['', Validators.required],
+      email: ['', [Validators.required, Validators.pattern(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/)]],
       religion: ['Christian', Validators.required],
       faith: ['', Validators.required],
       occupation: ['', Validators.required],
@@ -32,20 +34,21 @@ export class SignUpComponent {
       whyApply: ['', Validators.required],  
       linkFrom: ['', Validators.required],
       studying: ['', Validators.required],
-      password: ['', Validators.required],
+      password: ['', [Validators.required, createPasswordStrengthValidator()]],
       confirmPassword: ['', Validators.required],
       networker: ['', Validators.required]
-    });
+    }, {
+      validator: passwordMatchValidator('password', 'confirmPassword')
+    } as AbstractControlOptions);
   }
 
   ngOnInit(): void {
-    console.log(this.myForm)
+    
   }
 
   async onSubmit(){
 
     const formData = this.myForm.value;
-    console.log(formData)
 
     const signUpData = {
       name: formData.name,
@@ -64,14 +67,15 @@ export class SignUpComponent {
       studying: formData.studying,
       networker: formData.networker
     }
-
+    
     if(this.myForm.invalid ) return
 
     try {
-      const addUserPromise = this.firebase.addUserToDb(signUpData);
-      const registerPromise = this.auth.register(formData.email, formData.password);
+      const addUserPromise = this.firebase.addUser(signUpData).then(()=> {
+        this.auth.register(formData.email, formData.password);
+      });
 
-      await Promise.all([addUserPromise, registerPromise]);
+      await Promise.all([addUserPromise]);
     } catch (error) {
         console.error('Error during form submission:', error);
         // Handle the error, e.g., show a user-friendly message
