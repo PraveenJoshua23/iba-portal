@@ -22,9 +22,9 @@ export class SignUpComponent {
     this.myForm = this.fb.group({
       name: ['', Validators.required],
       age: ['', Validators.required],
-      dob: ['', [Validators.required, dobFormatValidator()]],
+      dob: ['', [Validators.required]],
       phone: ['', Validators.required],
-      email: ['', [Validators.required, Validators.pattern(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/)]],
+      email: ['', [Validators.required, Validators.email]],
       religion: ['Christian', Validators.required],
       faith: ['', Validators.required],
       occupation: ['', Validators.required],

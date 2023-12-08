@@ -22,7 +22,7 @@ export const APP_ROUTE: Route[] = [
 
     { path: 'login', component: LoginComponent },
     { path: 'signup', component: SignUpComponent},
-    { path: 'landing', component: LandingComponent},
-    { path: '', redirectTo: '/landing', pathMatch: 'full' }, // Redirect to login by default
+    { path: '', component: LandingComponent},
+    // { path: '', redirectTo: '/landing', pathMatch: 'full' }, // Redirect to login by default
     { path: '**', redirectTo: '/landing' } // Redirect to login for unknown routes
 ];

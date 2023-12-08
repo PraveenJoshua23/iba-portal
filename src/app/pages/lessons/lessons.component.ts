@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VideoPlayerComponent } from 'src/app/components/video-player/video-player.component';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
 import { Lesson } from 'src/app/shared/models/lesson.model';
 import { BehaviorSubject } from 'rxjs';
@@ -10,7 +10,9 @@ import { BehaviorSubject } from 'rxjs';
   selector: 'app-lessons',
   standalone: true,
   imports: [CommonModule,
-    VideoPlayerComponent ],
+    VideoPlayerComponent,
+    RouterLink
+   ],
   templateUrl: './lessons.component.html',
   styleUrls: ['./lessons.component.scss'],
 })
