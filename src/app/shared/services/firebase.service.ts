@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { addDoc, arrayUnion, collection, CollectionReference, DocumentData, getDocs, getFirestore, query, where} from '@angular/fire/firestore';
+import { AngularFirestore, QueryDocumentSnapshot, QuerySnapshot } from '@angular/fire/compat/firestore';
+import { addDoc, arrayUnion, Timestamp, collection, CollectionReference, doc, DocumentData, getDoc, getDocs, getFirestore, query, where} from '@angular/fire/firestore';
 import { Observable, from, lastValueFrom, take } from 'rxjs';
 import { ref, onValue, getDatabase } from 'firebase/database';
 import { Lesson } from '../models/lesson.model';
+import { map, switchMap } from 'rxjs/operators';
+import { Firestore } from 'firebase/firestore';
 
 interface Ilessons {
   name: string;
@@ -23,13 +25,13 @@ interface Ilessons {
 export class FirebaseService {
   firestoreDb!:any;
   studentCol!: CollectionReference<DocumentData>;
+  src!: any;
 
   constructor(public db: AngularFireDatabase, private storage: AngularFireStorage, private firestore: AngularFirestore) {
      this.firestoreDb = getFirestore(); 
      this.studentCol = collection(this.firestoreDb, 'users');
-   }
-  src!: any;
-
+  }
+  
   async getStudents() {
     const snapshot = await getDocs(this.studentCol);
     return snapshot;
@@ -67,7 +69,7 @@ export class FirebaseService {
     return lastValueFrom(vid)
       .then(url => {
         this.src = url;
-        console.log("src", this.src);
+        // console.log("src", this.src);
         return this.src;
       })
       .catch(error => {
@@ -82,6 +84,75 @@ export class FirebaseService {
       console.error("Error adding user:", err)
     })
   }
+
+
+  saveQuiz(){
+    const quiz= {
+      quizId: 1234,
+      lessonId: 12312,
+      answerChoices: [1,2,4,1,2],
+      timestamp: this.firestoreDb.firestore.FieldValue.timestamp(),
+      score: 90
+    }
+
+    const quizMaster = {
+      lessonId: "lessons/bb/lesson/2143142",
+      lessonQuiz: [
+        {
+          question: "What is 2+2",
+          choices: ["2","4","6","5"],
+          correctAnswer: 1 
+        },
+        {
+          question: "What is 4+5",
+          choices: ["10","14","9","8"],
+          correctAnswer: 2 
+        },
+      ]
+    }
+  }
+
+  async storeUserQuizAnswers(lessonCategory:string, lessonId:string, answerChoices:number[], score?:number) {
+    console.log("Initiated store user quiz")
+    console.log(lessonCategory, lessonId);
+    
+    const userId = localStorage.getItem('userId'); // Replace with the actual user ID
+    const timestamp = Timestamp.now();
+    // const dateObject = new Date(timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000);
+    !score ? score = 0 : score;
+
+    this.getLessonIdByIdentifier(lessonId, lessonCategory).then((lesson)=>{
+      console.log()
+      const lessId = lesson;
+      console.log(lesson, lessId)
+      console.log({
+        userId,
+        lessId,
+        answerChoices,
+        timestamp,
+        score
+      });
+      // this.firestore.collection('userAnswers').doc(lessonCategory).collection('lesson').add({
+      //   userId,
+      //   lessId,
+      //   answerChoices,
+      //   timestamp,
+      //   score,
+      // }).then(()=> console.log("User answers added successfully"))
+    });  
+
+  }
+
+  async getLessonIdByIdentifier(identifier: string, lessonCategory:string): Promise<any> {
+    const lessonsCollectionRef = collection(this.firestoreDb, `lessons/${lessonCategory}/lesson`);
+    console.log(lessonsCollectionRef,"getLesson ",`lessons/${lessonCategory}/lesson`)
+    const lessonsQuery = query(lessonsCollectionRef, where('id', '==', identifier));
+
+    const querySnapshot = await getDocs(lessonsQuery);
+    return querySnapshot.docs;
+
+  }
+  
 
   seedUser() {
     const users = [

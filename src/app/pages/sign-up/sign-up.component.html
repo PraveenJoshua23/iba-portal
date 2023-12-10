@@ -68,14 +68,14 @@
             <label for="">Religion</label>
             <div class="flex items-center space-x-3 h-[52px] px-3 w-full">
               <div class="flex items-center space-x-2">
-                <label>
-                  <input type="radio" formControlName="religion" class="w-3 h-3" value="Christian"> Christian
+                <label for="religion1">
+                  <input type="radio" id="religion1" formControlName="religion" class="w-3 h-3" value="Christian"> Christian
                 </label>
               </div>
 
               <div class="flex items-center space-x-2">
-                <label>
-                  <input type="radio" formControlName="religion" value="Non-Christian"> Non-Christian
+                <label for="religion2">
+                  <input type="radio" id="religion2" formControlName="religion" value="Non-Christian"> Non-Christian
                 </label>
               </div>
             </div>
@@ -151,15 +151,15 @@
             <div class="flex items-center space-x-3 h-[52px] px-3 w-full">
               <div class="flex items-center space-x-2">
                 
-                <label>
-                  <input type="radio" formControlName="gender" class="w-3 h-3" value="Male"> Male
+                <label for="gender1">
+                  <input type="radio" id="gender1" formControlName="gender" class="w-3 h-3" value="Male"> Male
                 </label>
                
               </div>
 
               <div class="flex items-center space-x-2">
-                <label>
-                  <input type="radio" formControlName="gender" class="w-3 h-3" value="Female"> Female
+                <label for="gender2">
+                  <input type="radio" id="gender2" formControlName="gender" class="w-3 h-3" value="Female"> Female
                 </label>
                
               </div>
@@ -173,14 +173,14 @@
             <label for="">Marital Status</label>
             <div class="flex items-center space-x-3 h-[52px] px-3 w-full">
               <div class="flex items-center space-x-2">
-                <label>
-                  <input type="radio" formControlName="marital" class="w-3 h-3" value="Married"> Married
+                <label for="marital1">
+                  <input type="radio" id="marital1" formControlName="marital" class="w-3 h-3" value="Married"> Married
                 </label>
               </div>
 
               <div class="flex items-center space-x-2">
-                <label>
-                  <input type="radio" formControlName="marital" class="w-3 h-3" value="Unmarried/Single"> Unmarried/Single
+                <label for="marital2">
+                  <input type="radio" id="marital2" formControlName="marital" class="w-3 h-3" value="Unmarried/Single"> Unmarried/Single
                 </label>
               </div>
             </div>
@@ -252,13 +252,13 @@
           <label class="w-1/2" for="">Are you studying the online Bible class with us already?</label>
           <div class="flex items-center space-x-3 h-[52px] px-3 w-1/2">
             <div class="flex items-center space-x-2">
-              <label>
-                <input type="radio" formControlName="studying" class="w-3 h-3" value="Yes"> Yes
+              <label for="studying1">
+                <input type="radio" id="studying1" formControlName="studying" class="w-3 h-3" value="Yes"> Yes
               </label>
             </div>
             <div class="flex items-center space-x-2">
-              <label>
-                <input type="radio" formControlName="studying" class="w-3 h-3" value="No"> No
+              <label for="studying2">
+                <input type="radio" id="studying2" formControlName="studying" class="w-3 h-3" value="No"> No
               </label>
             </div>
           </div>
@@ -288,9 +288,10 @@
           </div>
 
           <div class="flex flex-col space-y-2 w-1/2">
-            <label for="">Confirm Password</label>
+            <label for="confirmPassword">Confirm Password</label>
             <input
               type="password"
+              id="confirmPassword"
               placeholder="Enter your Confirm Password"
               class="form-input rounded-md  border p-3"
               formControlName="confirmPassword"

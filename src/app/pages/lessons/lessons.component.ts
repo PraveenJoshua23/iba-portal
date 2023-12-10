@@ -64,25 +64,23 @@ export class LessonsComponent implements OnInit {
 
       const email = localStorage.getItem('email') || '';
       this.initializeLesson(email)
-      console.log(this.questions)
-      
   }
 
   async initializeLesson(email:string){
     this.firebase.getUserByEmail(email).subscribe(user => {
       this.currentLesson = user[0].lessonsWatched.filter((les: { name: string; }) => les.name === this.title);
-      // console.log(this.currentLesson)
+      console.log("init: ", this.currentLesson)
+      if(this.currentLesson){
+        const currentLesson = JSON.stringify(this.currentLesson)
+        localStorage.setItem('currentLesson', currentLesson);
+      }
       if (!this.videoSrc) this.getVideoFromFirebase(this.currentLesson).then(url => this.videoSrc = url);
       this.initializeQuiz(this.currentLesson);
     })
   }
 
   initializeQuiz(lesson: Lesson[]) {
-
     this.questions = lesson[0].quiz;
-    console.log(this.questions)
-    console.log(lesson);
-    
     this.userAnswers = new Array(this.questions.length).fill(-1);
   }
 
@@ -100,6 +98,7 @@ export class LessonsComponent implements OnInit {
     // Logic to handle the submission of the quiz
     // You can implement scoring or any other actions here
     this.showCorrectAnswer = true;
+    this.storeQuiz();
     console.log(this.userAnswers)
   }
 
@@ -121,4 +120,14 @@ export class LessonsComponent implements OnInit {
   async getVideoFromFirebase(lesson: Lesson[]){
     return await this.firebase.getVideo(lesson[0].category, lesson[0].language, lesson[0].path)
   }
-}
+
+  storeQuiz(){
+    const getCurrentLesson: string|null = localStorage.getItem('currentLesson')
+    console.log(getCurrentLesson)
+    const lesson = JSON.parse(getCurrentLesson!)
+    console.log(lesson)
+    const {category } = lesson[0]
+    console.log(category)
+    this.firebase.storeUserQuizAnswers(category,`${category}/lesson`, this.userAnswers, 90)
+  }
+} 
