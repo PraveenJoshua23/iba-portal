@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { AngularFirestore  } from '@angular/fire/compat/firestore';
-import * as fire from 'firebase/app';
-import { Observable, from, lastValueFrom } from 'rxjs';
-import { ref, onValue, getDatabase, update, Database } from 'firebase/database';
-import { HttpHeaders } from '@angular/common/http';
+import { AngularFirestore, QueryDocumentSnapshot, QuerySnapshot } from '@angular/fire/compat/firestore';
+import { addDoc, arrayUnion, Timestamp, collection, CollectionReference, doc, DocumentData, getDoc, getDocs, getFirestore, query, where} from '@angular/fire/firestore';
+import { Observable, from, lastValueFrom, take } from 'rxjs';
+import { ref, onValue, getDatabase } from 'firebase/database';
+import { Lesson } from '../models/lesson.model';
+import { map, switchMap } from 'rxjs/operators';
+import { Firestore } from 'firebase/firestore';
 
 interface Ilessons {
   name: string;
@@ -21,9 +23,19 @@ interface Ilessons {
   providedIn: 'root'
 })
 export class FirebaseService {
-
-  constructor(public db: AngularFireDatabase, private storage: AngularFireStorage, private firestore: AngularFirestore) { }
+  firestoreDb!:any;
+  studentCol!: CollectionReference<DocumentData>;
   src!: any;
+
+  constructor(public db: AngularFireDatabase, private storage: AngularFireStorage, private firestore: AngularFirestore) {
+     this.firestoreDb = getFirestore(); 
+     this.studentCol = collection(this.firestoreDb, 'users');
+  }
+  
+  async getStudents() {
+    const snapshot = await getDocs(this.studentCol);
+    return snapshot;
+  }
 
   getLesson(category: string): Observable<any>{
     return this.db.list(`lessons/${category}`).valueChanges();
@@ -51,13 +63,13 @@ export class FirebaseService {
   }
 
 
-  async getVideo(){
-    const ref = this.storage.ref('lessons/bb/en/[Basic Lesson 1] The Word Since the Beginning l Shincheonji Church of Jesus.mp4');
-    const vid = ref.getDownloadURL()
+  async getVideo(category:string, lang: string, path: string){
+    const ref = this.storage.ref(`lessons/${category}/${lang}/${path}.mp4`);
+    const vid = ref.getDownloadURL().pipe(take(1))
     return lastValueFrom(vid)
       .then(url => {
         this.src = url;
-        console.log("src", this.src);
+        // console.log("src", this.src);
         return this.src;
       })
       .catch(error => {
@@ -67,7 +79,82 @@ export class FirebaseService {
       });
   }
 
-  seedUsers() {
+  async addUser(data: unknown){
+    await addDoc(this.studentCol, data).then(() => console.log("Added user: ", data)).catch(err => {
+      console.error("Error adding user:", err)
+    })
+  }
+
+
+  saveQuiz(){
+    const quiz= {
+      quizId: 1234,
+      lessonId: 12312,
+      answerChoices: [1,2,4,1,2],
+      timestamp: this.firestoreDb.firestore.FieldValue.timestamp(),
+      score: 90
+    }
+
+    const quizMaster = {
+      lessonId: "lessons/bb/lesson/2143142",
+      lessonQuiz: [
+        {
+          question: "What is 2+2",
+          choices: ["2","4","6","5"],
+          correctAnswer: 1 
+        },
+        {
+          question: "What is 4+5",
+          choices: ["10","14","9","8"],
+          correctAnswer: 2 
+        },
+      ]
+    }
+  }
+
+  async storeUserQuizAnswers(lessonCategory:string, lessonId:string, answerChoices:number[], score?:number) {
+    console.log("Initiated store user quiz")
+    console.log(lessonCategory, lessonId);
+    
+    const userId = localStorage.getItem('userId'); // Replace with the actual user ID
+    const timestamp = Timestamp.now();
+    // const dateObject = new Date(timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000);
+    !score ? score = 0 : score;
+
+    this.getLessonIdByIdentifier(lessonId, lessonCategory).then((lesson)=>{
+      console.log()
+      const lessId = lesson;
+      console.log(lesson, lessId)
+      console.log({
+        userId,
+        lessId,
+        answerChoices,
+        timestamp,
+        score
+      });
+      // this.firestore.collection('userAnswers').doc(lessonCategory).collection('lesson').add({
+      //   userId,
+      //   lessId,
+      //   answerChoices,
+      //   timestamp,
+      //   score,
+      // }).then(()=> console.log("User answers added successfully"))
+    });  
+
+  }
+
+  async getLessonIdByIdentifier(identifier: string, lessonCategory:string): Promise<any> {
+    const lessonsCollectionRef = collection(this.firestoreDb, `lessons/${lessonCategory}/lesson`);
+    console.log(lessonsCollectionRef,"getLesson ",`lessons/${lessonCategory}/lesson`)
+    const lessonsQuery = query(lessonsCollectionRef, where('id', '==', identifier));
+
+    const querySnapshot = await getDocs(lessonsQuery);
+    return querySnapshot.docs;
+
+  }
+  
+
+  seedUser() {
     const users = [
       // User data objects
       {
@@ -100,6 +187,42 @@ export class FirebaseService {
     users.forEach(user => {
       this.firestore.collection('users').add(user);
     });
+  }
+
+  addQuiz(lessons: Lesson[]){
+    const questions = [
+      {
+        question: "What is the spiritual meaning of the Light and the Darkness? ( Jn1:1-5, Ps119:105, 130)",
+        choices: ["Light = Christians / Darkness = Non-Christians", "Light = Revealed word of God / Darkness = Ignorance of God’s word(Sealed word)"],
+        correctAnswer: 1
+      },
+      {
+        question: "Jesus prophesied the night is coming (Jn9:4). And he is coming back in the night time(Mt24:29-31, 1Th5:1-3). When he comes back, he will send us the true light(=open word) to lead us to Kingdom of heaven.",
+        choices: ["Darkness of not knowing the secret of N.T prophecy", "Darkness of not believing in Jesus as savior", "Darkness of absense of peace on this earth"],
+        correctAnswer: 0
+      },
+      {
+        question: "what time do we live in today according to the signs?",
+        choices: ["time of the O.T. prophecy (sealed book)", "time of the open word of the O.T prophecy at the first coming", "time of the N.T. prophecy (seal book)"],
+        correctAnswer: 0
+      },
+      {
+        question: "What is the spiritual meaning of the lampstands? ",
+        choices: ["Spirit", " Person (worker)", "Both A and B"],
+        correctAnswer: 0
+      },
+      {
+        question: "Moses' Tabernacle was copy and Shadow (Heb8:5) And the true reality appeared at the 1st coming! Who was the true reality of Lampstand of Holy Place?",
+        choices: ["time of the O.T. prophecy (sealed book)", "time of the open word of the O.T prophecy at the first coming", "time of the N.T. prophecy (seal book)"],
+        correctAnswer: 0
+      },
+    ]
+    
+    // lessons.forEach(lesson => {
+    //   this.firestore.collection('lesson').where()
+    // })
+  
+
   }
 
   seedLessons() {
@@ -226,6 +349,16 @@ export class FirebaseService {
     });
   }
 
+  async getStudentByEmail(email: string) {
+    const querySnapshot = await getDocs(query(this.studentCol, where('email', '==', email)));
+  
+    if (!querySnapshot.empty) {
+      return querySnapshot.docs.map(doc => doc.data());
+    } else {
+      // No matching documents
+      return [];
+    }
+  }
 
   getUserByEmail(email: string): Observable<any[]> {
     // Use 'ref' to create a query based on the 'email' field
@@ -245,7 +378,11 @@ export class FirebaseService {
     return this.firestore.collection('lessons').doc(category).collection('lesson', ref => ref.where('id', '==', lessonId)).valueChanges();
   }
   
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 37cc7400c6d1a51e97bb1d7ba4d1ac06133d8377
   getAllLessonByCategory(category: string){
     return this.firestore
       .collection('lessons')

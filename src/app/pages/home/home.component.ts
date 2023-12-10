@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { AppShellComponent } from 'src/app/components/app-shell/app-shell.component';
 import { RouterModule } from '@angular/router';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
+import { lastValueFrom } from 'rxjs';
+import { DocumentData, QuerySnapshot } from '@angular/fire/firestore';
 
 interface Ilessons {
   name: string;
@@ -27,24 +29,23 @@ export class HomeComponent implements OnInit{
   constructor(private fb: FirebaseService, ){}
 
   bbLessons: any[]= [];
+  initialLesson: Ilessons[] = []; 
   currentLesson: Ilessons[] = [];
+  usersList: any = []
 
   ngOnInit(): void {
       this.getAllLessons();
       // this.seedData();
-      this.getlesson()
+      this.getAllUser();
       this.getUser()
   }
 
   getAllLessons(){
      this.fb.getAllLessonByCategory('bb').subscribe( lesson => {
       this.bbLessons = lesson
+      console.log(this.bbLessons)
       this.sortLessons(this.bbLessons)
     })
-    // this.fb.getLesson('BB').subscribe(res => {
-    //   this.allLessons = res;
-    //   // console.log(this.allLessons)
-    // })
   }
 
   extractLessonNumber(lesson: { name: string; }) {
@@ -61,19 +62,16 @@ export class HomeComponent implements OnInit{
     });
   }
 
-  seedData(){
-    this.fb.seedLessons();
-    // this.fb.seedUsers();
+  async getAllUser(){
+    const snapshot = await this.fb.getStudents();
+    this.updateUserList(snapshot)
   }
 
-  getlesson(){
-    this.fb.getLessonbyCategory('bb', 'bb/lesson2').subscribe( lesson => {
-      
-     this.currentLesson.push(lesson[0] as Ilessons)
-
+  updateUserList(snapshot: QuerySnapshot<DocumentData>){
+    snapshot.docs.forEach( student => {
+      this.usersList.push({...student.data()})
     })
-
-   
+    console.log(this.usersList)
   }
 
   getUser(){
@@ -91,8 +89,13 @@ export class HomeComponent implements OnInit{
     // })
   }
 
-  selectLesson(){
-    this.fb.updateLesson(this.currentLesson)
+  selectLesson(id: string){
+    const les = this.bbLessons.filter(lesson => lesson.id === id)
+    const currentLes = JSON.stringify(les)
+    localStorage.setItem('currentLesson',currentLes)
+    console.log(les)
+  
+    this.fb.updateLesson(les)
   }
 
 }

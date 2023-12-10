@@ -1,29 +1,53 @@
-<main class="bg-gray-100 flex">
-  <section class="flex flex-col w-full h-full py-8 px-[10%] space-y-5">
+<main class="bg-gray-100 flex flex-col">
+    <div class="flex items-center justify-center gap-x-2 my-4 mx-6 w-fit cursor-pointer hover:bg-gray-200 pl-1 pr-3 py-1 rounded-full" [routerLink]="['/home']">
+        <div class="flex items-center justify-center border-black border w-7 h-7 rounded-full">
+                <img src="../../../assets/icons/next.svg" class="rotate-180 -translate-x-[1px]" alt="Previous Lesson">
+        </div>
+        <span>Back</span>
+    </div>
+  <section class="flex flex-col w-full h-full py-6 px-[10%] space-y-5">
     
-    <div class="px-5 border-b">
+    
+    <div class="flex justify-between items-center px-5 border-b m-0">
         <h1>{{title}}</h1>
+        <div class="flex items-center gap-x-5">
+            <div class="flex items-center gap-x-3 cursor-not-allowed">
+                <img src="../../../assets/icons/next.svg" class="rotate-180" alt="Previous Lesson">
+                <span class="text-sm text-gray-500">Previous</span>
+                
+            </div>
+            <div class="flex items-center gap-x-3 cursor-not-allowed">
+                <span class="text-sm text-gray-500">Next</span>
+                <img src="../../../assets/icons/next.svg" class="" alt="Next Lesson">
+            </div>
+        </div>
     </div>
-
-    <ng-container *ngIf="!isQuizOpen">
-    <div class="flex flex-col items-center justify-center">
-        <app-video-player [src]="videoSrc" (videoEnded)="onVideoEnd()"></app-video-player>
-    </div>
-    </ng-container>
 
     <ng-container *ngIf="isQuizOpen">
+    <!-- <div class="flex flex-col items-center justify-center">
+        <app-video-player [src]="videoSrc" (videoEnded)="onVideoEnd()"></app-video-player>
+    </div> -->
+    </ng-container>
+
+    <ng-container *ngIf="!isQuizOpen">
         <div class="flex justify-center items-center px-6 py-5 w-[800px] bg-white rounded-lg m-auto">
             <div *ngIf="currentQuizIndex < questions.length && !showCorrectAnswer" class="w-full p-6 relative">
-                <div class="absolute right-5 top-3 bg-gray-200 rounded-full px-5 py-1 tracking-wider">{{currentQuizIndex+1}}/{{questions.length}}</div>
-                <h3 class="">{{currentQuizIndex+1}}. {{ questions[currentQuizIndex].question }}</h3>
+                
+                <div class="flex justify-between space-x-3">
+                    <h3 class="">{{currentQuizIndex+1}}. {{ questions[currentQuizIndex].question }}</h3>
+                <div class="bg-gray-200 rounded-full px-5 py-1 tracking-wider whitespace-nowrap h-8">{{currentQuizIndex+1}}/{{questions.length}}</div>
+                </div>
                 <ul class="py-4 space-y-2">
-                    <li *ngFor="let choice of questions[currentQuizIndex].choices; let i = index" class="flex space-x-2">
-                    <input type="radio" [name]="'q' + currentQuizIndex" [checked]="userAnswers[currentQuizIndex] === i"
-                            (change)="userAnswers[currentQuizIndex] = i"
-                            class="cursor-pointer"><span>{{ choice }}</span>
+                    <li *ngFor="let choice of questions[currentQuizIndex].choices; let i = index">
+                        <label class="flex space-x-2 cursor-pointer" [for]="'q' + i">
+                            <input type="radio" [id]="'q' + i" [name]="'q' + currentQuizIndex" [checked]="userAnswers[currentQuizIndex] === i"
+                                (change)="userAnswers[currentQuizIndex] = i"
+                                class="cursor-pointer">
+                            <span>{{ choice }}</span>
+                        </label>
                     </li>
                 </ul>
-                <div class="flex justify-end space-x-3 w-full">
+                <div class="flex justify-end space-x-3 w-full pt-10">
                     <button (click)="prevQuestion()" [disabled]="currentQuizIndex === 0" [ngClass]="{'hidden': currentQuizIndex === 0}" class="px-5 border border-golden-600 text-golden-600 py-2 rounded-md">Previous</button>
                     <button (click)="nextQuestion()" [disabled]="isChoiceSelected()" [ngClass]="{'hidden':currentQuizIndex === questions.length-1}" class="px-5 border border-golden-600 py-2 rounded-md text-golden-600 disabled:cursor-not-allowed">Next</button>
                     <button (click)="submitQuiz()" class="px-3 bg-golden-600 py-2 rounded-md text-white disabled:cursor-not-allowed disabled:opacity-50" [disabled]="isChoiceSelected()"  [ngClass]="{'hidden': currentQuizIndex < questions.length-1}" >Submit</button>
@@ -31,6 +55,7 @@
             </div>
             
             <div *ngIf="showCorrectAnswer" class="px-6 w-full">
+       
                 <h3>Quiz Results</h3>
                 <ul class="py-3">
                     <li *ngFor="let question of questions; let i = index" class="flex flex-col space-y-1">
@@ -39,12 +64,43 @@
                     </li>
                 </ul>
                 <div class="flex justify-center items-center">
-                    <button (click)="retryQuiz()" class="px-3 bg-golden-600 py-2 rounded-md text-white">Retry Quiz</button>
+                    <button (click)="retryQuiz(questions)" class="px-3 bg-golden-600 py-2 rounded-md text-white">Retry Quiz</button>
                 </div>
-                
+
             </div>
         </div>
     </ng-container>
+
+
+    <ng-container>
+
+        <div class="w-full">
+            <div class="border-b border-gray-200 dark:border-gray-400 mb-4">
+                <ul class="flex flex-wrap -mb-px" id="myTab" role="tablist">
+                    <li class="mr-2" role="presentation">
+                        <button class="inline-block text-gray-500 hover:text-gray-600 hover:border-gray-300 rounded-t-lg py-4 px-4 text-sm font-medium text-center border-transparent border-b-2 dark:text-gray-400 dark:hover:text-gray-300 cursor-not-allowed" id="profile-tab" type="button" role="tab" aria-controls="profile" aria-selected="false">Materials</button>
+                    </li>
+                    <li class="mr-2" role="presentation">
+                        <button class="inline-block text-gray-500 hover:text-gray-600 hover:border-gray-300 rounded-t-lg py-4 px-4 text-sm font-medium text-center border-transparent border-b-2 dark:text-gray-400 dark:hover:text-gray-300 cursor-not-allowed" id="dashboard-tab" type="button" role="tab" aria-controls="dashboard" aria-selected="true">Notes</button>
+                    </li>
+                    <li class="mr-2" role="presentation">
+                        <button class="inline-block text-gray-500 hover:text-gray-600 hover:border-gray-300 rounded-t-lg py-4 px-4 text-sm font-medium text-center border-transparent border-b-2 dark:text-gray-400 dark:hover:text-gray-300 cursor-not-allowed" id="settings-tab" type="button" role="tab" aria-controls="settings" aria-selected="false">Quiz</button>
+                    </li>
+                    <li class="" role="presentation">
+                        <button class="inline-block text-gray-500 hover:text-gray-600 hover:border-gray-300 rounded-t-lg py-4 px-4 text-sm font-medium text-center border-transparent border-b-2 dark:text-gray-400 dark:hover:text-gray-300 cursor-not-allowed" id="settings-tab" type="button" role="tab" aria-controls="settings" aria-selected="false">QnA Forum</button>
+                    </li>
+                </ul>
+            </div>
+            <div id="myTabContent">
+                <div class="bg-gray-50 p-4 rounded-lg dark:bg-gray-800" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                    <p class="text-gray-500 dark:text-gray-400 text-sm">This section will be unlocked once you finish the lesson video.</p>
+                </div>
+           
+            </div>
+        </div>
+    </ng-container>
+
+    
 
 
     
