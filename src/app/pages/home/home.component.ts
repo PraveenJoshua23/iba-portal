@@ -35,8 +35,7 @@ export class HomeComponent implements OnInit{
 
   ngOnInit(): void {
       this.getAllLessons();
-      // this.seedData();
-      this.getAllUser();
+      // this.getAllUser();
       this.getUser()
   }
 
@@ -62,10 +61,10 @@ export class HomeComponent implements OnInit{
     });
   }
 
-  async getAllUser(){
-    const snapshot = await this.fb.getStudents();
-    this.updateUserList(snapshot)
-  }
+  // async getAllUser(){
+  //   const snapshot = await this.fb.getUsers();
+  //   this.updateUserList(snapshot)
+  // }
 
   updateUserList(snapshot: QuerySnapshot<DocumentData>){
     snapshot.docs.forEach( student => {

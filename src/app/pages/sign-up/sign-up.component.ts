@@ -6,6 +6,7 @@ import { VideoPlayerComponent } from 'src/app/components/video-player/video-play
 import { AuthService } from 'src/app/shared/services/auth.service';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
 import { createPasswordStrengthValidator, dobFormatValidator, passwordMatchValidator } from '../../shared/utils/validators';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -18,7 +19,7 @@ import { createPasswordStrengthValidator, dobFormatValidator, passwordMatchValid
 export class SignUpComponent {
   myForm!: FormGroup;
 
-  constructor(private fb: FormBuilder, private firebase: FirebaseService, private auth: AuthService) { 
+  constructor(private fb: FormBuilder, private firebase: FirebaseService, private auth: AuthService, private router: Router) { 
     this.myForm = this.fb.group({
       name: ['', Validators.required],
       age: ['', Validators.required],
@@ -52,7 +53,7 @@ export class SignUpComponent {
 
     const signUpData = {
       name: formData.name,
-      age: formData.age,
+      age: this.calculateAge(formData.dob),
       dob: formData.dob,
       phone: formData.phone,
       email: formData.email,
@@ -61,11 +62,10 @@ export class SignUpComponent {
       occupation: formData.occupation,
       gender: formData.gender,
       marital: formData.marital,
-      language: formData.marital,
+      language: formData.language,
       whyApply: formData.whyApply,
-      linkFrom: formData.linkFrom,
+      networker: formData.linkFrom,
       studying: formData.studying,
-      networker: formData.networker
     }
     
     if(this.myForm.invalid ) return
@@ -75,10 +75,32 @@ export class SignUpComponent {
         this.auth.register(formData.email, formData.password);
       });
 
-      await Promise.all([addUserPromise]);
+      await Promise.all([addUserPromise]).then(()=> this.router.navigate(['login']));
     } catch (error) {
         console.error('Error during form submission:', error);
         // Handle the error, e.g., show a user-friendly message
     }
   }
+
+  calculateAge(date:any){
+    // Parse the date of birth string into a Date object
+    const dobArray = date.split('/');
+    const dob = new Date(`${dobArray[2]}-${dobArray[1]}-${dobArray[0]}`);
+
+    // Get the current date
+    const currentDate = new Date();
+
+    // Calculate the age
+    let age = currentDate.getFullYear() - dob.getFullYear();
+
+    // Adjust age based on the month and day
+    if (currentDate.getMonth() < dob.getMonth() || (currentDate.getMonth() === dob.getMonth() && currentDate.getDate() < dob.getDate())) {
+      age--;
+    }
+
+  return age;
+  }
 }
+
+
+

@@ -99,7 +99,6 @@ export class LessonsComponent implements OnInit {
     // You can implement scoring or any other actions here
     this.showCorrectAnswer = true;
     this.storeQuiz();
-    console.log(this.userAnswers)
   }
 
   retryQuiz(lesson:any) {
@@ -111,6 +110,11 @@ export class LessonsComponent implements OnInit {
   onVideoEnd(){
     console.log('triggered')
     this.isQuizOpen = true;
+
+  }
+
+  progressUpdate(update:number){
+    console.log(update)
   }
 
   isChoiceSelected(): boolean {
@@ -123,11 +127,8 @@ export class LessonsComponent implements OnInit {
 
   storeQuiz(){
     const getCurrentLesson: string|null = localStorage.getItem('currentLesson')
-    console.log(getCurrentLesson)
     const lesson = JSON.parse(getCurrentLesson!)
-    console.log(lesson)
-    const {category } = lesson[0]
-    console.log(category)
-    this.firebase.storeUserQuizAnswers(category,`${category}/lesson`, this.userAnswers, 90)
+    const {category, id } = lesson[0]
+    this.firebase.storeUserQuizAnswers(category, id, this.userAnswers, 90)
   }
 } 

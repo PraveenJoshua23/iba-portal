@@ -4,6 +4,7 @@ import { LoginComponent } from "./pages/login/login.component";
 import { SignUpComponent } from "./pages/sign-up/sign-up.component";
 import { authGuard } from "./auth.guard";
 import { LandingComponent } from "./pages/landing/landing.component";
+import { adminGuard } from "./admin.guard";
 
 
 export const APP_ROUTE: Route[] = [
@@ -18,6 +19,12 @@ export const APP_ROUTE: Route[] = [
         component: AppShellComponent,
         canActivate: [authGuard],
         loadChildren: () => import('./lessons.route').then((m)=>m.LESSON_ROUTE)
+    },
+    {
+        path: 'admin',
+        component: AppShellComponent,
+        canActivate: [authGuard, adminGuard],
+        loadChildren: () => import('./admin.route').then((m)=>m.ADMIN_ROUTE)
     },
 
     { path: 'login', component: LoginComponent },

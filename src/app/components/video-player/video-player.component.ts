@@ -4,6 +4,7 @@ import { VgApiService, VgCoreModule } from '@videogular/ngx-videogular/core';
 import {VgControlsModule} from '@videogular/ngx-videogular/controls';
 import {VgOverlayPlayModule} from '@videogular/ngx-videogular/overlay-play';
 import {VgBufferingModule} from '@videogular/ngx-videogular/buffering';
+import { delay, lastValueFrom, take } from 'rxjs';
 
 @Component({
   selector: 'app-video-player',
@@ -18,6 +19,7 @@ import {VgBufferingModule} from '@videogular/ngx-videogular/buffering';
 export class VideoPlayerComponent implements OnDestroy {
   @Input() src!: string;
   @Output() videoEnded = new EventEmitter<void>();
+  @Output() videoProgress = new EventEmitter<number>();
 
   preload: string = 'auto';
   api: VgApiService = new VgApiService();
@@ -41,7 +43,7 @@ export class VideoPlayerComponent implements OnDestroy {
         this.onVideoEnd();
       });
 
-      const progress$= media.subscriptions.timeUpdate.subscribe(() => {
+      const progress$= media.subscriptions.timeUpdate.pipe(delay(5000)).subscribe(() => {
         this.currentTime = media.currentTime;
         this.duration = media.duration;
         this.onTimeUpdate()
@@ -58,14 +60,19 @@ export class VideoPlayerComponent implements OnDestroy {
   }
 
   onTimeUpdate(){
-    this.progressRate = Math.round((this.currentTime/this.duration) * 100); 
-    console.log(this.progressRate)
+    this.progressRate = Math.round((this.currentTime/this.duration) * 100);
+    if(!Number.isNaN(this.progressRate)) {
+      this.videoProgress.emit(this.progressRate);
+    }
+    
   }
 
   onVideoEnd() {
     console.log('Video ended');
     this.videoEnded.emit()
   }
+
+
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(subscription => subscription.unsubscribe());
