@@ -1,13 +1,12 @@
 import { Injectable } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { AngularFirestore, QueryDocumentSnapshot, QuerySnapshot } from '@angular/fire/compat/firestore';
+import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { addDoc, arrayUnion, Timestamp, collection, CollectionReference, doc, DocumentData, getDoc, getDocs, getFirestore, query, where} from '@angular/fire/firestore';
 import { Observable, from, lastValueFrom, take } from 'rxjs';
 import { ref, onValue, getDatabase } from 'firebase/database';
 import { Lesson } from '../models/lesson.model';
 import { map, switchMap } from 'rxjs/operators';
-import { Firestore } from 'firebase/firestore';
 
 interface Ilessons {
   name: string;
@@ -114,8 +113,8 @@ export class FirebaseService {
 
   async storeUserQuizAnswers(lessonCategory:string, lessonId:string, answerChoices:number[], score?:number) {
     console.log("Initiated store user quiz")
-    console.log(lessonCategory, lessonId);
-    
+    console.log(lessonCategory, "HHHHHHHHHHH "+lessonId);
+    console.log(localStorage.getItem('LessonId'));
     const userId = localStorage.getItem('userId'); // Replace with the actual user ID
     const timestamp = Timestamp.now();
     // const dateObject = new Date(timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000);
@@ -143,16 +142,83 @@ export class FirebaseService {
 
   }
 
-  async getLessonIdByIdentifier(identifier: string, lessonCategory:string): Promise<any> {
+  // async getLessonIdByIdentifier(identifier: string, lessonCategory:string): Promise<any> {
+  //   const lessonsCollectionRef = collection(this.firestoreDb, `lessons/${lessonCategory}/lesson`);
+  //   console.log(lessonsCollectionRef,"getLesson ",`lessons/${lessonCategory}/lesson`)
+  //   const lessonsQuery = query(lessonsCollectionRef, where('id', '==', identifier));
+
+  //   const querySnapshot = await getDocs(lessonsQuery);
+  //   return querySnapshot.docs;
+
+  // }
+  
+  // async getLessonIdByIdentifier(identifier: string, lessonCategory: string): Promise<string | null> {
+  //   const lessonsCollectionRef = collection(this.firestoreDb, `lessons/${lessonCategory}/lesson`);
+  //   console.log(lessonsCollectionRef, "getLesson ", `lessons/${lessonCategory}/lesson`);
+  // console.log("Iden : "+identifier);
+  
+  //   const lessonsQuery = query(lessonsCollectionRef, where('id', '==', identifier));
+  //   const querySnapshot = await getDocs(lessonsQuery);
+  
+  //   // Check if there is a matching document
+  //   if (!querySnapshot.empty) {
+  //     // Assuming you want to get the ID of the first matching document
+  //     const lessonDoc = querySnapshot.docs[0];
+  //     const lessonId = lessonDoc.id;
+  // console.log(lessonId +"LLLLLLLLLLLLL");
+  
+  //     return lessonId;
+  //   }
+  
+  //   // Return null if no matching document is found
+  //   console.log("MMMMMMMMMLLLLLLLLLLLLL");
+  //   return null;
+  // }
+  
+// Thomas
+  //  async getLessonIdByIdentifier(identifier: string, lessonCategory:string): Promise<any> {
+  //   const lessonsCollectionRef = collection(this.firestoreDb, `lessons/${lessonCategory}/lesson`);
+  //   console.log(lessonsCollectionRef,"getLesson ",`lessons/${lessonCategory}/lesson`)
+  //   const lessonsQuery = query(lessonsCollectionRef, where('id', '==', identifier));
+
+  //   const querySnapshot = await getDocs(lessonsQuery);
+  //   console.log("JJJJJJJJJJJ"+ querySnapshot.docs);
+    
+  //   return querySnapshot.docs;
+
+  // }
+
+  async getLessonIdByIdentifier(identifier: string, lessonCategory: string): Promise<string | null> {
     const lessonsCollectionRef = collection(this.firestoreDb, `lessons/${lessonCategory}/lesson`);
-    console.log(lessonsCollectionRef,"getLesson ",`lessons/${lessonCategory}/lesson`)
-    const lessonsQuery = query(lessonsCollectionRef, where('id', '==', identifier));
-
-    const querySnapshot = await getDocs(lessonsQuery);
-    return querySnapshot.docs;
-
+    console.log('Collection Reference:', lessonsCollectionRef);
+    console.log('Identifier:', identifier);
+  
+    try {
+      // Get a reference to the document with the specified field value
+      const lessonDocRef = doc(lessonsCollectionRef);
+  
+      // Retrieve the document
+      const lessonDocSnapshot = await getDoc(lessonDocRef);
+  
+      // Check if the document exists
+      if (lessonDocSnapshot.exists()) {
+        // Return the ID
+        return lessonDocSnapshot.id;
+      } else {
+        // Return null if no matching document is found
+        console.log('No matching document found.');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error querying lessons:', error);
+      return null;
+    }
   }
   
+  
+
+
+
 
   seedUser() {
     const users = [
@@ -231,115 +297,50 @@ export class FirebaseService {
       {
         id: "bb/lesson1",
         category: 'bb',
-        name: "Lesson 1 sealed book and revelation",
+        name: "BB Lesson 1",
         locked: true,
         progress: 0,
-        path: "BB Lesson 1",
-        language:"en",
-        instructor:"joshua"
+        path: "BB Lesson 1"
       },
       {
         id: "bb/lesson2",
         category: 'bb',
-        name: "Lesson 2 seed and harvest (sign of Second coming) ",
+        name: "BB Lesson 2",
         locked: true,
         progress: 0,
-        path: "BB Lesson 2",
-        language:"en",
-        instructor:"thomas"
+        path: "BB Lesson 2"
       },
       {
         id: "bb/lesson3",
         category: 'bb',
-        name: "Lesson 3 how to read prophecy (prophecy and secrets of the kingdom of heaven in parable) ",
+        name: "BB Lesson 3",
         locked: true,
         progress: 0,
-        path: "BB Lesson 3",
-        language:"en",
-        instructor:"joshua"
+        path: "BB Lesson 3"
       },
-
-
-      {
-        id: "bb/lesson4",
-        category: 'bb',
-        name: "Lesson 4 introduction to Revelation",
-        locked: true,
-        progress: 0,
-        path: "BB Lesson 4",
-        language:"en",
-        instructor:"joshua"
-      },
-      {
-        id: "bb/lesson5",
-        category: 'bb',
-        name: "Lesson 5 Moses’s tabernacle and copy and shadow/ reality",
-        locked: true,
-        progress: 0,
-        path: "BB Lesson 5",
-        language:"en",
-        instructor:"joshua"
-      },
-      {
-        id: "bb/lesson6",
-        category: 'bb',
-        name: "Lesson 6 elementary teaching and teaching of righteousness for the mature ",
-        locked: true,
-        progress: 0,
-        path: "BB Lesson 6",
-        language:"en",
-        instructor:"joshua"
-      },
-      {
-        id: "bb/lesson7",
-        category: 'bb',
-        name: "Lesson 7 God’s covenants (OT and NT)",
-        locked: true,
-        progress: 0,
-        path: "BB Lesson 7",
-        language:"en",
-        instructor:"joshua"
-      },
-      {
-        id: "bb/lesson8",
-        category: 'bb',
-        name: "Lesson 8 God’s will and purpose (6,000 years of God’s work and history)",
-        locked: true,
-        progress: 0,
-        path: "BB Lesson 8",
-        language:"en",
-        instructor:"joshua"
-      },
-
       {
         id: "intro/lesson1",
         category: 'intro',
-        name: "Intro Lesson 1 The Two Kinds of Spirits (God and Satan) ",
+        name: "BB Lesson 1",
         locked: true,
         progress: 0,
-        path: "Intro Lesson 1",
-        language:"en",
-        instructor:"thomas"
+        path: "BB Lesson 1"
       },
       {
         id: "intro/lesson2",
         category: 'intro',
-        name: "Intro Lesson 2 The Basics of the Bible",
+        name: "BB Lesson 2",
         locked: true,
         progress: 0,
-        path: "Intro Lesson 2",
-        language:"en",
-        instructor:"joshua"
+        path: "BB Lesson 2"
       },
       {
         id: "intro/lesson1",
         category: 'intro',
-        name: "Intro Lesson 3 The Figurative Language of the Secrets of the Kingdom of Heaven",
+        name: "BB Lesson 3",
         locked: true,
         progress: 0,
-        path: "Intro Lesson 3",
-        language:"en",
-        instructor:"thomas"
+        path: "BB Lesson 3"
       }
     ];
   
@@ -378,11 +379,7 @@ export class FirebaseService {
     return this.firestore.collection('lessons').doc(category).collection('lesson', ref => ref.where('id', '==', lessonId)).valueChanges();
   }
   
-<<<<<<< HEAD
-  
-=======
 
->>>>>>> 37cc7400c6d1a51e97bb1d7ba4d1ac06133d8377
   getAllLessonByCategory(category: string){
     return this.firestore
       .collection('lessons')
@@ -411,15 +408,3 @@ export class FirebaseService {
     });
   }
 }
-function doc(arg0: any, arg1: string, email: string) {
-  throw new Error('Function not implemented.');
-}
-
-function getFirestore(): any {
-  throw new Error('Function not implemented.');
-}
-
-function arrayUnion(newData: any) {
-  throw new Error('Function not implemented.');
-}
-
