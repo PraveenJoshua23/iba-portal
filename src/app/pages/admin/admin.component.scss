@@ -1,0 +1,20 @@
+.custom-header {
+    background-color: #4CAF50; /* Add your preferred background color */
+    color: white; /* Add your preferred text color */
+    font-weight: bold; /* Add any additional styling as needed */
+  }
+
+
+  tr.mat-mdc-header-row{
+    background-color: #4CAF50;
+  }
+
+  tr.mat-mdc-row{
+    height: 40px;
+    background-color: white;
+  }
+
+  main{
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+}

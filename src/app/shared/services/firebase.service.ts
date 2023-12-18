@@ -31,9 +31,13 @@ export class FirebaseService {
      this.studentCol = collection(this.firestoreDb, 'users');
   }
   
-  async getStudents() {
-    const snapshot = await getDocs(this.studentCol);
-    return snapshot;
+  async getUsers() {
+    const querySnapshot = await getDocs(this.studentCol);
+
+    // Extract user data from the QuerySnapshot
+    const users = querySnapshot.docs.map((doc) => doc.data() as DocumentData);
+
+    return users;
   }
 
   getLesson(category: string): Observable<any>{
@@ -120,17 +124,17 @@ export class FirebaseService {
     // const dateObject = new Date(timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000);
     !score ? score = 0 : score;
 
-    this.getLessonIdByIdentifier(lessonId, lessonCategory).then((lesson)=>{
-      console.log()
-      const lessId = lesson;
-      console.log(lesson, lessId)
-      console.log({
-        userId,
-        lessId,
-        answerChoices,
-        timestamp,
-        score
-      });
+    // this.getLessonIdByIdentifier(lessonId, lessonCategory).then((lesson)=>{
+    //   console.log()
+    //   const lessId = lesson;
+    //   console.log(lesson, lessId)
+    //   console.log({
+    //     userId,
+    //     lessId,
+    //     answerChoices,
+    //     timestamp,
+    //     score
+    //   });
       // this.firestore.collection('userAnswers').doc(lessonCategory).collection('lesson').add({
       //   userId,
       //   lessId,
@@ -138,8 +142,15 @@ export class FirebaseService {
       //   timestamp,
       //   score,
       // }).then(()=> console.log("User answers added successfully"))
-    });  
+    // });  
 
+    this.firestore.collection('userAnswers').doc(lessonCategory).collection('lesson', ref => ref.where('id','==',lessonId)).add({
+      userId,
+      lessonId,
+      answerChoices,
+      timestamp,
+      score,
+    }).then(()=> console.log("User answers added successfully"))
   }
 
   // async getLessonIdByIdentifier(identifier: string, lessonCategory:string): Promise<any> {
@@ -220,41 +231,6 @@ export class FirebaseService {
 
 
 
-  seedUser() {
-    const users = [
-      // User data objects
-      {
-        name: "John Doe",
-        email: "johndoe@gmail.com",
-        language: "English",
-        currentLesson: "",
-        userDetails: {
-          name: "John Doe",
-          age: 29,
-          dob: "23-06-1995",
-          phone: 7826528743,
-          email: "johndoe@gmail.com",
-          religion: "Christian",
-          faith: "21",
-          occupation: "IT",
-          gender: "Male",
-          marital: "No",
-          language: "English",
-          whyApply: "adfsdf",
-          linkFrom: "dsfsdf",
-          studying: "sdfsdffds",
-          networker: "Jane"
-        },
-        lessonsWatched: [],
-        overallProgress: 0
-      }
-    ];
-  
-    users.forEach(user => {
-      this.firestore.collection('users').add(user);
-    });
-  }
-
   addQuiz(lessons: Lesson[]){
     const questions = [
       {
@@ -289,65 +265,6 @@ export class FirebaseService {
     // })
   
 
-  }
-
-  seedLessons() {
-    const lessons = [
-      // Lesson data objects
-      {
-        id: "bb/lesson1",
-        category: 'bb',
-        name: "BB Lesson 1",
-        locked: true,
-        progress: 0,
-        path: "BB Lesson 1"
-      },
-      {
-        id: "bb/lesson2",
-        category: 'bb',
-        name: "BB Lesson 2",
-        locked: true,
-        progress: 0,
-        path: "BB Lesson 2"
-      },
-      {
-        id: "bb/lesson3",
-        category: 'bb',
-        name: "BB Lesson 3",
-        locked: true,
-        progress: 0,
-        path: "BB Lesson 3"
-      },
-      {
-        id: "intro/lesson1",
-        category: 'intro',
-        name: "BB Lesson 1",
-        locked: true,
-        progress: 0,
-        path: "BB Lesson 1"
-      },
-      {
-        id: "intro/lesson2",
-        category: 'intro',
-        name: "BB Lesson 2",
-        locked: true,
-        progress: 0,
-        path: "BB Lesson 2"
-      },
-      {
-        id: "intro/lesson1",
-        category: 'intro',
-        name: "BB Lesson 3",
-        locked: true,
-        progress: 0,
-        path: "BB Lesson 3"
-      }
-    ];
-  
-    lessons.forEach(lesson => {
-      // Assume lessons are organized by category
-      this.firestore.collection('lessons').doc(lesson.category).collection('lesson').add(lesson);
-    });
   }
 
   async getStudentByEmail(email: string) {
@@ -388,6 +305,32 @@ export class FirebaseService {
       .valueChanges();
   }
 
+  // Add a new lesson to a specific category
+  addLessonToCategory(category: string, newLesson: Lesson): Promise<void> {
+    // Get the collection reference for the specific category
+    const categoryCollection = this.firestore.collection('lessons').doc(category).collection('lesson');
+
+    // Generate a new ID for the lesson
+    const lessonId = this.firestore.createId();
+
+    // Set the new lesson with the generated ID
+    return categoryCollection.doc(lessonId).set({
+      ...newLesson,
+    });
+  }
+
+  // Delete a lesson by ID within a specific category
+  async deleteLessonByCategory(category: string, lessonId: string): Promise<void> {
+    // Get the collection reference for the specific category
+    const categoryCollection = this.firestore.collection('lessons').doc(category).collection('lesson');
+
+    // Find the lesson by the unique identifier and delete it
+    const snapshot = await categoryCollection.ref.where('id', '==', lessonId).get();
+    snapshot.forEach(doc => {
+      doc.ref.delete();
+    });
+  }
+
 
   updateLesson(lessonObj: Ilessons[]){
     const newLessonObject = lessonObj;
@@ -408,3 +351,41 @@ export class FirebaseService {
     });
   }
 }
+
+
+
+
+// seedUser() {
+//   const users = [
+//     // User data objects
+//     {
+//       name: "John Doe",
+//       email: "johndoe@gmail.com",
+//       language: "English",
+//       currentLesson: "",
+//       userDetails: {
+//         name: "John Doe",
+//         age: 29,
+//         dob: "23-06-1995",
+//         phone: 7826528743,
+//         email: "johndoe@gmail.com",
+//         religion: "Christian",
+//         faith: "21",
+//         occupation: "IT",
+//         gender: "Male",
+//         marital: "No",
+//         language: "English",
+//         whyApply: "adfsdf",
+//         linkFrom: "dsfsdf",
+//         studying: "sdfsdffds",
+//         networker: "Jane"
+//       },
+//       lessonsWatched: [],
+//       overallProgress: 0
+//     }
+//   ];
+
+//   users.forEach(user => {
+//     this.firestore.collection('users').add(user);
+//   });
+// }

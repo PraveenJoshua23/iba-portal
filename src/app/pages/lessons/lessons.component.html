@@ -24,9 +24,9 @@
     </div>
 
     <ng-container *ngIf="isQuizOpen">
-    <!-- <div class="flex flex-col items-center justify-center">
-        <app-video-player [src]="videoSrc" (videoEnded)="onVideoEnd()"></app-video-player>
-    </div> -->
+        <!-- <div class="flex flex-col items-center justify-center">
+            <app-video-player [src]="videoSrc" (videoEnded)="onVideoEnd()" (videoProgress)="progressUpdate($event)"></app-video-player>
+        </div> -->
     </ng-container>
 
     <ng-container *ngIf="!isQuizOpen">
