@@ -21,21 +21,21 @@ export class SignUpComponent {
 
   constructor(private fb: FormBuilder, private firebase: FirebaseService, private auth: AuthService, private router: Router) { 
     this.myForm = this.fb.group({
-      name: ['', Validators.required],
-      dob: ['', [Validators.required]],
-      phone: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
+      name: ['Thomas', Validators.required],
+      dob: ['12/10/1998', [Validators.required]],
+      phone: ['5252752752', Validators.required],
+      email: ['thoomas@gmail.com', [Validators.required, Validators.email]],
       religion: ['Christian', Validators.required],
-      faith: ['', Validators.required],
-      occupation: ['', Validators.required],
-      gender: ['', Validators.required],
-      marital: ['', Validators.required],
+      faith: ['17', Validators.required],
+      occupation: ['IT', Validators.required],
+      gender: ['Male', Validators.required],
+      marital: ['Married', Validators.required],
       language: ['English', Validators.required],
-      whyApply: ['', Validators.required],  
-      linkFrom: ['', Validators.required],
-      studying: ['', Validators.required],
-      password: ['', [Validators.required, createPasswordStrengthValidator()]],
-      confirmPassword: ['', Validators.required],
+      whyApply: ['God', Validators.required],  
+      linkFrom: ['HOOO', Validators.required],
+      studying: ['Yes', Validators.required],
+      password: ['Zion@123', [Validators.required, createPasswordStrengthValidator()]],
+      confirmPassword: ['Zion@123', Validators.required],
     }, {
       validator: passwordMatchValidator('password', 'confirmPassword')
     } as AbstractControlOptions);
@@ -69,11 +69,16 @@ export class SignUpComponent {
     if(this.myForm.invalid ) return
 
     try {
-      const addUserPromise = this.firebase.addUser(signUpData).then(()=> {
-        this.auth.register(formData.email, formData.password);
-      });
+      const addUserPromise = this.firebase.addUser(signUpData).then((v)=> {
+        // v will return the email exist or not in users collection
+        if(!v){
+          this.auth.register(formData.email, formData.password);
+          this.router.navigate(['login'])
+        } else {
 
-      await Promise.all([addUserPromise]).then(()=> this.router.navigate(['login']));
+        }
+      });
+      //await Promise.all([addUserPromise]).then(()=> this.router.navigate(['login']));
     } catch (error) {
         console.error('Error during form submission:', error);
         // Handle the error, e.g., show a user-friendly message

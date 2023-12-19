@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { AngularFirestore, QueryDocumentSnapshot, QuerySnapshot } from '@angular/fire/compat/firestore';
+import { AngularFirestore, AngularFirestoreCollection, QueryDocumentSnapshot, QuerySnapshot } from '@angular/fire/compat/firestore';
 import { addDoc, arrayUnion, Timestamp, collection, CollectionReference, doc, DocumentData, getDoc, getDocs, getFirestore, query, where, updateDoc} from '@angular/fire/firestore';
 import { Observable, from, lastValueFrom, take } from 'rxjs';
 import { ref, onValue, getDatabase } from 'firebase/database';
@@ -83,12 +83,51 @@ export class FirebaseService {
       });
   }
 
-  async addUser(data: unknown){
-    await addDoc(this.studentCol, data).then(() => console.log("Added user: ", data)).catch(err => {
-      console.error("Error adding user:", err)
-    })
-  }
+  async addUser(data: unknown): Promise<boolean>{
+    // await addDoc(this.studentCol, data).then(() => console.log("Added user: ", data)).catch(err => {
+    //   console.error("Error adding user:", err)
+    // })
 
+
+    const email = (data as any)?.email; // Replace 'email' with the actual field name
+
+    if (!email) {
+      console.error("Email not provided in data.");
+      return false;
+    }
+  
+  
+    // Check if the email already exists
+    const emailExists = await this.checkEmailExistence(email);
+    
+    if (emailExists) {
+      console.log('Email already exists.');
+      // Handle accordingly, e.g., display an error message or prevent adding the user
+    } else {
+      // Add the user if the email doesn't exist
+      await this.firestore.collection("users").add(data);
+      console.log('User added:', data);
+    }
+return emailExists
+  }
+  async checkEmailExistence(email: string): Promise<boolean> {
+    try {
+      const querySnapshot = await this.firestore.collection('users', ref => ref.where('email', '==', email)).get().toPromise();
+  
+      // Check if querySnapshot is not undefined before accessing its properties
+      if (querySnapshot !== undefined) {
+        return !querySnapshot.empty;
+      } else {
+        // Handle the case where querySnapshot is undefined
+        console.error('Query snapshot is undefined.');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error checking email existence:', error);
+      return false;
+    }
+  }
+  
 
   saveQuiz(){
     const quiz= {
