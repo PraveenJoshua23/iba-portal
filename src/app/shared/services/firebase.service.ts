@@ -281,18 +281,46 @@ export class FirebaseService {
   }
 
   //inititate lessons to a user for progress
-  // initCourse(lessons:any[]){
-  //   const email: any = localStorage.getItem('email');
-  //   const user = this.firestore.collection('users');
-  //   const progress = user.collection('progress');
-  //   documentRef.set(lessons)
-  //     .then(() => {
-  //       console.log(`Document with ID ${docId} successfully written to Firestore.`, lessons);
-  //     })
-  //     .catch((error) => {
-  //       console.error('Error writing document:', error);
-  //     });
-  // }
+  initCourse(lessons:any[]){
+    const email: any = localStorage.getItem('email');
+    // const data = {
+    //   id: lessons.id,
+    //   userId: email,
+    //   progress: 100,
+    //   locked: false,
+    //   startDate: Timestamp.now()
+    // }
+
+    const array = []
+
+    lessons.forEach( lesson => {
+      const data = {
+        id: lesson.id,
+        userId: email,
+        progress: 100,
+        locked: false,
+        startDate: Timestamp.now()
+      }
+      const progress = this.firestore.collection('progress').doc(email);
+    progress.set(lesson)
+      .then(() => {
+        console.log(`Document with ID ${email} successfully written to Firestore.`, data);
+      })
+      .catch((error) => {
+        console.error('Error writing document:', error);
+      });
+    })
+    // If the progress accoridng to the lessonId does not exists in progress collection, then execute below
+    
+    const progress = this.firestore.collection('progress').doc(email);
+    progress.set(data)
+      .then(() => {
+        console.log(`Document with ID ${email} successfully written to Firestore.`, data);
+      })
+      .catch((error) => {
+        console.error('Error writing document:', error);
+      });
+  }
 }
 
 
