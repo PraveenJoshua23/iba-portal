@@ -22,7 +22,6 @@ export class SignUpComponent {
   constructor(private fb: FormBuilder, private firebase: FirebaseService, private auth: AuthService, private router: Router) { 
     this.myForm = this.fb.group({
       name: ['', Validators.required],
-      age: ['', Validators.required],
       dob: ['', [Validators.required]],
       phone: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
@@ -37,7 +36,6 @@ export class SignUpComponent {
       studying: ['', Validators.required],
       password: ['', [Validators.required, createPasswordStrengthValidator()]],
       confirmPassword: ['', Validators.required],
-      networker: ['', Validators.required]
     }, {
       validator: passwordMatchValidator('password', 'confirmPassword')
     } as AbstractControlOptions);

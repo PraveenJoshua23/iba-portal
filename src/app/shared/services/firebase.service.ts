@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { AngularFirestore, QueryDocumentSnapshot, QuerySnapshot } from '@angular/fire/compat/firestore';
-import { addDoc, arrayUnion, Timestamp, collection, CollectionReference, doc, DocumentData, getDoc, getDocs, getFirestore, query, where} from '@angular/fire/firestore';
+import { addDoc, arrayUnion, Timestamp, collection, CollectionReference, doc, DocumentData, getDoc, getDocs, getFirestore, query, where, updateDoc} from '@angular/fire/firestore';
 import { Observable, from, lastValueFrom, take } from 'rxjs';
 import { ref, onValue, getDatabase } from 'firebase/database';
 import { Lesson } from '../models/lesson.model';
@@ -30,6 +30,7 @@ export class FirebaseService {
   constructor(public db: AngularFireDatabase, private storage: AngularFireStorage, private firestore: AngularFirestore) {
      this.firestoreDb = getFirestore(); 
      this.studentCol = collection(this.firestoreDb, 'users');
+     
   }
   
   async getUsers() {
@@ -125,26 +126,6 @@ export class FirebaseService {
     // const dateObject = new Date(timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000);
     !score ? score = 0 : score;
 
-    // this.getLessonIdByIdentifier(lessonId, lessonCategory).then((lesson)=>{
-    //   console.log()
-    //   const lessId = lesson;
-    //   console.log(lesson, lessId)
-    //   console.log({
-    //     userId,
-    //     lessId,
-    //     answerChoices,
-    //     timestamp,
-    //     score
-    //   });
-      // this.firestore.collection('userAnswers').doc(lessonCategory).collection('lesson').add({
-      //   userId,
-      //   lessId,
-      //   answerChoices,
-      //   timestamp,
-      //   score,
-      // }).then(()=> console.log("User answers added successfully"))
-    // });  
-
     this.firestore.collection('userAnswers').doc(lessonCategory).collection('lesson', ref => ref.where('id','==',lessonId)).add({
       userId,
       lessonId,
@@ -217,6 +198,20 @@ export class FirebaseService {
     return this.firestore.collection('users', ref => ref.where('email', '==', email)).valueChanges();
   }
 
+  async updateUserByEmail(data:any, email:string){
+    const querySnapshot = await getDocs(query(this.studentCol, where('email', '==', email)));
+    if (!querySnapshot.empty) {
+      const docRef = doc(this.studentCol, querySnapshot.docs[0].id);
+    
+      // Update the document with the edited data
+      await updateDoc(docRef, data);
+    
+      console.log('Document updated successfully!');
+    } else {
+      console.log('No documents found with the specified email.');
+    }
+  }
+
   getUserCollection(email: string){
     // Reference to the collection in Firestore
     const usersCollection = this.firestore.collection('users', ref =>
@@ -284,42 +279,20 @@ export class FirebaseService {
         console.error("Error updating lessonsWatched array:", error);
     });
   }
+
+  //inititate lessons to a user for progress
+  // initCourse(lessons:any[]){
+  //   const email: any = localStorage.getItem('email');
+  //   const user = this.firestore.collection('users');
+  //   const progress = user.collection('progress');
+  //   documentRef.set(lessons)
+  //     .then(() => {
+  //       console.log(`Document with ID ${docId} successfully written to Firestore.`, lessons);
+  //     })
+  //     .catch((error) => {
+  //       console.error('Error writing document:', error);
+  //     });
+  // }
 }
 
 
-
-
-// seedUser() {
-//   const users = [
-//     // User data objects
-//     {
-//       name: "John Doe",
-//       email: "johndoe@gmail.com",
-//       language: "English",
-//       currentLesson: "",
-//       userDetails: {
-//         name: "John Doe",
-//         age: 29,
-//         dob: "23-06-1995",
-//         phone: 7826528743,
-//         email: "johndoe@gmail.com",
-//         religion: "Christian",
-//         faith: "21",
-//         occupation: "IT",
-//         gender: "Male",
-//         marital: "No",
-//         language: "English",
-//         whyApply: "adfsdf",
-//         linkFrom: "dsfsdf",
-//         studying: "sdfsdffds",
-//         networker: "Jane"
-//       },
-//       lessonsWatched: [],
-//       overallProgress: 0
-//     }
-//   ];
-
-//   users.forEach(user => {
-//     this.firestore.collection('users').add(user);
-//   });
-// }

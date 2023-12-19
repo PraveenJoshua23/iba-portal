@@ -1,0 +1,7 @@
+h2{
+    @apply font-semibold;
+}
+
+.mdc-button-submit.mat-mdc-button{
+    @apply bg-golden-500 rounded-md px-3 py-2 disabled:opacity-80 disabled:cursor-not-allowed;
+}
