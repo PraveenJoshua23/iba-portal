@@ -312,14 +312,14 @@ export class FirebaseService {
     })
     // If the progress accoridng to the lessonId does not exists in progress collection, then execute below
     
-    const progress = this.firestore.collection('progress').doc(email);
-    progress.set(data)
-      .then(() => {
-        console.log(`Document with ID ${email} successfully written to Firestore.`, data);
-      })
-      .catch((error) => {
-        console.error('Error writing document:', error);
-      });
+    // const progress = this.firestore.collection('progress').doc(email);
+    // progress.set(data)
+    //   .then(() => {
+    //     console.log(`Document with ID ${email} successfully written to Firestore.`, data);
+    //   })
+    //   .catch((error) => {
+    //     console.error('Error writing document:', error);
+    //   });
   }
 }
 
