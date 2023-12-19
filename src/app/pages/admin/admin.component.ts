@@ -1,7 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {MatTableModule} from '@angular/material/table';
+import {MatButtonModule} from '@angular/material/button';
+
+import {MatDialog, MatDialogModule} from '@angular/material/dialog';
+// import {Sort, MatSortModule} from '@angular/material/sort';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { EditUserComponent } from 'src/app/components/edit-user/edit-user.component';
 
 export interface UserData {
   id: string;
@@ -22,22 +28,40 @@ const ELEMENT_DATA: UserData[] = [
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, MatTableModule],
+  imports: [CommonModule, MatTableModule, MatButtonModule, MatDialogModule ],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss']
 })
 export class AdminComponent implements OnInit{
 
-  displayedColumns: string[] = ['name', 'age', 'language'];
+  displayedColumns: string[] = ['id','name', 'language', 'networker', 'instructor', 'class', 'progress', 'action'];
   dataSource: any = [];
+  visibleRowCount = 5; // Default number of visible rows
 
-  constructor(private fb: FirebaseService){
 
+  constructor(private form: FormBuilder, private fb: FirebaseService, public dialog: MatDialog){
+   
   }
 
 
   ngOnInit(): void {
      this.getAllUsers();
+  }
+
+  openDialog(item:any) {
+    console.log(item)
+    const dialogRef = this.dialog.open(EditUserComponent,{
+      data: item
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log(`Dialog result: ${result}`);
+    });
+  }
+
+  // Function to update the number of visible rows
+  updateVisibleRows(count: number) {
+    this.visibleRowCount = count;
   }
   
 

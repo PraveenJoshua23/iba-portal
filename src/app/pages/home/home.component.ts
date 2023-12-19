@@ -61,17 +61,12 @@ export class HomeComponent implements OnInit{
     });
   }
 
-  // async getAllUser(){
-  //   const snapshot = await this.fb.getUsers();
-  //   this.updateUserList(snapshot)
+  // updateUserList(snapshot: QuerySnapshot<DocumentData>){
+  //   snapshot.docs.forEach( student => {
+  //     this.usersList.push({...student.data()})
+  //   })
+  //   console.log(this.usersList)
   // }
-
-  updateUserList(snapshot: QuerySnapshot<DocumentData>){
-    snapshot.docs.forEach( student => {
-      this.usersList.push({...student.data()})
-    })
-    console.log(this.usersList)
-  }
 
   getUser(){
     this.fb.getUserCollection("johndoe@gmail.com").get().subscribe(querySnapshot => {
@@ -83,9 +78,6 @@ export class HomeComponent implements OnInit{
         console.log("No document found with the specified email");
       }
     })
-    // this.fb.getUserByEmail("johndoe@gmail.com").subscribe(user=> {
-    //   console.log(user)
-    // })
   }
 
   selectLesson(id: string){
@@ -95,6 +87,10 @@ export class HomeComponent implements OnInit{
     console.log(les)
   
     this.fb.updateLesson(les)
+  }
+
+  startLesson(category:string){
+    
   }
 
 }

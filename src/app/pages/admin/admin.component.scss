@@ -6,12 +6,23 @@
 
 
   tr.mat-mdc-header-row{
-    background-color: #4CAF50;
+    @apply bg-gray-200;
   }
 
   tr.mat-mdc-row{
     height: 40px;
     background-color: white;
+  }
+
+  .mat-column-progress{
+    text-align: center;
+  }
+
+  .cdk-cell.mat-column-action{
+    @apply text-blue-700;
+    @apply cursor-pointer;
+    @apply hover:opacity-80;
+    @apply hover:bg-gray-100
   }
 
   main{
