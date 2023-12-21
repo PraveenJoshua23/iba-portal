@@ -23,13 +23,13 @@
         </div>
     </div>
 
-    <ng-container *ngIf="isQuizOpen">
-        <!-- <div class="flex flex-col items-center justify-center">
+    <ng-container *ngIf="!isQuizOpen">
+        <div class="flex flex-col items-center justify-center">
             <app-video-player [src]="videoSrc" (videoEnded)="onVideoEnd()" (videoProgress)="progressUpdate($event)"></app-video-player>
-        </div> -->
+        </div>
     </ng-container>
 
-    <ng-container *ngIf="!isQuizOpen">
+    <ng-container *ngIf="isQuizOpen">
         <div class="flex justify-center items-center px-6 py-5 w-[800px] bg-white rounded-lg m-auto">
             <div *ngIf="currentQuizIndex < questions.length && !showCorrectAnswer" class="w-full p-6 relative">
                 

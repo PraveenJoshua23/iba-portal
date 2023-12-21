@@ -15,6 +15,12 @@ export const APP_ROUTE: Route[] = [
         loadChildren: () => import('./app-shell.route').then((m)=>m.APP_SHELL_ROUTE)
     },
     {
+        path: 'profile',
+        component: AppShellComponent,
+        canActivate: [authGuard],
+        loadChildren: () => import('./profile.route').then((m)=>m.PROFILE_ROUTE)
+    },
+    {
         path: 'lesson',
         component: AppShellComponent,
         canActivate: [authGuard],

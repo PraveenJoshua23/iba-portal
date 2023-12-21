@@ -1,0 +1,9 @@
+<div [style.width]="imageWidth() + 'px'">
+    <img [src]="imageSource()" [height]="imageHeight()" [width]="imageWidth()">
+    <div class="flex space-x-3">
+        <input #inputField type="file" (change)="fileSelected($event)" (click)="inputField.value =''" hidden>
+        <button mat-flat-button 
+        class="px-3 py-1 w-full bg-golden-400 rounded-md cursor-pointer text-slate-900 text-sm mt-4"
+        (click)="inputField.click()">Upload profile</button>
+    </div>
+</div>
