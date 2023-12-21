@@ -25,6 +25,7 @@ export class FirebaseService {
   firestoreDb!:any;
   studentCol!: CollectionReference<DocumentData>;
   src!: any;
+  intNum: number=0;
 
   constructor(public db: AngularFireDatabase, private storage: AngularFireStorage, private firestore: AngularFirestore) {
      this.firestoreDb = getFirestore(); 
@@ -395,36 +396,30 @@ return emailExists
     //   locked: false,
     //   startDate: Timestamp.now()
     // }
-
-    const array = []
-
+    this.intNum=0;
+    const array : any[]=[];
+    //const intNum:number=0;
     lessons.forEach( lesson => {
+      this.intNum++;
       const data = {
         id: lesson.id,
         userId: email,
-        progress: 100,
-        locked: false,
+        progress: 0,
+        locked: this.intNum == 1 ? false : true,
         startDate: Timestamp.now()
       }
-      const progress = this.firestore.collection('progress').doc(email);
-    progress.set(lesson)
-      .then(() => {
-        console.log(`Document with ID ${email} successfully written to Firestore.`, data);
-      })
-      .catch((error) => {
-        console.error('Error writing document:', error);
-      });
+     //  const progress = this.firestore.collection('progress').doc(email);
+     array.push(data);
+     
     })
-    // If the progress accoridng to the lessonId does not exists in progress collection, then execute below
-    
-    // const progress = this.firestore.collection('progress').doc(email);
-    // progress.set(data)
-    //   .then(() => {
-    //     console.log(`Document with ID ${email} successfully written to Firestore.`, data);
-    //   })
-    //   .catch((error) => {
-    //     console.error('Error writing document:', error);
-    //   });
+    const progress = this.firestore.collection('progress').doc(email);
+  progress.set({ BB: array })
+    .then(() => {
+      console.log(`Document with ID ${email} successfully written to Firestore.`, array);
+    })
+    .catch((error) => {
+      console.error('Error writing document:', error);
+    });
   }
 }
 
