@@ -1,13 +1,12 @@
 import { Injectable } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { AngularFirestore, QueryDocumentSnapshot, QuerySnapshot } from '@angular/fire/compat/firestore';
+import { AngularFirestore, AngularFirestoreCollection, QueryDocumentSnapshot, QuerySnapshot } from '@angular/fire/compat/firestore';
 import { addDoc, arrayUnion, Timestamp, collection, CollectionReference, doc, DocumentData, getDoc, getDocs, getFirestore, query, where, updateDoc} from '@angular/fire/firestore';
 import { Observable, from, lastValueFrom, take } from 'rxjs';
 import { ref, onValue, getDatabase } from 'firebase/database';
 import { Lesson } from '../models/lesson.model';
 import { map, switchMap } from 'rxjs/operators';
-import { Firestore } from 'firebase/firestore';
 
 interface Ilessons {
   name: string;
@@ -26,6 +25,7 @@ export class FirebaseService {
   firestoreDb!:any;
   studentCol!: CollectionReference<DocumentData>;
   src!: any;
+  intNum: number=0;
 
   constructor(public db: AngularFireDatabase, private storage: AngularFireStorage, private firestore: AngularFirestore) {
      this.firestoreDb = getFirestore(); 
@@ -84,12 +84,51 @@ export class FirebaseService {
       });
   }
 
-  async addUser(data: unknown){
-    await addDoc(this.studentCol, data).then(() => console.log("Added user: ", data)).catch(err => {
-      console.error("Error adding user:", err)
-    })
-  }
+  async addUser(data: unknown): Promise<boolean>{
+    // await addDoc(this.studentCol, data).then(() => console.log("Added user: ", data)).catch(err => {
+    //   console.error("Error adding user:", err)
+    // })
 
+
+    const email = (data as any)?.email; // Replace 'email' with the actual field name
+
+    if (!email) {
+      console.error("Email not provided in data.");
+      return false;
+    }
+  
+  
+    // Check if the email already exists
+    const emailExists = await this.checkEmailExistence(email);
+    
+    if (emailExists) {
+      console.log('Email already exists.');
+      // Handle accordingly, e.g., display an error message or prevent adding the user
+    } else {
+      // Add the user if the email doesn't exist
+      await this.firestore.collection("users").add(data);
+      console.log('User added:', data);
+    }
+return emailExists
+  }
+  async checkEmailExistence(email: string): Promise<boolean> {
+    try {
+      const querySnapshot = await this.firestore.collection('users', ref => ref.where('email', '==', email)).get().toPromise();
+  
+      // Check if querySnapshot is not undefined before accessing its properties
+      if (querySnapshot !== undefined) {
+        return !querySnapshot.empty;
+      } else {
+        // Handle the case where querySnapshot is undefined
+        console.error('Query snapshot is undefined.');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error checking email existence:', error);
+      return false;
+    }
+  }
+  
 
   saveQuiz(){
     const quiz= {
@@ -119,8 +158,8 @@ export class FirebaseService {
 
   async storeUserQuizAnswers(lessonCategory:string, lessonId:string, answerChoices:number[], score?:number) {
     console.log("Initiated store user quiz")
-    console.log(lessonCategory, lessonId);
-    
+    console.log(lessonCategory, "HHHHHHHHHHH "+lessonId);
+    console.log(localStorage.getItem('LessonId'));
     const userId = localStorage.getItem('userId'); // Replace with the actual user ID
     const timestamp = Timestamp.now();
     // const dateObject = new Date(timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000);
@@ -135,16 +174,83 @@ export class FirebaseService {
     }).then(()=> console.log("User answers added successfully"))
   }
 
-  async getLessonIdByIdentifier(identifier: string, lessonCategory:string): Promise<any> {
+  // async getLessonIdByIdentifier(identifier: string, lessonCategory:string): Promise<any> {
+  //   const lessonsCollectionRef = collection(this.firestoreDb, `lessons/${lessonCategory}/lesson`);
+  //   console.log(lessonsCollectionRef,"getLesson ",`lessons/${lessonCategory}/lesson`)
+  //   const lessonsQuery = query(lessonsCollectionRef, where('id', '==', identifier));
+
+  //   const querySnapshot = await getDocs(lessonsQuery);
+  //   return querySnapshot.docs;
+
+  // }
+  
+  // async getLessonIdByIdentifier(identifier: string, lessonCategory: string): Promise<string | null> {
+  //   const lessonsCollectionRef = collection(this.firestoreDb, `lessons/${lessonCategory}/lesson`);
+  //   console.log(lessonsCollectionRef, "getLesson ", `lessons/${lessonCategory}/lesson`);
+  // console.log("Iden : "+identifier);
+  
+  //   const lessonsQuery = query(lessonsCollectionRef, where('id', '==', identifier));
+  //   const querySnapshot = await getDocs(lessonsQuery);
+  
+  //   // Check if there is a matching document
+  //   if (!querySnapshot.empty) {
+  //     // Assuming you want to get the ID of the first matching document
+  //     const lessonDoc = querySnapshot.docs[0];
+  //     const lessonId = lessonDoc.id;
+  // console.log(lessonId +"LLLLLLLLLLLLL");
+  
+  //     return lessonId;
+  //   }
+  
+  //   // Return null if no matching document is found
+  //   console.log("MMMMMMMMMLLLLLLLLLLLLL");
+  //   return null;
+  // }
+  
+// Thomas
+  //  async getLessonIdByIdentifier(identifier: string, lessonCategory:string): Promise<any> {
+  //   const lessonsCollectionRef = collection(this.firestoreDb, `lessons/${lessonCategory}/lesson`);
+  //   console.log(lessonsCollectionRef,"getLesson ",`lessons/${lessonCategory}/lesson`)
+  //   const lessonsQuery = query(lessonsCollectionRef, where('id', '==', identifier));
+
+  //   const querySnapshot = await getDocs(lessonsQuery);
+  //   console.log("JJJJJJJJJJJ"+ querySnapshot.docs);
+    
+  //   return querySnapshot.docs;
+
+  // }
+
+  async getLessonIdByIdentifier(identifier: string, lessonCategory: string): Promise<string | null> {
     const lessonsCollectionRef = collection(this.firestoreDb, `lessons/${lessonCategory}/lesson`);
-    console.log(lessonsCollectionRef,"getLesson ",`lessons/${lessonCategory}/lesson`)
-    const lessonsQuery = query(lessonsCollectionRef, where('id', '==', identifier));
-
-    const querySnapshot = await getDocs(lessonsQuery);
-    return querySnapshot.docs;
-
+    console.log('Collection Reference:', lessonsCollectionRef);
+    console.log('Identifier:', identifier);
+  
+    try {
+      // Get a reference to the document with the specified field value
+      const lessonDocRef = doc(lessonsCollectionRef);
+  
+      // Retrieve the document
+      const lessonDocSnapshot = await getDoc(lessonDocRef);
+  
+      // Check if the document exists
+      if (lessonDocSnapshot.exists()) {
+        // Return the ID
+        return lessonDocSnapshot.id;
+      } else {
+        // Return null if no matching document is found
+        console.log('No matching document found.');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error querying lessons:', error);
+      return null;
+    }
   }
   
+  
+
+
+
 
   addQuiz(lessons: Lesson[]){
     const questions = [
@@ -290,36 +396,30 @@ export class FirebaseService {
     //   locked: false,
     //   startDate: Timestamp.now()
     // }
-
-    const array = []
-
+    this.intNum=0;
+    const array : any[]=[];
+    //const intNum:number=0;
     lessons.forEach( lesson => {
+      this.intNum++;
       const data = {
         id: lesson.id,
         userId: email,
-        progress: 100,
-        locked: false,
+        progress: 0,
+        locked: this.intNum == 1 ? false : true,
         startDate: Timestamp.now()
       }
-      const progress = this.firestore.collection('progress').doc(email);
-    progress.set(lesson)
-      .then(() => {
-        console.log(`Document with ID ${email} successfully written to Firestore.`, data);
-      })
-      .catch((error) => {
-        console.error('Error writing document:', error);
-      });
+     //  const progress = this.firestore.collection('progress').doc(email);
+     array.push(data);
+     
     })
-    // If the progress accoridng to the lessonId does not exists in progress collection, then execute below
-    
-    // const progress = this.firestore.collection('progress').doc(email);
-    // progress.set(data)
-    //   .then(() => {
-    //     console.log(`Document with ID ${email} successfully written to Firestore.`, data);
-    //   })
-    //   .catch((error) => {
-    //     console.error('Error writing document:', error);
-    //   });
+    const progress = this.firestore.collection('progress').doc(email);
+  progress.set({ BB: array })
+    .then(() => {
+      console.log(`Document with ID ${email} successfully written to Firestore.`, array);
+    })
+    .catch((error) => {
+      console.error('Error writing document:', error);
+    });
   }
 }
 

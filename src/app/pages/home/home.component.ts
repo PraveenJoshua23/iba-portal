@@ -26,7 +26,9 @@ interface Ilessons {
 })
 export class HomeComponent implements OnInit{
 
-  constructor(private fb: FirebaseService){}
+  
+
+  constructor(private fb: FirebaseService, ){}
 
   bbLessons: any[]= [];
   initialLesson: Ilessons[] = []; 
@@ -89,9 +91,9 @@ export class HomeComponent implements OnInit{
     this.fb.updateLesson(les)
   }
 
-  startLesson(category:string){
-    
+  startLesson(id: string){
+    this.fb.initCourse(this.bbLessons)
   }
-
+  
   
 }
