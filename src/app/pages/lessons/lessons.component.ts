@@ -68,6 +68,8 @@ export class LessonsComponent implements OnInit {
 
   async initializeLesson(email:string){
     this.firebase.getLessonbyCategory('bb','bb/lesson1').subscribe(lesson=> {
+      console.log("jjjjjjjjjjj");
+      
       console.log(lesson);
       this.currentLesson = lesson;
       if (!this.videoSrc) this.getVideoFromFirebase(this.currentLesson).then(url => this.videoSrc = url);
@@ -106,7 +108,7 @@ export class LessonsComponent implements OnInit {
   onVideoEnd(){
     console.log('triggered')
     this.isQuizOpen = true;
-
+    this.firebase.vidEndNxtLessonUpdate(this.currentLesson)
   }
 
   progressUpdate(update:number){

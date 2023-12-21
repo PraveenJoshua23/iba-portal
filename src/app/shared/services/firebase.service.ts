@@ -9,6 +9,7 @@ import { Lesson } from '../models/lesson.model';
 import { map, switchMap } from 'rxjs/operators';
 
 interface Ilessons {
+  lessonNo: number
   name: string;
   id: string;
   progress: number;
@@ -402,6 +403,7 @@ return emailExists
     lessons.forEach( lesson => {
       this.intNum++;
       const data = {
+        lessonNo: this.intNum,
         id: lesson.id,
         userId: email,
         progress: 0,
@@ -421,6 +423,129 @@ return emailExists
       console.error('Error writing document:', error);
     });
   }
+
+// Next Lesson Update for Enable:
+
+// vidEndNxtLessonUpdate(lessons:any[]){
+//   console.log(lessons);
+//   console.log("lllllllllllllllllllllessonIndex");
+//   const email: any = localStorage.getItem('email');
+//   const progress = this.firestore.collection('progress').doc(email);
+
+//   const lessonIndex = lessons.findIndex((lesson) => lesson.lessonNo === 2);
+
+// console.log(lessonIndex);
+
+// // Check if the lesson with the unique identifier was found
+// if (lessonIndex !== -1) {
+//   // Update the 'locked' property of the specified lesson in the array
+//   lessons[lessonIndex].locked = false;
+
+//   // Create an object to set in Firestore with the modified lesson
+//   const updateObject = { BB: [lessons[lessonIndex]] };
+
+//   // Update the 'progress' document in Firestore
+//   progress.set(updateObject)
+//     .then(() => {
+//       console.log(`Document with ID ${email} successfully written to Firestore.`, updateObject);
+//     })
+//     .catch((error) => {
+//       console.error('Error writing document:', error);
+//     });
+// } else {
+//   console.log(`Lesson with unique identifier ${lessons[0].lessonNo+1} not found in the 'lessons' array.`);
+// }
+// }
+
+
+vidEndNxtLessonUpdate(lessons: any[]) {
+//   const email: any = localStorage.getItem('email');
+//   console.log(email);
+  
+//   const progress = this.firestore.collection('progress').doc("johndoe@gmail.com").valueChanges();
+// console.log(progress);
+
+//   progress.subscribe((lessonUpdate: any) =>{
+    
+//   console.log(lessonUpdate[0].BB);
+
+//   lessonUpdate.findIndex((lesson: { lessonNo: number; }) =>lesson.lessonNo === 2)
+//   })
+
+
+const email: any = localStorage.getItem('email');
+console.log(email);
+
+// Assuming 'email' is used as the document ID in Firestore
+const progress = this.firestore.collection('progress').doc("johndoe@gmail.com").valueChanges();
+console.log(progress);
+
+progress.subscribe((lessonUpdate: any) => {
+  console.log('Lesson Update:', lessonUpdate);
+
+  if (lessonUpdate && lessonUpdate[0] && lessonUpdate[0].BB) {
+    console.log(lessonUpdate[0].BB);
+
+    const lessonIndex = lessonUpdate.findIndex((lesson: { lessonNo: number; }) => lesson.lessonNo === 2);
+
+    if (lessonIndex !== -1) {
+      // Update the 'locked' property of the specified lesson
+      lessonUpdate[lessonIndex].BB[0].locked = false;
+
+      // Now, update the 'progress' document in Firestore with the modified data
+      this.firestore.collection('progress').doc("johndoe@gmail.com").update({
+        [`BB.${lessonIndex}.locked`]: false
+      })
+        .then(() => {
+          console.log(`Document with ID ${"johndoe@gmail.com"} successfully updated in Firestore.`, lessonUpdate);
+        })
+        .catch((error) => {
+          console.error('Error updating document:', error);
+        });
+    } else {
+      console.log(`Lesson with lessonNo 2 not found in the 'lessonUpdate' array.`);
+    }
+  } else {
+    console.log('Lesson data is not available or does not have the expected structure.');
+  }
+});
+
+
+
+
+
+
+
+  // Find the index of the lesson with the specified unique identifier
+//   const lessonIndex = lessonUpdate.findIndex((lesson) => {
+//     console.log(lesson);
+    
+//     return lesson.lessonNo === 2});
+// console.log(lessonIndex);
+
+//   // Check if the lesson with the unique identifier was found
+//   if (lessonIndex !== -1) {
+//     // Update the 'locked' property of the specified lesson in the array
+//     lessons[lessonIndex].locked = false;
+
+//     // Create an object to set in Firestore with the modified lesson
+//     const updateObject = { BB: [lessons[lessonIndex]] };
+
+//     // Update the 'progress' document in Firestore
+//     progress.update(updateObject)
+//       .then(() => {
+//         console.log(`Document with ID ${email} successfully written to Firestore.`, updateObject);
+//       })
+//       .catch((error) => {
+//         console.error('Error writing document:', error);
+//       });
+//   } else {
+//     console.log(`Lesson with unique identifier 2 not found in the 'lessons' array.`);
+  }
+//}
+
+
+
 }
 
 
