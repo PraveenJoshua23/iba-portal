@@ -67,13 +67,9 @@ export class LessonsComponent implements OnInit {
   }
 
   async initializeLesson(email:string){
-    this.firebase.getUserByEmail(email).subscribe(user => {
-      this.currentLesson = user[0].lessonsWatched.filter((les: { name: string; }) => les.name === this.title);
-      console.log("init: ", this.currentLesson)
-      if(this.currentLesson){
-        const currentLesson = JSON.stringify(this.currentLesson)
-        localStorage.setItem('currentLesson', currentLesson);
-      }
+    this.firebase.getLessonbyCategory('bb','bb/lesson1').subscribe(lesson=> {
+      console.log(lesson);
+      this.currentLesson = lesson;
       if (!this.videoSrc) this.getVideoFromFirebase(this.currentLesson).then(url => this.videoSrc = url);
       this.initializeQuiz(this.currentLesson);
     })
