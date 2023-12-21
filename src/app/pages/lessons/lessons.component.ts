@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VideoPlayerComponent } from 'src/app/components/video-player/video-player.component';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -55,8 +55,16 @@ export class LessonsComponent implements OnInit {
   videoSrc: any;
   questions:any[]= [];
   isVideoFinished: boolean = false;
+  progressRate = signal(0);
+  lessonId!: string;
+  category!: string;
 
-  constructor(private active: ActivatedRoute, private route: Router, private firebase: FirebaseService ){}
+  constructor(private active: ActivatedRoute, private route: Router, private firebase: FirebaseService, private ar: ActivatedRoute ){
+    this.ar.queryParams.subscribe(params => {
+      this.lessonId = params['id'];
+      this.category = this.lessonId.split('/')[0];
+    });
+  }
 
   ngOnInit(): void {
       const encoded = this.route.url.split('/')[3]
@@ -67,7 +75,7 @@ export class LessonsComponent implements OnInit {
   }
 
   async initializeLesson(email:string){
-    this.firebase.getLessonbyCategory('bb','bb/lesson1').subscribe(lesson=> {
+    this.firebase.getLessonbyCategory(this.category,this.lessonId).subscribe(lesson=> {
       console.log(lesson);
       this.currentLesson = lesson;
       if (!this.videoSrc) this.getVideoFromFirebase(this.currentLesson).then(url => this.videoSrc = url);
@@ -109,8 +117,9 @@ export class LessonsComponent implements OnInit {
 
   }
 
-  progressUpdate(update:number){
-    console.log(update)
+  progressUpdate(update:number){ 
+    this.progressRate.set(update);
+    console.log(this.progressRate())
   }
 
   isChoiceSelected(): boolean {
