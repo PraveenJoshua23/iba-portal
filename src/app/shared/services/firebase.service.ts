@@ -478,37 +478,74 @@ console.log(email);
 
 // Assuming 'email' is used as the document ID in Firestore
 const progress = this.firestore.collection('progress').doc("johndoe@gmail.com").valueChanges();
-console.log(progress);
 
-progress.subscribe((lessonUpdate: any) => {
-  console.log('Lesson Update:', lessonUpdate);
 
-  if (lessonUpdate && lessonUpdate[0] && lessonUpdate[0].BB) {
-    console.log(lessonUpdate[0].BB);
+const progressDocRef = this.firestore.collection('progress').doc("johndoe@gmail.com");
 
-    const lessonIndex = lessonUpdate.findIndex((lesson: { lessonNo: number; }) => lesson.lessonNo === 2);
+progressDocRef.get().subscribe((doc) => {
+  if (doc.exists) {
+    // Get the data from the document
+    const data: any = doc.data();
+console.log(data);
 
-    if (lessonIndex !== -1) {
-      // Update the 'locked' property of the specified lesson
-      lessonUpdate[lessonIndex].BB[0].locked = false;
+    // Check if the nested object exists
+    //if (data && data[Lesson]) {
+      // Update the specific field inside the nested object
+      console.log(data["BB"][data[0].lessonNo]);
+      
+      data["BB"][data.lessonNo].locked = false;
 
-      // Now, update the 'progress' document in Firestore with the modified data
-      this.firestore.collection('progress').doc("johndoe@gmail.com").update({
-        [`BB.${lessonIndex}.locked`]: false
-      })
+      // Update the document with the modified data
+      progressDocRef.update(data)
         .then(() => {
-          console.log(`Document with ID ${"johndoe@gmail.com"} successfully updated in Firestore.`, lessonUpdate);
+          console.log('Field updated successfully');
         })
         .catch((error) => {
-          console.error('Error updating document:', error);
+          console.error('Error updating field: ', error);
         });
-    } else {
-      console.log(`Lesson with lessonNo 2 not found in the 'lessonUpdate' array.`);
-    }
-  } else {
-    console.log('Lesson data is not available or does not have the expected structure.');
-  }
+  //   } else {
+  //     console.log('Nested object not found');
+  //   }
+  // } else {
+  //   console.log('Document does not exist');
+   }
 });
+
+
+
+
+
+// console.log(progress);
+
+// progress.subscribe((lessonUpdate: any) => {
+//   console.log('Lesson Update:', lessonUpdate);
+
+//   if (lessonUpdate && lessonUpdate[0] && lessonUpdate[0].BB) {
+//     console.log(lessonUpdate[0].BB);
+
+//     const lessonIndex = lessonUpdate.findIndex((lesson: { lessonNo: number; }) => lesson.lessonNo === 2);
+
+//     if (lessonIndex !== -1) {
+//       // Update the 'locked' property of the specified lesson
+//       lessonUpdate[lessonIndex].BB[0].locked = false;
+
+//       // Now, update the 'progress' document in Firestore with the modified data
+//       this.firestore.collection('progress').doc("johndoe@gmail.com").update({
+//         [`BB.${lessonIndex}.locked`]: false
+//       })
+//         .then(() => {
+//           console.log(`Document with ID ${"johndoe@gmail.com"} successfully updated in Firestore.`, lessonUpdate);
+//         })
+//         .catch((error) => {
+//           console.error('Error updating document:', error);
+//         });
+//     } else {
+//       console.log(`Lesson with lessonNo 2 not found in the 'lessonUpdate' array.`);
+//     }
+//   } else {
+//     console.log('Lesson data is not available or does not have the expected structure.');
+//   }
+// });
 
 
 
