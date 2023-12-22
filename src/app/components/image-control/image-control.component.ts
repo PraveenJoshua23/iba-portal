@@ -4,29 +4,41 @@ import {MatButtonModule} from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { CropperDialogComponent, CropperDialogResult } from '../cropper-dialog/cropper-dialog.component';
 import { filter } from 'rxjs';
+import { Storage, ref, uploadBytes } from '@angular/fire/storage';
+import { getDownloadURL } from 'firebase/storage';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner'
+import { FirebaseService } from 'src/app/shared/services/firebase.service';
+
 
 @Component({
   selector: 'app-image-control',
   standalone: true,
-  imports: [CommonModule, MatButtonModule],
+  imports: [CommonModule, MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './image-control.component.html',
   styleUrls: ['./image-control.component.scss']
 })
 export class ImageControlComponent {
   imageWidth = signal(0);
-  @Input() set width(val: number){
+  @Input({ required: true}) set width(val: number){
     this.imageWidth.set(val);
   }
 
   imageHeight = signal(0);
-  @Input() set height(val: number){
+  @Input({ required: true}) set height(val: number){
     this.imageHeight.set(val);
   }
+
+  imagePath = signal('');
+  @Input({ required: true}) set path(val: string){
+    this.imagePath.set(val);
+  }
+
+  uploading = signal(false);
 
   placeholder = computed(() => `https://placehold.co/${this.imageWidth()}x${this.imageHeight()}`)
 
   dialog = inject(MatDialog)
-  croppedImage = signal<CropperDialogResult|undefined>(undefined)
+  croppedImageUrl = signal<string|undefined>(undefined)
 
   fileSelected(event: any){
     const file = event.target.files[0];
@@ -37,27 +49,42 @@ export class ImageControlComponent {
       });
 
       dialogRef.afterClosed().pipe(filter(result => !!result)).subscribe((result)=>{
-        this.croppedImage.set(result);
+        this.uploadImage(result.blob)
       })
     }
   }
 
   imageSource = computed(()=>{
-    if(this.croppedImage){
-      return this.croppedImage()?.imageUrl
-    } else{
-      return this.placeholder()
-    }
-    
+    return this.croppedImageUrl() ?? this.placeholder();
   })
 
-  @Output() imageReady = new EventEmitter<Blob>();
+  @Output() imageReady = new EventEmitter<string>();
 
-  constructor(){
+  constructor(private firebase: FirebaseService){
+
+    this.getImage();
     effect(()=>{
-      if(this.croppedImage()){
-        this.imageReady.emit(this.croppedImage()?.blob)
+      if(this.croppedImageUrl()){
+        this.imageReady.emit(this.croppedImageUrl())
       }
+    })
+  }
+
+  storage = inject(Storage)
+
+  async uploadImage(blob: Blob){
+    this.uploading.set(true)
+    const storageRef = ref(this.storage, this.imagePath());
+    const uploadTask = await uploadBytes(storageRef, blob);
+    const downloadUrl = await getDownloadURL(uploadTask.ref);
+    this.croppedImageUrl.set(downloadUrl);
+    this.uploading.set(false)
+  }
+
+  async getImage(){
+    const email = localStorage.getItem('email') ?? ''
+    this.firebase.getProfile(email).then((v)=>{
+      this.croppedImageUrl.set(v)
     })
   }
 }

@@ -21,43 +21,17 @@ export class LessonsComponent implements OnInit {
   isQuizOpen: boolean = false;
   currentQuizIndex = 0;
   currentLesson!: any; 
-
-  // questions = [
-  //   {
-  //     question: "What is 2*5?",
-  //     choices: [2, 5, 10, 15, 20],
-  //     correctAnswer: 2
-  //   },
-  //   {
-  //     question: "What is 3*6?",
-  //     choices: [3, 6, 9, 12, 18],
-  //     correctAnswer: 4
-  //   },
-  //   {
-  //     question: "What is 8*9?",
-  //     choices: [72, 99, 108, 134, 156],
-  //     correctAnswer: 0
-  //   },
-  //   {
-  //     question: "What is 1*7?",
-  //     choices: [4, 5, 6, 7, 8],
-  //     correctAnswer: 3
-  //   },
-  //   {
-  //     question: "What is 8*8?",
-  //     choices: [20, 30, 40, 50, 64],
-  //     correctAnswer: 4
-  //   }
-  // ];
-
   userAnswers: number[] = [];
   showCorrectAnswer = false;
   videoSrc: any;
   questions:any[]= [];
-  isVideoFinished: boolean = false;
+  isVideoCompleted: boolean = false;
   progressRate = signal(0);
   lessonId!: string;
   category!: string;
+  tabs = ['Materials', 'Notes', 'Quiz', 'QnA Forum'];
+  activeTabIndex = 0;
+
 
   constructor(private active: ActivatedRoute, private route: Router, private firebase: FirebaseService, private ar: ActivatedRoute ){
     this.ar.queryParams.subscribe(params => {
@@ -76,7 +50,6 @@ export class LessonsComponent implements OnInit {
 
   async initializeLesson(email:string){
     this.firebase.getLessonbyCategory(this.category,this.lessonId).subscribe(lesson=> {
-      console.log(lesson);
       this.currentLesson = lesson;
       if (!this.videoSrc) this.getVideoFromFirebase(this.currentLesson).then(url => this.videoSrc = url);
       this.initializeQuiz(this.currentLesson);
@@ -114,12 +87,13 @@ export class LessonsComponent implements OnInit {
   onVideoEnd(){
     console.log('triggered')
     this.isQuizOpen = true;
+    this.isVideoCompleted = true;
 
   }
 
   progressUpdate(update:number){ 
     this.progressRate.set(update);
-    console.log(this.progressRate())
+    // console.log(this.progressRate())
   }
 
   isChoiceSelected(): boolean {
@@ -136,4 +110,9 @@ export class LessonsComponent implements OnInit {
     const {category, id } = lesson[0]
     this.firebase.storeUserQuizAnswers(category, id, this.userAnswers, 90)
   }
+
+  setActiveTab(index: number): void {
+    this.activeTabIndex = index;
+  }
+  
 } 

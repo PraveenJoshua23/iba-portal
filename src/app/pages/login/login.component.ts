@@ -78,10 +78,9 @@ export class LoginComponent implements OnInit {
   }
 
   getUser(){
-    const email = "johndoe@gmail.com";
+    const email = this.loginForm.get('email')?.value;
     this.firebase.getUserByEmail(email).subscribe(user => {
       this.userData = user[0]
-      console.log(this.userData)
 
       localStorage.setItem('username', this.userData.name)
       localStorage.setItem('email', this.userData.email)

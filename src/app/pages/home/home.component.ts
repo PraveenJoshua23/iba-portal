@@ -71,7 +71,8 @@ export class HomeComponent implements OnInit{
   // }
 
   getUser(){
-    this.fb.getUserCollection("johndoe@gmail.com").get().subscribe(querySnapshot => {
+    const email = localStorage.getItem('email')?? ''
+    this.fb.getUserCollection(email).get().subscribe(querySnapshot => {
       if (querySnapshot.size > 0) {
         // Assuming there's only one document with the given email
         const docId = querySnapshot.docs[0].id;

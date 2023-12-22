@@ -1,12 +1,11 @@
 import { Injectable } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { AngularFirestore, AngularFirestoreCollection, QueryDocumentSnapshot, QuerySnapshot } from '@angular/fire/compat/firestore';
-import { addDoc, arrayUnion, Timestamp, collection, CollectionReference, doc, DocumentData, getDoc, getDocs, getFirestore, query, where, updateDoc} from '@angular/fire/firestore';
-import { Observable, from, lastValueFrom, take } from 'rxjs';
+import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { Timestamp, collection, CollectionReference, doc, DocumentData, getDoc, getDocs, getFirestore, query, where, updateDoc} from '@angular/fire/firestore';
+import { Observable, lastValueFrom, take } from 'rxjs';
 import { ref, onValue, getDatabase } from 'firebase/database';
 import { Lesson } from '../models/lesson.model';
-import { map, switchMap } from 'rxjs/operators';
 
 interface Ilessons {
   name: string;
@@ -65,6 +64,21 @@ export class FirebaseService {
       }  else return;
      
     });
+  }
+
+  async getProfile(email:string){
+    const ref = this.storage.ref(`profile/${email}/user`)
+    const pic = ref.getDownloadURL().pipe(take(1));
+    return lastValueFrom(pic)
+    .then(url => {
+      return url;
+    })
+    .catch(error => {
+      console.error("Error getting profile picture URL:", error);
+      // Handle the error or throw it if you want to handle it outside of this function.
+      throw error;
+    });
+    
   }
 
 

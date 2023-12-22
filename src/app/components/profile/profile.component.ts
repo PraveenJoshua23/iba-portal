@@ -1,6 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FirebaseService } from 'src/app/shared/services/firebase.service';
 import { ImageControlComponent } from '../image-control/image-control.component';
 import { MatDialogModule } from '@angular/material/dialog';
 
@@ -12,10 +11,14 @@ import { MatDialogModule } from '@angular/material/dialog';
   styleUrls: ['./profile.component.scss']
 })
 export class ProfileComponent {
+  profilePath = signal('')
 
-  constructor(private fb: FirebaseService){}
+  constructor(){
+    const email = localStorage.getItem('email')
+    this.profilePath.set(`/profile/${email}/profile`)
+  }
 
   imageReady(event:any){
-    console.log(event)
+    // console.log(event)
   }
 }

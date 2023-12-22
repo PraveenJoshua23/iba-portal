@@ -12,17 +12,17 @@ import { RouterModule } from '@angular/router';
 })
 export class SidebarComponent implements OnInit, OnDestroy{
   constructor(private auth: AngularFireAuth){}
-  usrEmail!: string | null;
+  usrEmail: string |null = '';
 
   private subscriptions: any[] = [];
 
   ngOnInit(): void {
       const authSub = this.auth.authState.subscribe(user => {
         if(user){
-          this.usrEmail = user.email
+          this.usrEmail = user.email;
         }
       })
-
+      
       this.subscriptions.push(authSub) 
   }
 

@@ -1,9 +1,12 @@
-<div [style.width]="imageWidth() + 'px'">
-    <img [src]="imageSource()" [height]="imageHeight()" [width]="imageWidth()">
+<div [style.width]="imageWidth() + 'px'" class="relative">
+    <img class="rounded-full" [ngClass]="uploading()? 'opacity-50' :'opacity-100'" [src]="imageSource()" [height]="imageHeight()" [width]="imageWidth()">
     <div class="flex space-x-3">
         <input #inputField type="file" (change)="fileSelected($event)" (click)="inputField.value =''" hidden>
-        <button mat-flat-button 
+        <div class="absolute bottom-6 left-[40px] opacity-40 hover:opacity-100">
+            <button mat-flat-button 
         class="px-3 py-1 w-full bg-golden-400 rounded-md cursor-pointer text-slate-900 text-sm mt-4"
         (click)="inputField.click()">Upload profile</button>
+        </div>
     </div>
+    <mat-progress-spinner [diameter]="50" mode="indeterminate" *ngIf="uploading()"/>
 </div>

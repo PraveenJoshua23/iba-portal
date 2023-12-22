@@ -1,7 +1,11 @@
 <section class="flex space-x-3 px-10 py-8 max-height bg-slate-100">
     <div class="flex flex-col items-center py-3 min-w-[300px] bg-white  rounded-lg">
         <!-- <div class="flex items-center justify-center rounded-md bg-gray-400 text-white ">Upload Profile Picture</div> -->
-        <app-image-control [width]="200" [height]="200" (imageReady)="imageReady($event)"/>
+        <app-image-control 
+        [width]="200" 
+        [height]="200" 
+        [path]="profilePath()"
+        (imageReady)="imageReady($event)"/>
         
         <!-- <button class="px-3 py-1 bg-golden-400 rounded-md cursor-pointer text-slate-900 text-sm mt-4">Upload profile</button> -->
     </div>
