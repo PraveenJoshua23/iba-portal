@@ -7,23 +7,23 @@
 
             <div class="flex justify-between items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600">
                 <span>BB Lessons</span>
-                <button class="px-5 py-2 rounded-lg cursor-pointer border text-sm font-medium" (click)="startLesson('bb')">Start</button>
+                <button class="px-5 py-2 rounded-lg cursor-pointer border text-sm font-medium" (click)="startLesson('bb')" *ngIf="!progress">Start</button>
             </div>
         
-            <ng-container *ngFor="let lessons of bbLessons; let last = last">
+            <ng-container *ngFor="let lessons of bbLessons;let i = index; let last = last">
              
-                <div class="flex justify-between px-4 py-3 rounded-sm cursor-pointer" 
-                [ngClass]="{ 'border-b' : !last}" 
+                <div class="flex justify-between px-4 py-3 rounded-sm" 
+                [ngClass]="{ 'border-b' : !last, 'pointer-events-none opacity-60': progress.BB[i].locked, 'cursor-pointer':!progress.BB[i].locked}" 
                 [routerLink]="['/lesson/bb', lessons.name]"
                 [queryParams]="{id: lessons.id}"  
                 queryParamsHandling="merge"
                 (click)="selectLesson(lessons.id)" 
                 >
                     <span class=" ">{{lessons.name}}</span>
-                    <div class="flex space-x-3 items-center">
+                    <div class="flex items-center space-x-3 ">
                         
                         <!-- <span class="uppercase font-medium text-gray-400 hover:text-golden-600">{{lessons}}</span> -->
-                        <span class="bg-gray-300 px-4 py-1 rounded-md">{{lessons.progress}}%</span>
+                        <span class="bg-gray-300 px-4 py-1 rounded-md">{{progress.BB[i].locked ? 'Finish previous lesson' :progress.BB[i].progress + '%' }}</span>
                     </div>
                 </div>
             </ng-container>

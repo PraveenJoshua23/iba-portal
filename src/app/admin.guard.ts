@@ -7,7 +7,7 @@ export const adminGuard: CanActivateFn = (route, state) => {
 
   if( !user) return false;
   console.log(user)
-  if( user === 'johndoe@gmail.com'){
+  if( user === 'admin@hsztc.com'){
     return true
   } else {
     router.navigate(['/login']);

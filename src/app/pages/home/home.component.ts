@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppShellComponent } from 'src/app/components/app-shell/app-shell.component';
 import { RouterModule } from '@angular/router';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
-import { lastValueFrom } from 'rxjs';
+import { Subscription, lastValueFrom } from 'rxjs';
 import { DocumentData, QuerySnapshot } from '@angular/fire/firestore';
 
 interface Ilessons {
@@ -24,7 +24,7 @@ interface Ilessons {
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
-export class HomeComponent implements OnInit{
+export class HomeComponent implements OnInit, OnDestroy{
 
   
 
@@ -34,12 +34,21 @@ export class HomeComponent implements OnInit{
   initialLesson: Ilessons[] = []; 
   currentLesson: Ilessons[] = [];
   usersList: any = []
+  progress!: any;
+  progress$!: Subscription;
 
   ngOnInit(): void {
       this.getAllLessons();
       // this.getAllUser();
-      this.getUser()
+      this.getUser();
+
+      this.progress$ = this.fb.getLessonProgress().subscribe(prog => this.progress= prog.data());
+      console.log(this.progress)
   }
+
+  ngOnDestroy(): void {
+    this.progress$.unsubscribe();
+}
 
   getAllLessons(){
      this.fb.getAllLessonByCategory('bb').subscribe( lesson => {
@@ -62,13 +71,6 @@ export class HomeComponent implements OnInit{
       return lessonNumberA - lessonNumberB;
     });
   }
-
-  // updateUserList(snapshot: QuerySnapshot<DocumentData>){
-  //   snapshot.docs.forEach( student => {
-  //     this.usersList.push({...student.data()})
-  //   })
-  //   console.log(this.usersList)
-  // }
 
   getUser(){
     const email = localStorage.getItem('email')?? ''
@@ -96,5 +98,6 @@ export class HomeComponent implements OnInit{
     this.fb.initCourse(this.bbLessons)
   }
   
+
   
 }

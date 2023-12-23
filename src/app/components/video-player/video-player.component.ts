@@ -86,7 +86,7 @@ export class VideoPlayerComponent implements OnDestroy {
 
   onTimeUpdate() {
     this.progressRate = Math.round((this.currentTime / this.duration) * 100);
-    if (!Number.isNaN(this.progressRate) && this.progressRate%3===0 && this.progressRate!==0) {
+    if (!Number.isNaN(this.progressRate) && this.progressRate%2===0 && this.progressRate!==0) {
       this.videoProgress.emit(this.progressRate);
     }
   }

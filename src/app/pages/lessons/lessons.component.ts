@@ -1,10 +1,10 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VideoPlayerComponent } from 'src/app/components/video-player/video-player.component';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
 import { Lesson } from 'src/app/shared/models/lesson.model';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-lessons',
@@ -16,7 +16,7 @@ import { BehaviorSubject } from 'rxjs';
   templateUrl: './lessons.component.html',
   styleUrls: ['./lessons.component.scss'],
 })
-export class LessonsComponent implements OnInit {
+export class LessonsComponent implements OnInit, OnDestroy {
   title!: string;
   isQuizOpen: boolean = false;
   currentQuizIndex = 0;
@@ -28,15 +28,23 @@ export class LessonsComponent implements OnInit {
   isVideoCompleted: boolean = false;
   progressRate = signal(0);
   lessonId!: string;
+  lessonNo!: number;
   category!: string;
   tabs = ['Materials', 'Notes', 'Quiz', 'QnA Forum'];
   activeTabIndex = 0;
-
+  progress: any;
+  progress$!: Subscription;
 
   constructor(private active: ActivatedRoute, private route: Router, private firebase: FirebaseService, private ar: ActivatedRoute ){
     this.ar.queryParams.subscribe(params => {
       this.lessonId = params['id'];
       this.category = this.lessonId.split('/')[0];
+      const str = this.lessonId.split('/')[1];
+      const numbers = str.match(/\d+/);
+
+      if (numbers) {
+        this.lessonNo = parseInt(numbers[0], 10);
+      }
     });
   }
 
@@ -45,8 +53,26 @@ export class LessonsComponent implements OnInit {
       this.title = decodeURIComponent(encoded);
 
       const email = localStorage.getItem('email') || '';
-      this.initializeLesson(email)
+      this.initializeLesson(email);
+
+      this.progress$ = this.firebase.getLessonProgress().subscribe((prog:any) => {
+        const progdata = prog.data();
+        console.log(progdata);
+        
+        this.progress = progdata[this.category.toUpperCase()].filter((lesson:any) => {
+          console.log(lesson.id, this.lessonId )
+          lesson.id = this.lessonId
+        } )
+        
+      });
+      
+      
   }
+
+  ngOnDestroy(): void {
+      this.progress$.unsubscribe();
+  }
+
 
   async initializeLesson(email:string){
     this.firebase.getLessonbyCategory(this.category,this.lessonId).subscribe(lesson=> {
@@ -88,12 +114,13 @@ export class LessonsComponent implements OnInit {
     console.log('triggered')
     this.isQuizOpen = true;
     this.isVideoCompleted = true;
-
+    this.firebase.vidEndNxtLessonUpdate(this.lessonNo, this.category, this.progressRate())
+    
   }
 
   progressUpdate(update:number){ 
     this.progressRate.set(update);
-    // console.log(this.progressRate())
+    console.log(this.progressRate())
   }
 
   isChoiceSelected(): boolean {
