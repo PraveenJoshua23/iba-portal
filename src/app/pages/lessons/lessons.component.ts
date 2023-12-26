@@ -1,11 +1,33 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Time } from '@angular/common';
 import { VideoPlayerComponent } from 'src/app/components/video-player/video-player.component';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
 import { Lesson } from 'src/app/shared/models/lesson.model';
 import { BehaviorSubject, Subscription } from 'rxjs';
 
+interface Progress {
+  BB: LessonProg[],
+  INTRO: LessonProg[],
+  INTERMEDIATE: LessonProg[],
+  ADVANCED: LessonProg[],
+  registration: number,
+}
+
+interface LessonProg {
+  id: string;
+  lessonNo: 1;
+  locked: boolean;
+  progress: number;
+  startDate: Timestamp;
+  endDate: Timestamp;
+  userId: string;
+}
+
+interface Timestamp {
+  nanoseconds: number;
+  seconds: number;
+}
 @Component({
   selector: 'app-lessons',
   standalone: true,
@@ -32,10 +54,11 @@ export class LessonsComponent implements OnInit, OnDestroy {
   category!: string;
   tabs = ['Materials', 'Notes', 'Quiz', 'QnA Forum'];
   activeTabIndex = 0;
-  progress: any;
+  progress!: Progress;
   progress$!: Subscription;
+  lessonProgress!: LessonProg;
 
-  constructor(private active: ActivatedRoute, private route: Router, private firebase: FirebaseService, private ar: ActivatedRoute ){
+  constructor(private route: Router, private firebase: FirebaseService, private ar: ActivatedRoute ){
     this.ar.queryParams.subscribe(params => {
       this.lessonId = params['id'];
       this.category = this.lessonId.split('/')[0];
@@ -56,17 +79,14 @@ export class LessonsComponent implements OnInit, OnDestroy {
       this.initializeLesson(email);
 
       this.progress$ = this.firebase.getLessonProgress().subscribe((prog:any) => {
-        const progdata = prog.data();
-        console.log(progdata);
-        
-        this.progress = progdata[this.category.toUpperCase()].filter((lesson:any) => {
-          console.log(lesson.id, this.lessonId )
-          lesson.id = this.lessonId
-        } )
-        
+        this.progress = prog.data();
+        this.lessonProgress = (this.progress as any)[this.category.toUpperCase()].find((lesson:any) => lesson.lessonNo === this.lessonNo)
+        // this.progress = progdata[this.category.toUpperCase()].filter((lesson:any) => {
+        //   // console.log(lessson.id, this.lessonId )
+        //   lesson.id = this.lessonId
+        // } )
+        console.log(this.lessonProgress)
       });
-      
-      
   }
 
   ngOnDestroy(): void {

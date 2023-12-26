@@ -158,7 +158,7 @@
                   aria-controls="profile"
                   aria-selected="false"
                   [ngClass]="
-                    i === activeTabIndex && isVideoCompleted 
+                    i === activeTabIndex && (isVideoCompleted || lessonProgress.progress === 100)
                       ? 'bg-slate-200 border-b-slate-700 text-slate-900'
                       : 'text-gray-500 dark:text-gray-400'
                   "
@@ -181,7 +181,7 @@
         </div>
         <div id="myTabContent">
           <div
-            *ngIf="!isVideoCompleted"
+            *ngIf="!isVideoCompleted || lessonProgress.progress !== 100"
             class="bg-gray-50 p-4 rounded-lg dark:bg-gray-800"
             id="locked"
             role="tabpanel"
