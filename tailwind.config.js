@@ -9,7 +9,6 @@ module.exports = {
     "./src/**/*.{html,ts}",
     "./app/**/*.html",
     "./app/**/*.ts",
-
   ],
   plugins: [
     require('@tailwindcss/forms'),

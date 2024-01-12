@@ -97,7 +97,4 @@ export class HomeComponent implements OnInit, OnDestroy{
   startLesson(id: string){
     this.fb.initCourse(this.bbLessons)
   }
-  
-
-  
 }

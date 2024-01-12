@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
 import { Lesson } from 'src/app/shared/models/lesson.model';
 import { BehaviorSubject, Subscription } from 'rxjs';
+import { AngularFireStorage } from '@angular/fire/compat/storage';
 
 interface Progress {
   BB: LessonProg[],
@@ -27,6 +28,13 @@ interface LessonProg {
 interface Timestamp {
   nanoseconds: number;
   seconds: number;
+}
+
+interface fileMetadata{
+    contentType: string| null | undefined;
+    name: string;
+    size: number;
+    path: string | undefined;
 }
 @Component({
   selector: 'app-lessons',
@@ -57,8 +65,18 @@ export class LessonsComponent implements OnInit, OnDestroy {
   progress!: Progress;
   progress$!: Subscription;
   lessonProgress!: LessonProg;
+  fileList: { name: string; videolink: any; }[] = [];
+  materialList: fileMetadata[] = [];
+  imageArray: any[] = [];
+  files:any[] =[];
+  uploadCompleted = signal(false);
 
-  constructor(private route: Router, private firebase: FirebaseService, private ar: ActivatedRoute ){
+  constructor(
+    private route: Router, 
+    private firebase: FirebaseService, 
+    private ar: ActivatedRoute, 
+    private storage: AngularFireStorage,
+   ){
     this.ar.queryParams.subscribe(params => {
       this.lessonId = params['id'];
       this.category = this.lessonId.split('/')[0];
@@ -72,6 +90,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+      this.materialList = [];
       const encoded = this.route.url.split('/')[3]
       this.title = decodeURIComponent(encoded);
 
@@ -100,6 +119,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
       if (!this.videoSrc) this.getVideoFromFirebase(this.currentLesson).then(url => this.videoSrc = url);
       this.initializeQuiz(this.currentLesson);
     })
+    this.getFileList();
   }
 
   initializeQuiz(lesson: Lesson[]) {
@@ -162,4 +182,111 @@ export class LessonsComponent implements OnInit, OnDestroy {
     this.activeTabIndex = index;
   }
   
+
+  getFileList() {
+    const ref = this.storage.ref('materials/bb/english');
+    let myurlsubscription = ref.listAll().subscribe((data) => {
+      console.log(data.items)
+      data.items.forEach(item => {
+    
+        let metadata: fileMetadata;
+        item.getMetadata().then(meta => {
+          metadata = {
+            contentType: meta.contentType,
+            name: meta.name,
+            size: meta.size,
+            path: ''
+          }
+        })
+        item.getDownloadURL().then(val => {
+          metadata.path = val
+          this.materialList.push(metadata);
+          console.log(this.materialList);
+        });
+      })
+    });
+  }
+
+  downloadFile(path: string|undefined){
+    if(path == undefined) return ;
+    window.open(path, '_blank');
+  }
+  
+  onDragOver(event: DragEvent){
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  onDrop(event: DragEvent){
+    event.preventDefault();
+        event.stopPropagation();
+        const files: unknown = event.dataTransfer?.files;
+        if (files) {
+            Array.from(files as any[]).forEach((file: File) => {
+                this.preview(file);
+            });
+        }
+  }
+
+  fileUpload(event:any){
+    const files: File[] = Array.from(event.target.files);
+        files.forEach((file: File) => {
+            this.preview(file);
+        });
+  }
+
+  preview(file: File) {
+    this.files.push(file);
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+        this.imageArray.push(reader.result);
+    };
+    console.log(this.imageArray)
+  }
+
+  //Remove the image from the array
+  deleteImage(index: number) {
+      this.imageArray.splice(index, 1);
+  }
+
+  isPdfFile(url: string): boolean {
+    return /^data:application\/pdf/.test(url);
+  }
+
+  uploadNotes(){
+    this.imageArray.forEach((file, index) =>{
+      const email = localStorage.getItem('email');
+      const {base64Content, contentType} = this.splitDataUri(file);
+      const fileRef = this.storage.ref(`notes/${email}/${this.lessonId}/note_${index}`);
+      fileRef.putString(base64Content, 'base64', { contentType: contentType }).then((snapshot) => {
+        console.log('File uploaded successfully:', snapshot.totalBytes);
+        // Get download URL if needed:
+        const downloadURL = snapshot.ref.getDownloadURL();
+        console.log(downloadURL);
+        // Check if all files are uploaded
+        if (index === this.imageArray.length - 1) {
+          // Clear imageArray
+          this.imageArray = [];
+
+          // Set uploadCompleted to true
+          this.uploadCompleted.set(true);
+
+          console.log('Upload completed');
+        }
+      });
+    })
+  }
+
+  splitDataUri(dataUri: string): { base64Content: string, contentType: string } {
+    const base64Index = dataUri.indexOf(';base64,');
+    if (base64Index === -1) {
+      throw new Error('Invalid data URI: Missing ;base64');
+    }
+  
+    const contentType = dataUri.substring(5, base64Index); // Extract content type
+    const base64Content = dataUri.substring(base64Index + 8); // Extract base64 content
+  
+    return { base64Content, contentType };
+  }
 } 
