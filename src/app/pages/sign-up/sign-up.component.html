@@ -10,9 +10,9 @@
     </div>
   </div>
 
-  <div class="py-3 mt-5">
+  <!-- <div class="py-3 mt-5">
     <app-video-player src=""></app-video-player>
-  </div>
+  </div> -->
 
   <div class="flex flex-col justify-center min-w-[980px] mx-auto px-3 py-4 bg-white rounded-lg shadow-lg mt-5">
     <h1 class="my-2 flex mx-auto font-bold">Registration Form</h1>
@@ -309,6 +309,9 @@
         <div *ngIf=" myForm.invalid && myForm.get('confirmPassword')?.dirty" class="text-sm text-red-500">
           Please check if all entries are correct.
         </div>
+
+        <mat-checkbox (change)="openTermsDialog()">I agree to the terms and conditions.</mat-checkbox>
+
         <div class="flex justify-end w-full">
           <button type="submit" class="bg-golden-500 rounded-md px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed" [disabled]="myForm.invalid">Submit</button>
         </div>

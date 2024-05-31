@@ -7,19 +7,23 @@ import { AuthService } from 'src/app/shared/services/auth.service';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
 import { createPasswordStrengthValidator, dobFormatValidator, passwordMatchValidator } from '../../shared/utils/validators';
 import { Router } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { TermsDialogComponent } from 'src/app/components/terms-dialog/terms-dialog.component';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+
 
 
 @Component({
   selector: 'app-sign-up',
   templateUrl: './sign-up.component.html',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, VideoPlayerComponent],
+  imports: [CommonModule, ReactiveFormsModule, VideoPlayerComponent, MatDialogModule, MatCheckboxModule],
   styleUrls: ['./sign-up.component.scss']
 })
 export class SignUpComponent {
   myForm!: FormGroup;
 
-  constructor(private fb: FormBuilder, private firebase: FirebaseService, private auth: AuthService, private router: Router) { 
+  constructor(private fb: FormBuilder, private firebase: FirebaseService, private auth: AuthService, private router: Router, public dialog: MatDialog) { 
     this.myForm = this.fb.group({
       name: ['Thomas', Validators.required],
       dob: ['12/10/1998', [Validators.required]],
@@ -102,6 +106,18 @@ export class SignUpComponent {
     }
 
   return age;
+  }
+
+  openTermsDialog(): void {
+    const dialogRef = this.dialog.open(TermsDialogComponent, {
+      width: '400px',
+      disableClose: true, // Dialog can only be closed via the Agree button
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      // Perform actions after the dialog is closed (e.g., enable a button)
+      console.log('User agreed to terms and conditions');
+    });
   }
 }
 
