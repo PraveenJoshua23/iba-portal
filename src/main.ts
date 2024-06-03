@@ -24,10 +24,11 @@ const firebaseConfig = {
 bootstrapApplication(AppComponent, {
   providers: [
     provideRouter(APP_ROUTE), importProvidersFrom(
-      provideFirebaseApp(()=> initializeApp(firebaseConfig)),
       AngularFireModule.initializeApp(firebaseConfig),
-      provideStorage(()=> getStorage())
+      
     ),
-    provideAnimations()
+    provideFirebaseApp(()=> initializeApp(firebaseConfig)),
+    provideAnimations(),
+    provideStorage(()=> getStorage())
 ]
 })
