@@ -1,21 +1,24 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppShellComponent } from 'src/app/components/app-shell/app-shell.component';
 import { RouterModule } from '@angular/router';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
-import { Subscription, lastValueFrom } from 'rxjs';
+import { Observable, Subscription, lastValueFrom, tap } from 'rxjs';
 import { DocumentData, QuerySnapshot } from '@angular/fire/firestore';
+import { DataService } from 'src/app/shared/services/data.service';
+import { Lesson } from 'src/app/shared/models/lesson.model';
+import { User, UserDetails } from 'src/app/shared/models/user.model';
 
-interface Ilessons {
-  name: string;
-  id: string;
-  progress: number;
-  category: string;
-  instructor: string;
-  language: string;
-  path:  string;
-  locked: boolean;
-}
+// interface Lesson {
+//   name: string;
+//   id: string;
+//   progress: number;
+//   category: string;
+//   instructor: string;
+//   language: string;
+//   path:  string;
+//   locked: boolean;
+// }
 
 @Component({
   selector: 'app-home',
@@ -26,29 +29,39 @@ interface Ilessons {
 })
 export class HomeComponent implements OnInit, OnDestroy{
 
-  
+  ds = inject(DataService);
+  allBBLessons$: Observable<any> = this.ds.getAllLessonSubCollection('bb');
 
-  constructor(private fb: FirebaseService, ){}
+  constructor(private fb: FirebaseService ){
+    }
 
   bbLessons: any[]= [];
-  initialLesson: Ilessons[] = []; 
-  currentLesson: Ilessons[] = [];
+  initialLesson: Lesson[] = []; 
+  currentLesson: Lesson[] = [];
   usersList: any = []
   progress!: any;
   progress$!: Subscription;
 
   ngOnInit(): void {
-      this.getAllLessons();
+      // this.getAllLessons();
       // this.getAllUser();
       this.getUser();
+      this.ds.checkUserProgress();
 
-      this.progress$ = this.fb.getLessonProgress().subscribe(prog => this.progress= prog.data());
-      console.log(this.progress)
+      // this.progress$ = this.fb.getLessonProgress().subscribe(prog => this.progress= prog.data());
+      // console.log(this.progress)
   }
+  /* Init :
 
+  Check Auth
+  Init User Details
+  Init Progress Details: If !progress then false
+  If progress, check progress update dashboard
+
+  */
   ngOnDestroy(): void {
-    this.progress$.unsubscribe();
-}
+    // this.progress$.unsubscribe();
+  }
 
   getAllLessons(){
      this.fb.getAllLessonByCategory('bb').subscribe( lesson => {
@@ -74,15 +87,15 @@ export class HomeComponent implements OnInit, OnDestroy{
 
   getUser(){
     const email = localStorage.getItem('email')?? ''
-    this.fb.getUserCollection(email).get().subscribe(querySnapshot => {
-      if (querySnapshot.size > 0) {
-        // Assuming there's only one document with the given email
-        const docId = querySnapshot.docs[0].id;
-        localStorage.setItem('userId', docId);
-      } else {
-        console.log("No document found with the specified email");
-      }
-    })
+    // this.fb.getUserCollection(email).get().subscribe(querySnapshot => {
+    //   if (querySnapshot.size > 0) {
+    //     // Assuming there's only one document with the given email
+    //     const docId = querySnapshot.docs[0].id;
+    //     localStorage.setItem('userId', docId);
+    //   } else {
+    //     console.log("No document found with the specified email");
+    //   }
+    // })
   }
 
   selectLesson(id: string){

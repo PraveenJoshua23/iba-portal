@@ -316,6 +316,10 @@
           <button type="submit" class="bg-golden-500 rounded-md px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed" [disabled]="myForm.invalid">Submit</button>
         </div>
 
+        @if (errorMsg) {
+          <div>{{errorMsg}}</div>
+        }
+
       </form>
     </div>
   </div>

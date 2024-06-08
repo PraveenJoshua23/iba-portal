@@ -8,8 +8,9 @@ import { AngularFireModule } from '@angular/fire/compat';
 import { getStorage, provideStorage} from '@angular/fire/storage'
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideFirebaseApp } from '@angular/fire/app';
-
+import { provideAuth, getAuth} from '@angular/fire/auth';
 import { initializeApp } from 'firebase/app';
+import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAh_Ppv8G1bsyY7ax4vMVc7IeHKt6ch9ug",
@@ -25,10 +26,11 @@ bootstrapApplication(AppComponent, {
   providers: [
     provideRouter(APP_ROUTE), importProvidersFrom(
       AngularFireModule.initializeApp(firebaseConfig),
-      
     ),
     provideFirebaseApp(()=> initializeApp(firebaseConfig)),
+    provideAuth(()=>getAuth()),
     provideAnimations(),
-    provideStorage(()=> getStorage())
+    provideStorage(()=> getStorage()),
+    provideFirestore(()=>getFirestore())
 ]
 })

@@ -355,6 +355,7 @@ export class FirebaseService {
       return [];
     }
   }
+  
 
   getUserByEmail(email: string): Observable<any[]> {
     // Use 'ref' to create a query based on the 'email' field

@@ -4,30 +4,34 @@
             <h1>Lessons</h1>
         </div>
         <div class="flex flex-col space-y-2 px-3 py-5 w-full">
-
+            
             <div class="flex justify-between items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600">
                 <span>BB Lessons</span>
+                
                 <button class="px-5 py-2 rounded-lg cursor-pointer border text-sm font-medium" (click)="startLesson('bb')" *ngIf="!progress">Start</button>
             </div>
-        
-            <ng-container *ngFor="let lessons of bbLessons;let i = index; let last = last">
-             
-                <div class="flex justify-between px-4 py-3 rounded-sm" 
-                [ngClass]="{ 'border-b' : !last, 'pointer-events-none opacity-60': progress.BB[i].locked, 'cursor-pointer':!progress.BB[i].locked}" 
+            @for (lessons of allBBLessons$|async; track lessons.id; let last = $last; let i = $index) {
+               <!-- {{lessons |json}} -->
+
+                <div class="flex justify-between px-4 py-3 rounded-sm"  
                 [routerLink]="['/lesson/bb', lessons.name]"
                 [queryParams]="{id: lessons.id}"  
                 queryParamsHandling="merge"
                 (click)="selectLesson(lessons.id)" 
+                [ngClass]="{ 'border-b' : !last, 'pointer-events-none opacity-60': lessons.locked, 'cursor-pointer':!lessons.locked}" 
                 >
                     <span class=" ">{{lessons.name}}</span>
+                   
                     <div class="flex items-center space-x-3 ">
                         
                         <!-- <span class="uppercase font-medium text-gray-400 hover:text-golden-600">{{lessons}}</span> -->
-                        <span class="bg-gray-300 px-4 py-1 rounded-md">{{progress.BB[i].locked ? 'Finish previous lesson' :progress.BB[i].progress + '%' }}</span>
+                        <span class="bg-gray-300 px-4 py-1 rounded-md">{{lessons.locked ? 'Finish previous lesson' :lessons.progress + '%' }}</span>
                     </div>
                 </div>
-            </ng-container>
+            }
 
+
+        
             <div class="flex items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600 opacity-50">Introductory Lessons</div>
             <div class="flex items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600 opacity-50">Intermediate Lessons</div>
             <div class="flex items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600 opacity-50">Advanced Lessons</div>

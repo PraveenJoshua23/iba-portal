@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { HttpClient} from '@angular/common/http';
-import { Component } from '@angular/core'; 
+import { Component, inject } from '@angular/core'; 
 import { FormGroup, FormBuilder, Validators, ReactiveFormsModule, AbstractControlOptions, FormControl, FormControlName } from '@angular/forms';
 import { VideoPlayerComponent } from 'src/app/components/video-player/video-player.component';
 import { AuthService } from 'src/app/shared/services/auth.service';
@@ -22,10 +21,13 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 })
 export class SignUpComponent {
   myForm!: FormGroup;
+  auth= inject(AuthService);
+  errorMsg: string|null = null;
 
-  constructor(private fb: FormBuilder, private firebase: FirebaseService, private auth: AuthService, private router: Router, public dialog: MatDialog) { 
+  constructor(private fb: FormBuilder, private firebase: FirebaseService, private router: Router, public dialog: MatDialog) { 
     this.myForm = this.fb.group({
       name: ['Thomas', Validators.required],
+      username: ['', Validators.required],
       dob: ['12/10/1998', [Validators.required]],
       phone: ['5252752752', Validators.required],
       email: ['thoomas@gmail.com', [Validators.required, Validators.email]],
@@ -55,6 +57,7 @@ export class SignUpComponent {
 
     const signUpData = {
       name: formData.name,
+      username: formData.username,
       age: this.calculateAge(formData.dob),
       dob: formData.dob,
       phone: formData.phone,
@@ -73,12 +76,14 @@ export class SignUpComponent {
     if(this.myForm.invalid ) return
 
     try {
-      const addUserPromise = this.firebase.addUser(signUpData).then((v)=> {
+      this.firebase.addUser(signUpData).then((v)=> {
         // v will return the email exist or not in users collection
         if(!v){
-          this.auth.register(formData.email, formData.password);
-          this.router.navigate(['login'])
-        } else {
+          this.auth.register(formData.email, formData.password, formData.username).subscribe({
+            next:()=>this.router.navigateByUrl('/login'),
+            error: (err)=>this.errorMsg = err.code
+          })
+          } else {
 
         }
       });

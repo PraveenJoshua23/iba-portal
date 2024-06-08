@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/shared/services/auth.service';
 
@@ -9,13 +9,18 @@ import { AuthService } from 'src/app/shared/services/auth.service';
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent {
-
-  constructor(private auth: AuthService, private route: Router){}
+  auth = inject(AuthService);
+  errMsg:string|null = null;
+  constructor(private route: Router){}
 
   signOut(){
     this.auth.signOut().subscribe({
       next: (res) => {
-        this.route.navigate(['/login'])
+        this.route.navigateByUrl('/')
+      },
+      error: (err) => {
+        this.errMsg = err.code;
+        console.log(this.errMsg)
       }
     })
 

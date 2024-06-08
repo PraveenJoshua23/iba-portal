@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { AngularFireAuthModule } from '@angular/fire/compat/auth';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   FormGroup,
   FormBuilder,
@@ -24,10 +24,11 @@ export class LoginComponent implements OnInit {
   isLoggingIn: boolean = false;
   isForgotten: boolean = false;
   userData: any;
+  auth = inject(Auth);
+  errorMsg: string|null = null;
 
   constructor(
     private fb: FormBuilder,
-    private auth: Auth,
     private route: Router,
     private firebase: FirebaseService
   ) {}
@@ -47,12 +48,13 @@ export class LoginComponent implements OnInit {
 
       this.isLoggingIn = true;
 
-      this.auth.signIn({ email: email, password: password }).subscribe({
+      this.auth.signIn( email, password ).subscribe({
         next: () => {
           this.getUser();
-          this.route.navigate(['/home'])
+          this.route.navigateByUrl('/home')
         },
         error: (error) => {
+          console.log(error)
           this.isLoggingIn = false;
         },
       });
