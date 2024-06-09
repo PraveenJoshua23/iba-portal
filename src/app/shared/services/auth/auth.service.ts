@@ -1,13 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { Auth, createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithEmailAndPassword, signOut, updateProfile, user } from '@angular/fire/auth';
-// import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { Router } from '@angular/router';
 import { Observable, from } from 'rxjs';
-
-type SignIn = {
-  email: string;
-  password: string;
-}
 
 @Injectable({
   providedIn: 'root'
@@ -18,12 +12,6 @@ export class AuthService {
   currentUserSignal = signal<any|null|undefined>(undefined)
 
   constructor( private route: Router) { }
-
-  // signIn(params: SignIn): Observable<any>{
-  //   return from(this.auth.signInWithEmailAndPassword(
-  //     params.email, params.password
-  //   ))
-  // }
 
   forgotPassword(email:string): Observable<void>{
     const promise = sendPasswordResetEmail(this.firebaseAuth, email);

@@ -12,13 +12,13 @@
             </div>
             @for (lessons of allBBLessons$|async; track lessons.id; let last = $last; let i = $index) {
                <!-- {{lessons |json}} -->
-
+<!-- 'pointer-events-none opacity-60': lessons.locked, 'cursor-pointer':!lessons.locked -->
                 <div class="flex justify-between px-4 py-3 rounded-sm"  
                 [routerLink]="['/lesson/bb', lessons.name]"
                 [queryParams]="{id: lessons.id}"  
                 queryParamsHandling="merge"
                 (click)="selectLesson(lessons.id)" 
-                [ngClass]="{ 'border-b' : !last, 'pointer-events-none opacity-60': lessons.locked, 'cursor-pointer':!lessons.locked}" 
+                [ngClass]="{ 'border-b' : !last}"  
                 >
                     <span class=" ">{{lessons.name}}</span>
                    

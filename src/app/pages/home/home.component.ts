@@ -4,10 +4,8 @@ import { AppShellComponent } from 'src/app/components/app-shell/app-shell.compon
 import { RouterModule } from '@angular/router';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
 import { Observable, Subscription, lastValueFrom, tap } from 'rxjs';
-import { DocumentData, QuerySnapshot } from '@angular/fire/firestore';
 import { DataService } from 'src/app/shared/services/data.service';
 import { Lesson } from 'src/app/shared/models/lesson.model';
-import { User, UserDetails } from 'src/app/shared/models/user.model';
 
 // interface Lesson {
 //   name: string;
@@ -63,13 +61,13 @@ export class HomeComponent implements OnInit, OnDestroy{
     // this.progress$.unsubscribe();
   }
 
-  getAllLessons(){
-     this.fb.getAllLessonByCategory('bb').subscribe( lesson => {
-      this.bbLessons = lesson
-      console.log(this.bbLessons)
-      this.sortLessons(this.bbLessons)
-    })
-  }
+  // getAllLessons(){
+  //    this.fb.getAllLessonByCategory('bb').subscribe( lesson => {
+  //     this.bbLessons = lesson
+  //     console.log(this.bbLessons)
+  //     this.sortLessons(this.bbLessons)
+  //   })
+  // }
 
   extractLessonNumber(lesson: { name: string; }) {
     const match = lesson.name.match(/\d+/);
@@ -99,6 +97,7 @@ export class HomeComponent implements OnInit, OnDestroy{
   }
 
   selectLesson(id: string){
+    console.log(id)
     const les = this.bbLessons.filter(lesson => lesson.id === id)
     const currentLes = JSON.stringify(les)
     localStorage.setItem('currentLesson',currentLes)

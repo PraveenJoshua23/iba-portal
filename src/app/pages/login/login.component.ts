@@ -9,7 +9,7 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 // import { AuthService } from 'src/app/auth.service';
-import { AuthService as Auth } from 'src/app/shared/services/auth.service';
+import { AuthService as Auth } from 'src/app/shared/services/auth/auth.service';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
 
 @Component({
