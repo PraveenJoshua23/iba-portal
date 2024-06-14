@@ -1,11 +1,16 @@
 import { Injectable, inject } from '@angular/core';
-import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/compat/firestore';
 import { Observable, from, of, throwError } from 'rxjs';
-import { catchError, map, mergeMap, tap } from 'rxjs/operators';
+import { catchError, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 import { UserDetails } from '../models/user.model';
 import { Lesson } from '../models/lesson.model';
 import { CollectionReference, Firestore, addDoc, collection, collectionData, doc, getDocs, orderBy, query, setDoc, where } from '@angular/fire/firestore';
-import { Auth } from '@angular/fire/auth';
+import { Auth, authState } from '@angular/fire/auth';
+
+interface Progress {
+  email: string;
+  displayName?: string;
+  // ...other profile details
+}
 
 @Injectable({
   providedIn: 'root'
@@ -21,7 +26,7 @@ export class DataService {
   fs = inject(Firestore);
   auth = inject(Auth);
 
-  constructor(private afs: AngularFirestore) {
+  constructor() {
     this.usersRef = collection(this.fs, 'users');
     this.progressRef = collection(this.fs, 'progress');
     this.lessonsRef = collection(this.fs, 'lessons');
@@ -71,6 +76,36 @@ export class DataService {
     } catch (error) {
       console.error('Error managing progress entry:', error);
     }
+  }
+
+  getProgress(email: string): Observable<Progress | null>{
+    
+      const q = query(this.progressRef, where('email', '==', email));
+
+      return from(getDocs(q)).pipe( // Convert Promise to Observable
+        switchMap(snapshot => {
+          if (snapshot.empty) {
+            return of(null);
+          } else {
+            // Assuming you only expect one document with the given email
+            console.log(snapshot.docs[0].data())
+            return of(snapshot.docs[0].data() as Progress);
+          }
+        })
+      );
+   
+  }
+
+  getCurrentUser$(): Observable<Progress | null> {
+    return authState(this.auth).pipe(
+      switchMap(user => {
+        if (user) {
+          return this.getProgress(user.email as string);
+        } else {
+          return of(null);
+        }
+      })
+    );
   }
 
   getUserByEmail(email: string): Observable<any> {

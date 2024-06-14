@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TermsDialogComponent } from 'src/app/components/terms-dialog/terms-dialog.component';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { UserServiceService } from 'src/app/shared/services/users/user-service.service';
 
 
 
@@ -22,6 +23,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 export class SignUpComponent {
   myForm!: FormGroup;
   auth= inject(AuthService);
+  userService = inject(UserServiceService)
   errorMsg: string|null = null;
 
   constructor(private fb: FormBuilder, private firebase: FirebaseService, private router: Router, public dialog: MatDialog) { 
@@ -76,17 +78,22 @@ export class SignUpComponent {
     if(this.myForm.invalid ) return
 
     try {
-      this.firebase.addUser(signUpData).then((v)=> {
+      this.userService.addUser(signUpData).then((v)=> {
+        console.log(v)
+        this.auth.register(formData.email, formData.password, formData.username).subscribe({
+              next:()=>this.router.navigateByUrl('/login'),
+              error: (err)=>this.errorMsg = err.code
+            })
         // v will return the email exist or not in users collection
-        if(!v){
-          this.auth.register(formData.email, formData.password, formData.username).subscribe({
-            next:()=>this.router.navigateByUrl('/login'),
-            error: (err)=>this.errorMsg = err.code
-          })
-          } else {
-
-        }
-      });
+        // if(!v){
+        //   this.auth.register(formData.email, formData.password, formData.username).subscribe({
+        //     next:()=>this.router.navigateByUrl('/login'),
+        //     error: (err)=>this.errorMsg = err.code
+        //   })
+        //   } else {
+        //     console.error("User was not registered, Try again!")
+        // }
+      }).catch(err=> console.log(err));
       //await Promise.all([addUserPromise]).then(()=> this.router.navigate(['login']));
     } catch (error) {
         console.error('Error during form submission:', error);

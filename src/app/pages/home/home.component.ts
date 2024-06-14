@@ -25,7 +25,7 @@ import { Lesson } from 'src/app/shared/models/lesson.model';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
-export class HomeComponent implements OnInit, OnDestroy{
+export class HomeComponent implements OnInit{
 
   ds = inject(DataService);
   allBBLessons$: Observable<any> = this.ds.getAllLessonSubCollection('bb');
@@ -42,10 +42,8 @@ export class HomeComponent implements OnInit, OnDestroy{
 
   ngOnInit(): void {
       // this.getAllLessons();
-      // this.getAllUser();
-      this.getUser();
-      this.ds.checkUserProgress();
-
+      this.progress = this.ds.getCurrentUser$();
+      this.progress.subscribe((v:any)=> console.log(v))
       // this.progress$ = this.fb.getLessonProgress().subscribe(prog => this.progress= prog.data());
       // console.log(this.progress)
   }
@@ -57,9 +55,6 @@ export class HomeComponent implements OnInit, OnDestroy{
   If progress, check progress update dashboard
 
   */
-  ngOnDestroy(): void {
-    // this.progress$.unsubscribe();
-  }
 
   // getAllLessons(){
   //    this.fb.getAllLessonByCategory('bb').subscribe( lesson => {
