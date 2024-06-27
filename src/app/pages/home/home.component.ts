@@ -1,37 +1,34 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppShellComponent } from 'src/app/components/app-shell/app-shell.component';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
-import { Observable, Subscription, lastValueFrom, tap } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { DataService } from 'src/app/shared/services/data.service';
 import { Lesson } from 'src/app/shared/models/lesson.model';
+import { ProgressService } from 'src/app/shared/services/progress/progress.service';
+import { AuthService } from 'src/app/shared/services/auth/auth.service';
+import { LessonsService } from 'src/app/shared/services/lessons/lessons.service';
+import { bbLessonsInit } from 'src/app/shared/utils/init-data';
+import {  IProgress, LessonsProgress } from 'src/app/shared/models/progress.interface';
+import { SortPipe } from "../../shared/pipes/sort.pipe";
+import { Timestamp } from '@angular/fire/firestore';
 
-// interface Lesson {
-//   name: string;
-//   id: string;
-//   progress: number;
-//   category: string;
-//   instructor: string;
-//   language: string;
-//   path:  string;
-//   locked: boolean;
-// }
 
 @Component({
-  selector: 'app-home',
-  standalone: true,
-  imports: [CommonModule, AppShellComponent, RouterModule],
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
+    selector: 'app-home',
+    standalone: true,
+    templateUrl: './home.component.html',
+    styleUrls: ['./home.component.scss'],
+    imports: [CommonModule, AppShellComponent, RouterModule, SortPipe]
 })
 export class HomeComponent implements OnInit{
 
   ds = inject(DataService);
+  ps = inject(ProgressService);
+  as = inject(AuthService);
+  ls = inject(LessonsService);
   allBBLessons$: Observable<any> = this.ds.getAllLessonSubCollection('bb');
-
-  constructor(private fb: FirebaseService ){
-    }
 
   bbLessons: any[]= [];
   initialLesson: Lesson[] = []; 
@@ -39,69 +36,104 @@ export class HomeComponent implements OnInit{
   usersList: any = []
   progress!: any;
   progress$!: Subscription;
+  email!: string|null;
+  loadingProgress: boolean = true;
+  selectedCategory = signal('bb');
+  categoryProgress: LessonsProgress[]= [];
+
+  constructor(private fb: FirebaseService, private router: Router ){
+    this.email = localStorage.getItem('email')??'';
+  }
 
   ngOnInit(): void {
-      // this.getAllLessons();
-      this.progress = this.ds.getCurrentUser$();
-      this.progress.subscribe((v:any)=> console.log(v))
-      // this.progress$ = this.fb.getLessonProgress().subscribe(prog => this.progress= prog.data());
-      // console.log(this.progress)
+      // this.ls.seedLessonsByCategory(this.selectedCategory(), bbLessonsInit).
+      //   subscribe(v=> console.log(v));
+        
+ 
+      this.email = localStorage.getItem('email')??'';
+      if(this.email === ''){
+        console.error("Email not found")
+        this.email = this.as.getUserEmail();
+      }
+      this.ps.initializeProgressOnLoad(this.email!)
+      .subscribe({
+        next: (progress) => {
+          this.progress = progress;
+          this.getCategoryProgress(this.selectedCategory(),this.progress);
+          this.loadingProgress = false;
+        },
+        error: (error) => {
+          console.error('Error initializing progress:', error);
+          this.loadingProgress = false;
+          // Handle the error (e.g., show a user-friendly message)
+        }
+      });
+      
   }
-  /* Init :
-
-  Check Auth
-  Init User Details
-  Init Progress Details: If !progress then false
-  If progress, check progress update dashboard
-
-  */
-
-  // getAllLessons(){
-  //    this.fb.getAllLessonByCategory('bb').subscribe( lesson => {
-  //     this.bbLessons = lesson
-  //     console.log(this.bbLessons)
-  //     this.sortLessons(this.bbLessons)
-  //   })
-  // }
-
-  extractLessonNumber(lesson: { name: string; }) {
-    const match = lesson.name.match(/\d+/);
-    return match ? parseInt(match[0], 10) : 0;
-  }
-
-  // Function to sort lessons by lesson number
-  sortLessons(array: any) {
-    array.sort((a: { name: string; }, b: { name: string; }) => {
-      const lessonNumberA = this.extractLessonNumber(a);
-      const lessonNumberB = this.extractLessonNumber(b);
-      return lessonNumberA - lessonNumberB;
-    });
-  }
-
-  getUser(){
-    const email = localStorage.getItem('email')?? ''
-    // this.fb.getUserCollection(email).get().subscribe(querySnapshot => {
-    //   if (querySnapshot.size > 0) {
-    //     // Assuming there's only one document with the given email
-    //     const docId = querySnapshot.docs[0].id;
-    //     localStorage.setItem('userId', docId);
-    //   } else {
-    //     console.log("No document found with the specified email");
-    //   }
-    // })
-  }
-
-  selectLesson(id: string){
-    console.log(id)
-    const les = this.bbLessons.filter(lesson => lesson.id === id)
-    const currentLes = JSON.stringify(les)
-    localStorage.setItem('currentLesson',currentLes)
-    console.log(les)
   
-    this.fb.updateLesson(les)
+  selectLesson(id: string){
+    this.updateLessonProgress(id)
   }
 
   startLesson(id: string){
-    this.fb.initCourse(this.bbLessons)
+    this.selectedCategory.set(id);
+    this.ps.initializeProgressOnLoad(this.email!)
+      .subscribe({
+        next: (progress) => {
+          this.progress = progress;
+          this.getCategoryProgress(this.selectedCategory(),this.progress);
+          this.loadingProgress = false;
+        },
+        error: (error) => {
+          console.error('Error initializing progress:', error);
+          this.loadingProgress = false;
+          // Handle the error (e.g., show a user-friendly message)
+        }
+      });
+  }
+
+  getCategoryProgress(category:string, progress: IProgress){
+    const categoryProg = progress.categoryProgress.filter(val => val.categoryName.toLocaleLowerCase() === category.toLocaleLowerCase());
+    this.categoryProgress = categoryProg[0].lessons
+  }
+
+  updateLessonProgress(lessonId: string): void {
+     
+    if (!this.progress || this.progress?.categoryProgress.length === 0) return; 
+    localStorage.setItem('categoryProgress',JSON.stringify(this.progress.categoryProgress))
+    for (const category of this.progress.categoryProgress) {
+
+      const lessonToUpdate = category.lessons.find((l: { id: string; }) => l.id === lessonId);
+
+      if (lessonToUpdate && lessonToUpdate.progress === '0' && lessonToUpdate.watchDuration === 0) {
+        
+        const updatedLessonData: Partial<IProgress> = {
+          categoryProgress: this.progress.categoryProgress.map((cat: { lessons: { id: string; }[]; }) => ({
+            ...cat,
+            lessons: cat.lessons.map((lesson: { id: string; }) => (lesson.id === lessonId ? {
+              ...lesson,
+              progress: '1',
+              startDate: Timestamp.now() // Current timestamp
+            } : lesson))
+          }))
+        };
+        this.ps.updateProgress(this.email!, updatedLessonData)
+            .subscribe({
+              next: (updatedProgress) => {
+                this.progress = updatedProgress;
+                this.ds.setLessonData(updatedProgress, lessonToUpdate, this.email!);
+                this.router.navigate([`/lesson/${this.selectedCategory().toLocaleLowerCase()}`, lessonId]);
+                // Optionally update your UI here
+              },
+              error: (error) => {
+                console.error('Error updating progress:', error);
+                // Handle error here
+              }
+            });
+      } else {
+        this.ds.setLessonData(this.progress, lessonId, this.email!);
+        this.router.navigate([`/lesson/${this.selectedCategory().toLocaleLowerCase()}`, lessonId]);
+      }
+    }
   }
 }

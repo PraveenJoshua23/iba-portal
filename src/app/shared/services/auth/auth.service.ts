@@ -13,6 +13,16 @@ export class AuthService {
 
   constructor( private route: Router) { }
 
+  getUserEmail(): string|null{
+    const user = localStorage.getItem('email');
+    if(user === ''){
+      const user = this.firebaseAuth.currentUser;
+      return user ? user.email : null; 
+    } else {
+      return user;
+    }
+  }
+
   forgotPassword(email:string): Observable<void>{
     const promise = sendPasswordResetEmail(this.firebaseAuth, email);
     // return from(this.auth.sendPasswordResetEmail(email))

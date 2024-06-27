@@ -51,7 +51,8 @@ export class LoginComponent implements OnInit {
       this.auth.signIn( email, password ).subscribe({
         next: () => {
           this.getUser();
-          this.route.navigateByUrl('/home')
+          this.route.navigateByUrl('/home');
+          localStorage.setItem('email', email);
         },
         error: (error) => {
           console.log(error)

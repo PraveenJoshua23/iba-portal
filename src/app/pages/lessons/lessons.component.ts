@@ -1,11 +1,16 @@
-import { Component, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, Time } from '@angular/common';
 import { VideoPlayerComponent } from 'src/app/components/video-player/video-player.component';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
 import { Lesson } from 'src/app/shared/models/lesson.model';
-import { BehaviorSubject, Subscription } from 'rxjs';
+import {  Subscription } from 'rxjs';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
+import { IProgress, LessonsProgress } from 'src/app/shared/models/progress.interface';
+import { DataService } from 'src/app/shared/services/data.service';
+import { LessonsService } from 'src/app/shared/services/lessons/lessons.service';
+import { ProgressService } from 'src/app/shared/services/progress/progress.service';
+import { ILesson } from 'src/app/shared/models/lessons.interface';
 
 interface Progress {
   BB: LessonProg[],
@@ -47,10 +52,19 @@ interface fileMetadata{
   styleUrls: ['./lessons.component.scss'],
 })
 export class LessonsComponent implements OnInit, OnDestroy {
+  _progress: LessonsProgress | null =null;
+  _lesson: any= null;
+  _email: string| null = null;
+  _category!: string;
+
+  ds= inject(DataService);
+  ls= inject(LessonsService);
+  ps= inject(ProgressService);
+
   title!: string;
   isQuizOpen: boolean = false;
   currentQuizIndex = 0;
-  currentLesson!: any; 
+  currentLesson = signal<ILesson | null>(null); 
   userAnswers: number[] = [];
   showCorrectAnswer = false;
   videoSrc: any;
@@ -62,9 +76,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
   category!: string;
   tabs = ['Materials', 'Notes', 'Quiz', 'QnA Forum'];
   activeTabIndex = 0;
-  progress!: Progress;
   progress$!: Subscription;
-  lessonProgress!: LessonProg;
   fileList: { name: string; videolink: any; }[] = [];
   materialList: fileMetadata[] = [];
   imageArray: any[] = [];
@@ -77,48 +89,64 @@ export class LessonsComponent implements OnInit, OnDestroy {
     private ar: ActivatedRoute, 
     private storage: AngularFireStorage,
    ){
-    this.ar.queryParams.subscribe(params => {
+    this.ar.params.subscribe(params=> {
       this.lessonId = params['id'];
-      this.category = this.lessonId.split('/')[0];
-      const str = this.lessonId.split('/')[1];
-      const numbers = str.match(/\d+/);
-
-      if (numbers) {
-        this.lessonNo = parseInt(numbers[0], 10);
-      }
-    });
+      this._category = params['category']
+    })
   }
 
   ngOnInit(): void {
-      this.materialList = [];
-      const encoded = this.route.url.split('/')[3]
-      this.title = decodeURIComponent(encoded);
+    this._lesson = this.ds.getSelectedLesson() ?? this.lessonId;
+    this._email = this.ds.getUserEmail() ?? localStorage.getItem('email');
+    this._progress =  this.getProgress();
+    this.initLesson();
+    
+    console.log("progress: ", this._progress);
 
-      const email = localStorage.getItem('email') || '';
-      this.initializeLesson(email);
-
-      this.progress$ = this.firebase.getLessonProgress().subscribe((prog:any) => {
-        this.progress = prog.data();
-        this.lessonProgress = (this.progress as any)[this.category.toUpperCase()].find((lesson:any) => lesson.lessonNo === this.lessonNo)
-        // this.progress = progdata[this.category.toUpperCase()].filter((lesson:any) => {
-        //   // console.log(lessson.id, this.lessonId )
-        //   lesson.id = this.lessonId
-        // } )
-        console.log(this.lessonProgress)
-      });
+    this.materialList = [];
+    const encoded = this.route.url.split('/')[3]
+    this.title = decodeURIComponent(encoded);
   }
 
   ngOnDestroy(): void {
-      this.progress$.unsubscribe();
+      // this.progress$.unsubscribe();
   }
 
 
+  initLesson(){
+    this.ls.getLessonById(this._lesson, this._category).subscribe({
+      next: (lesson) => {
+        this.currentLesson.set(lesson);
+        console.log(this.currentLesson())
+        if (!this.videoSrc) this.getVideoFromFirebase(this.currentLesson()!).then(url => this.videoSrc = url);
+      },
+      error: (err)=> console.error(err)
+    });
+  }
+
+  getProgress(){
+    const categoryProgress = localStorage.getItem('categoryProgress');
+    if(categoryProgress){
+      const parsedCategory = JSON.parse(categoryProgress!);
+      const allprogress = parsedCategory.filter((category: any)=> category.categoryName.toLocaleLowerCase() === this._category.toLocaleLowerCase());
+      const filterProgress = allprogress[0].lessons.filter((lesson: { id: any; }) => lesson.id === this._lesson )
+      return filterProgress[0]
+    } else {
+      console.log("Cannot find progress from localStorage.")
+    }
+    // this.ps.getProgressByEmail(this._email!).then(progress=> {
+    //   const categoryLesson = progress.categoryProgress.filter((progress: { categoryName: string; })=> progress.categoryName === category)
+    //   console.log(progress)
+    //   return categoryLesson
+    // });
+  }
+
   async initializeLesson(email:string){
-    this.firebase.getLessonbyCategory(this.category,this.lessonId).subscribe(lesson=> {
-      this.currentLesson = lesson;
-      if (!this.videoSrc) this.getVideoFromFirebase(this.currentLesson).then(url => this.videoSrc = url);
-      this.initializeQuiz(this.currentLesson);
-    })
+    // this.firebase.getLessonbyCategory(this.category,this.lessonId).subscribe(lesson=> {
+    //   this.currentLesson = lesson;
+    //   if (!this.videoSrc) this.getVideoFromFirebase(this.currentLesson).then(url => this.videoSrc = url);
+    //   this.initializeQuiz(this.currentLesson);
+    // })
     this.getFileList();
   }
 
@@ -154,21 +182,34 @@ export class LessonsComponent implements OnInit, OnDestroy {
     console.log('triggered')
     this.isQuizOpen = true;
     this.isVideoCompleted = true;
+    // Update to progress as completed: true
+    // Get PostQuiz Details
+    // Set Quiz to open
     this.firebase.vidEndNxtLessonUpdate(this.lessonNo, this.category, this.progressRate())
     
   }
 
   progressUpdate(update:number){ 
     this.progressRate.set(update);
-    console.log(this.progressRate())
   }
 
   isChoiceSelected(): boolean {
     return this.userAnswers[this.currentQuizIndex] === -1;
   }
 
-  async getVideoFromFirebase(lesson: Lesson[]){
-    return await this.firebase.getVideo(lesson[0].category, lesson[0].language, lesson[0].path)
+  async getVideoFromFirebase(lesson: ILesson){
+    let lang;
+    switch(lesson.language){
+      case 'English':
+        lang = 'en';
+        break;
+      case 'Tamil':
+        lang = 'ta';
+        break;
+      default:
+        lang = 'en'
+    }
+    return await this.ds.getVideo(lesson.category, lang, lesson.path)
   }
 
   storeQuiz(){

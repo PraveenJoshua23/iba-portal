@@ -1,13 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {MatTableModule} from '@angular/material/table';
+import {MatTableDataSource, MatTableModule} from '@angular/material/table';
 import {MatButtonModule} from '@angular/material/button';
-
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator'; 
 import {MatDialog, MatDialogModule} from '@angular/material/dialog';
 // import {Sort, MatSortModule} from '@angular/material/sort';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EditUserComponent } from 'src/app/components/edit-user/edit-user.component';
+import { MatSort } from '@angular/material/sort';
+import { DataService } from 'src/app/shared/services/data.service';
 
 export interface UserData {
   id: string;
@@ -28,15 +30,19 @@ const ELEMENT_DATA: UserData[] = [
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, MatTableModule, MatButtonModule, MatDialogModule ],
+  imports: [CommonModule, MatTableModule, MatButtonModule, MatDialogModule, MatPaginatorModule ],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss']
 })
-export class AdminComponent implements OnInit{
+export class AdminComponent implements OnInit, AfterViewInit{
 
   displayedColumns: string[] = ['id','name', 'language', 'networker', 'instructor', 'class', 'progress', 'action'];
-  dataSource: any = [];
+  dataSource = new MatTableDataSource<any>([]);;
   visibleRowCount = 5; // Default number of visible rows
+  ds = inject(DataService)
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('matSort') sort!: MatSort;
 
 
   constructor(private form: FormBuilder, private fb: FirebaseService, public dialog: MatDialog){
@@ -63,12 +69,16 @@ export class AdminComponent implements OnInit{
   updateVisibleRows(count: number) {
     this.visibleRowCount = count;
   }
-  
 
+  ngAfterViewInit() {
+    this.dataSource.paginator = this.paginator;
+    
+  }
+  
   getAllUsers(){
-    return this.fb.getUsers().then(v=> {
-      this.dataSource = v
-      console.log(v)
+    return this.ds.getAllUsersData().subscribe(users=>{
+      this.dataSource.data = users
+      this.dataSource.sort = this.sort;
     })
   }
 }

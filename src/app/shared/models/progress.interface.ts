@@ -1,4 +1,5 @@
 export interface IProgress {
+    id: string,
     email: string,
     classId: string,
     userId: string,
@@ -7,6 +8,8 @@ export interface IProgress {
 
 export interface CategoryProgress {
     categoryName: "BB" | "Introductory" | "Intermediate" | "Advanced",
+    progress: string,
+    locked: boolean,
     lessons: LessonsProgress[] 
 }
 
@@ -15,9 +18,15 @@ export interface LessonsProgress {
     name: string,
     lessonNo: string,
     watchDuration: number,
+    progress: string,
     completed: boolean,
     locked: boolean,
-    startDate: Date,
-    completedDate: Date,
-    postQuizId: string
+    startDate: Timestamp | null,
+    completedDate: Timestamp | null,
+    postQuizId: string | null
 }
+
+export interface Timestamp {
+    nanoseconds: number;
+    seconds: number;
+  }

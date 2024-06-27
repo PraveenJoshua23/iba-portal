@@ -3,7 +3,7 @@ import { LessonsComponent } from './pages/lessons/lessons.component';
 
 export const LESSON_ROUTE: Route[] = [
     {
-      path: 'bb/:id',
+      path: ':category/:id',
       component: LessonsComponent
     }
 ];

@@ -1,4 +1,4 @@
-import { Injectable, Signal } from '@angular/core';
+import { Injectable, Signal, inject } from '@angular/core';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
@@ -16,9 +16,10 @@ import {
   updateDoc,
   arrayUnion,
 } from '@angular/fire/firestore';
-import { Observable, lastValueFrom, take } from 'rxjs';
+import { Observable, firstValueFrom, lastValueFrom, take } from 'rxjs';
 import { ref, onValue, getDatabase } from 'firebase/database';
 import { Lesson } from '../models/lesson.model';
+import { Storage,ref as Ref, getDownloadURL } from '@angular/fire/storage';
 
 interface Ilessons {
   lessonNo: number;
@@ -39,6 +40,7 @@ export class FirebaseService {
   studentCol!: CollectionReference<DocumentData>;
   src!: any;
   intNum: number = 0;
+  s = inject(Storage);
 
   constructor(
     public db: AngularFireDatabase,
@@ -97,19 +99,22 @@ export class FirebaseService {
   }
 
   async getVideo(category: string, lang: string, path: string) {
-    const ref = this.storage.ref(`lessons/${category}/${lang}/${path}.mp4`);
-    const vid = ref.getDownloadURL().pipe(take(1));
-    return lastValueFrom(vid)
-      .then((url) => {
-        this.src = url;
-        // console.log("src", this.src);
-        return this.src;
-      })
-      .catch((error) => {
-        console.error('Error getting video URL:', error);
-        // Handle the error or throw it if you want to handle it outside of this function.
-        throw error;
-      });
+    try {
+      const storagePath = `lessons/${category}/${lang}/${path}.mp4`;
+      const storageRef = Ref(this.s, storagePath);
+  
+      // Directly await the Promise from getDownloadURL
+      const url = await getDownloadURL(storageRef); 
+      this.src = url;
+      return url;  
+    } catch (error) {
+      console.error('Error getting video URL:', error);
+  
+      // Error handling (similar to previous example)
+      // ...
+  
+      return null; 
+    }
   }
 
   async addUser(data: unknown): Promise<boolean> {
@@ -211,52 +216,6 @@ export class FirebaseService {
       })
       .then(() => console.log('User answers added successfully'));
   }
-
-  // async getLessonIdByIdentifier(identifier: string, lessonCategory:string): Promise<any> {
-  //   const lessonsCollectionRef = collection(this.firestoreDb, `lessons/${lessonCategory}/lesson`);
-  //   console.log(lessonsCollectionRef,"getLesson ",`lessons/${lessonCategory}/lesson`)
-  //   const lessonsQuery = query(lessonsCollectionRef, where('id', '==', identifier));
-
-  //   const querySnapshot = await getDocs(lessonsQuery);
-  //   return querySnapshot.docs;
-
-  // }
-
-  // async getLessonIdByIdentifier(identifier: string, lessonCategory: string): Promise<string | null> {
-  //   const lessonsCollectionRef = collection(this.firestoreDb, `lessons/${lessonCategory}/lesson`);
-  //   console.log(lessonsCollectionRef, "getLesson ", `lessons/${lessonCategory}/lesson`);
-  // console.log("Iden : "+identifier);
-
-  //   const lessonsQuery = query(lessonsCollectionRef, where('id', '==', identifier));
-  //   const querySnapshot = await getDocs(lessonsQuery);
-
-  //   // Check if there is a matching document
-  //   if (!querySnapshot.empty) {
-  //     // Assuming you want to get the ID of the first matching document
-  //     const lessonDoc = querySnapshot.docs[0];
-  //     const lessonId = lessonDoc.id;
-  // console.log(lessonId +"LLLLLLLLLLLLL");
-
-  //     return lessonId;
-  //   }
-
-  //   // Return null if no matching document is found
-  //   console.log("MMMMMMMMMLLLLLLLLLLLLL");
-  //   return null;
-  // }
-
-  // Thomas
-  //  async getLessonIdByIdentifier(identifier: string, lessonCategory:string): Promise<any> {
-  //   const lessonsCollectionRef = collection(this.firestoreDb, `lessons/${lessonCategory}/lesson`);
-  //   console.log(lessonsCollectionRef,"getLesson ",`lessons/${lessonCategory}/lesson`)
-  //   const lessonsQuery = query(lessonsCollectionRef, where('id', '==', identifier));
-
-  //   const querySnapshot = await getDocs(lessonsQuery);
-  //   console.log("JJJJJJJJJJJ"+ querySnapshot.docs);
-
-  //   return querySnapshot.docs;
-
-  // }
 
   async getLessonIdByIdentifier(
     identifier: string,

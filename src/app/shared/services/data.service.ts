@@ -1,16 +1,13 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, from, of, throwError } from 'rxjs';
-import { catchError, map, mergeMap, switchMap, tap } from 'rxjs/operators';
+import { Observable, from, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { UserDetails } from '../models/user.model';
 import { Lesson } from '../models/lesson.model';
 import { CollectionReference, Firestore, addDoc, collection, collectionData, doc, getDocs, orderBy, query, setDoc, where } from '@angular/fire/firestore';
-import { Auth, authState } from '@angular/fire/auth';
+import { Auth } from '@angular/fire/auth';
+import { IProgress } from '../models/progress.interface';
+import { Storage, getDownloadURL, ref } from '@angular/fire/storage';
 
-interface Progress {
-  email: string;
-  displayName?: string;
-  // ...other profile details
-}
 
 @Injectable({
   providedIn: 'root'
@@ -23,8 +20,13 @@ export class DataService {
 
   users$!: Observable<UserDetails[]>;
 
+  private progressData: IProgress | null = null;
+  private selectedLesson: any = null;
+  private userEmail: string | null = null;
+
   fs = inject(Firestore);
   auth = inject(Auth);
+  s = inject(Storage)
 
   constructor() {
     this.usersRef = collection(this.fs, 'users');
@@ -34,8 +36,20 @@ export class DataService {
 
   }
 
+  setLessonData(progress: IProgress, lesson: any, email: string) {
+    this.progressData = progress;
+    this.selectedLesson = lesson;
+    this.userEmail = email;
+  }
+
+  getProgressData(): IProgress | null { return this.progressData; }
+  getSelectedLesson(): any { return this.selectedLesson; }
+  getUserEmail(): string | null { return this.userEmail; }
+
+  /* --------------------- Re: Functions (Need to rearrange) --------------------------- */
+
   getAllUsersData(): Observable<UserDetails[]>{
-    return collectionData(this.usersRef) as Observable<UserDetails[]>
+    return collectionData(this.usersRef,  { idField: 'id' }) as Observable<UserDetails[]>
   }
 
   getAllLessons():Observable<Lesson[]>{
@@ -78,34 +92,18 @@ export class DataService {
     }
   }
 
-  getProgress(email: string): Observable<Progress | null>{
-    
-      const q = query(this.progressRef, where('email', '==', email));
-
-      return from(getDocs(q)).pipe( // Convert Promise to Observable
-        switchMap(snapshot => {
-          if (snapshot.empty) {
-            return of(null);
-          } else {
-            // Assuming you only expect one document with the given email
-            console.log(snapshot.docs[0].data())
-            return of(snapshot.docs[0].data() as Progress);
-          }
-        })
-      );
-   
-  }
-
-  getCurrentUser$(): Observable<Progress | null> {
-    return authState(this.auth).pipe(
-      switchMap(user => {
-        if (user) {
-          return this.getProgress(user.email as string);
-        } else {
-          return of(null);
-        }
-      })
-    );
+  async getVideo(category: string, lang: string, path: string) {
+    try {
+      const storagePath = `lessons/${category}/${lang}/${path}.mp4`;
+      const storageRef = ref(this.s, storagePath);
+  
+      // Directly await the Promise from getDownloadURL
+      const url = await getDownloadURL(storageRef); 
+      return url;  
+    } catch (error) {
+      console.error('Error getting video URL:', error);  
+      return null; 
+    }
   }
 
   getUserByEmail(email: string): Observable<any> {
@@ -126,22 +124,4 @@ export class DataService {
       })
     );
   }
-
-
-
-  // get(id: string): Observable<YourDataModel> {
-  //   return this.collection.doc<YourDataModel>(id).valueChanges();
-  // }
-
-  // create(data: YourDataModel): Promise<void> {
-  //   return this.collection.add(data);
-  // }
-
-  // update(id: string, data: YourDataModel): Promise<void> {
-  //   return this.collection.doc(id).update(data);
-  // }
-
-  // delete(id: string): Promise<void> {
-  //   return this.collection.doc(id).delete();
-  // }
 }
