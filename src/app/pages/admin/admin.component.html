@@ -9,104 +9,17 @@
             </div>
         </div> -->
 
-        <div class="container mx-auto">
-            <h2 class="py-3">User Table</h2>
-            <table mat-table [dataSource]="dataSource" matSort>
-                <!-- ID Column -->
-                <ng-container matColumnDef="id">
-                  <th mat-header-cell mat-sort-header *matHeaderCellDef >ID</th>
-                  <td mat-cell *matCellDef="let element; let index= index">{{ index+1}}</td>
-                </ng-container>
-          
-                <!-- Name Column -->
-                <ng-container matColumnDef="name">
-                  <th mat-header-cell mat-sort-header *matHeaderCellDef >Name</th>
-                  <td mat-cell *matCellDef="let element">{{ element.name }}</td>
-                </ng-container>
-          
-                <!-- Language Column -->
-                <ng-container matColumnDef="language">
-                  <th mat-header-cell mat-sort-header *matHeaderCellDef >Language</th>
-                  <td mat-cell *matCellDef="let element">{{ element.language }}</td>
-                </ng-container>
-          
-                <!-- Networker Column -->
-                <ng-container matColumnDef="networker">
-                  <th mat-header-cell mat-sort-header *matHeaderCellDef>Networker</th>
-                  <td mat-cell *matCellDef="let element" [style.color]="">{{ element.networker }}</td>
-                </ng-container>
+        <app-edit-user></app-edit-user>
 
-                <!-- Instructor Column -->
-                <ng-container matColumnDef="instructor">
-                    <th mat-header-cell mat-sort-header *matHeaderCellDef>Instructor</th>
-                    <td mat-cell *matCellDef="let element" [style.color]="">{{ element.instructor ? element.instructor : 'Daniel' }}</td>
-                </ng-container>
+        <app-edit-class></app-edit-class>
 
-                 <!-- Class Column -->
-                 <ng-container matColumnDef="class">
-                    <th mat-header-cell mat-sort-header *matHeaderCellDef>Class</th>
-                    <td mat-cell *matCellDef="let element" [style.color]="">{{ element.class ? element.class : 'Class 141' }}</td>
-                </ng-container>
+        <app-edit-lesson></app-edit-lesson>
 
-                 <!-- Progress -->
-                 <ng-container matColumnDef="progress">
-                    <th mat-header-cell mat-sort-header *matHeaderCellDef>Progress</th>
-                    <td mat-cell *matCellDef="let element" >{{ element.progress ? element.progress : '0%' }}</td>
-                </ng-container>
+        <div id="edit-class" class="container mx-auto">
 
-                 <!-- Progress -->
-                 <ng-container matColumnDef="action">
-                    <th mat-header-cell mat-sort-header *matHeaderCellDef>Action</th>
-                    <td mat-cell *matCellDef="let element" (click)="openDialog(element)">Edit user</td>
-                </ng-container>
-          
-                <tr mat-header-row  *matHeaderRowDef="displayedColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-              </table>
-              <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 15]" showFirstLastButtons
-                ></mat-paginator>
         </div>
-
-        <!-- <div class="container mx-auto">
-            <table class="min-w-full bg-white border border-gray-300">
-              <thead>
-                <tr class="bg-gray-200">
-                  <th class="py-2 px-4 text-[#667085] text-sm border-b">S.No</th>
-                  <th class="py-2 px-4 text-[#667085] text-sm border-b">Name</th>
-                  <th class="py-2 px-4 text-[#667085] text-sm border-b">Language</th>
-                  <th class="py-2 px-4 text-[#667085] text-sm border-b">Networker</th>
-                  <th class="py-2 px-4 text-[#667085] text-sm border-b">Instructor</th>
-                  <th class="py-2 px-4 text-[#667085] text-sm border-b">Class</th>
-                  <th class="py-2 px-4 text-[#667085] text-sm border-b">Progress</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let row of dataSource; let index = index">
-                  <td class="py-2 text-sm text-center px-4 border-b">{{ index+1}}</td>
-                  <td class="py-2 text-sm text-center px-4 border-b">{{ row.name }}</td>
-                  <td class="py-2 text-sm text-center px-4 border-b">{{ row.language }}</td>
-                  <td class="py-2 text-sm text-center px-4 border-b">{{ row.networker ? 'Yes' : 'No' }}</td>
-                  <td class="py-2 text-sm text-center px-4 border-b">{{ row.instructor ? row.instructor : 'Daniel' }}</td>
-                  <td class="py-2 text-sm text-center px-4 border-b">{{ row.class ? row.class : 'Class 151' }}</td>
-                  <td class="py-2 text-sm text-center px-4 border-b">{{ row.progress ? row.progress : "0%" }}</td>
-                </tr> 
-              </tbody>
-            </table>
-          </div> -->
 
        
           
     </section>
-
-    <!-- <section class="flex flex-col w-full py-8 px-[6%] space-y-5 overflow-y-hidden">
-        <div>
-            <h2>Create/Update/Add/Delete items</h2>
-        </div>
-
-        <div>
-            <h3>Add Lesson</h3>
-
-        </div>
-
-    </section> -->
 </main>

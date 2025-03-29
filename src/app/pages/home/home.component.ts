@@ -9,10 +9,14 @@ import { Lesson } from 'src/app/shared/models/lesson.model';
 import { ProgressService } from 'src/app/shared/services/progress/progress.service';
 import { AuthService } from 'src/app/shared/services/auth/auth.service';
 import { LessonsService } from 'src/app/shared/services/lessons/lessons.service';
-import { bbLessonsInit } from 'src/app/shared/utils/init-data';
+import { seedUser } from 'src/app/shared/utils/init-data';
 import {  IProgress, LessonsProgress } from 'src/app/shared/models/progress.interface';
 import { SortPipe } from "../../shared/pipes/sort.pipe";
 import { Timestamp } from '@angular/fire/firestore';
+import { UserService } from 'src/app/shared/services/users/user.service';
+import { IUser } from 'src/app/shared/models/user.interface';
+import { User } from '@angular/fire/auth';
+
 
 
 @Component({
@@ -28,14 +32,16 @@ export class HomeComponent implements OnInit{
   ps = inject(ProgressService);
   as = inject(AuthService);
   ls = inject(LessonsService);
+  userService = inject(UserService)
   allBBLessons$: Observable<any> = this.ds.getAllLessonSubCollection('bb');
 
   bbLessons: any[]= [];
   initialLesson: Lesson[] = []; 
   currentLesson: Lesson[] = [];
-  usersList: any = []
+  // usersList: any = []
   progress!: any;
   progress$!: Subscription;
+  userData!: IUser | null;
   email!: string|null;
   loadingProgress: boolean = true;
   selectedCategory = signal('bb');
@@ -48,8 +54,23 @@ export class HomeComponent implements OnInit{
   ngOnInit(): void {
       // this.ls.seedLessonsByCategory(this.selectedCategory(), bbLessonsInit).
       //   subscribe(v=> console.log(v));
-        
- 
+      // this.userService.seedUsersToFirestore(seedUser)
+
+      this.as.authState$.subscribe((user: User | null) => {
+        if(user){
+          console.log("User is logged in!", user);
+
+          this.email = localStorage.getItem('email')??'';
+          if(this.email === ''){
+            console.error("Email not found")
+            this.email = this.as.getUserEmail();
+          }
+          this.getUser();
+        } else {
+          console.log("User is not logged in!")
+        }
+      })
+
       this.email = localStorage.getItem('email')??'';
       if(this.email === ''){
         console.error("Email not found")
@@ -69,6 +90,14 @@ export class HomeComponent implements OnInit{
         }
       });
       
+  }
+
+  async getUser(){
+    if(this.email){
+      this.userData = await this.ds.getUserByEmail(this.email)
+    } else {
+      console.error("Email is not found")
+    }
   }
   
   selectLesson(id: string){

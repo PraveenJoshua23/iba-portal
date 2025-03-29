@@ -1,12 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, from, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { UserDetails } from '../models/user.model';
+
 import { Lesson } from '../models/lesson.model';
 import { CollectionReference, Firestore, addDoc, collection, collectionData, doc, getDocs, orderBy, query, setDoc, where } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { IProgress } from '../models/progress.interface';
 import { Storage, getDownloadURL, ref } from '@angular/fire/storage';
+import { IUser, IUserDetails } from '../models/user.interface';
 
 
 @Injectable({
@@ -18,7 +19,7 @@ export class DataService {
   usersRef!: CollectionReference;
   lessonsRef!: CollectionReference;
 
-  users$!: Observable<UserDetails[]>;
+  users$!: Observable<IUserDetails[]>;
 
   private progressData: IProgress | null = null;
   private selectedLesson: any = null;
@@ -48,8 +49,8 @@ export class DataService {
 
   /* --------------------- Re: Functions (Need to rearrange) --------------------------- */
 
-  getAllUsersData(): Observable<UserDetails[]>{
-    return collectionData(this.usersRef,  { idField: 'id' }) as Observable<UserDetails[]>
+  getAllUsersData(): Observable<IUserDetails[]>{
+    return collectionData(this.usersRef,  { idField: 'id' }) as Observable<IUserDetails[]>
   }
 
   getAllLessons():Observable<Lesson[]>{
@@ -106,22 +107,38 @@ export class DataService {
     }
   }
 
-  getUserByEmail(email: string): Observable<any> {
+  async getUserByEmail(email: string): Promise<IUser|null> {
     const q = query(this.usersRef, where('email', '==', email));
 
-    return from(getDocs(q)).pipe(
-      map(querySnapshot => {
-        if (!querySnapshot.empty) {
-          const userDoc = querySnapshot.docs[0];
-          return userDoc.data();
-        } else {
-          return null; 
-        }
-      }),
-      catchError(error => {
-        console.error('Error getting user details:', error);
-        return of(null); // Return null if there's an error
-      })
-    );
+    try {
+      const querySnapshot = await getDocs(q);
+      console.log('querysnapshot:', querySnapshot)
+      if (!querySnapshot.empty) {
+        const userDoc = querySnapshot.docs[0];
+        return { id: userDoc.id, ...userDoc.data() } as IUser;
+      } else {
+        return null; // User not found
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      return null;
+    }
+
+    // return from(getDocs(q)).pipe(
+    //   map(querySnapshot => {
+    //     console.log('querysnapshot:', querySnapshot)
+    //     console.log(querySnapshot.empty)
+    //     if (!querySnapshot.empty) {
+    //       const userDoc = querySnapshot.docs[0];
+    //       return userDoc.data();
+    //     } else {
+    //       return null; 
+    //     }
+    //   }),
+    //   catchError(error => {
+    //     console.error('Error getting user details:', error);
+    //     return of(null); // Return null if there's an error
+    //   })
+    // );
   }
 }

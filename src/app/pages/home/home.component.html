@@ -14,7 +14,7 @@
                 @for (lessons of allBBLessons$|async| sort; track lessons.id; let last = $last; let i = $index) {
                     <div class="flex items-center justify-between px-4 py-3 rounded-sm"
                     (click)="selectLesson(categoryProgress[i].id)" 
-                    [ngClass]="{ 'border-b' : !last, 'pointer-events-none opacity-60': categoryProgress[i]['locked'], 'cursor-pointer':!categoryProgress[i]['locked']}"  
+                    [ngClass]="{ 'border-b' : !last, 'pointer-events-none opacity-60': categoryProgress[i].locked!, 'cursor-pointer':!categoryProgress[i].locked!}"  
                     >
                         <div class="flex items-center gap-x-2">
                             <span>{{lessons.lessonNo}}.</span>

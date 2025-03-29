@@ -1,4 +1,6 @@
-export interface ILesson{
+import { IQuiz } from './quiz.interface';
+
+export interface ILesson {
     id: string;
     name: string;
     description: string;
@@ -7,4 +9,5 @@ export interface ILesson{
     path: string;
     language: string;
     instructor: string;
+    quiz: IQuiz[];
 }

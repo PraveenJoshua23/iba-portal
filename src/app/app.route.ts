@@ -29,7 +29,7 @@ export const APP_ROUTE: Route[] = [
     {
         path: 'admin',
         component: AppShellComponent,
-        canActivate: [authGuard, adminGuard],
+        canActivate: [authGuard],
         loadChildren: () => import('./admin.route').then((m)=>m.ADMIN_ROUTE)
     },
 

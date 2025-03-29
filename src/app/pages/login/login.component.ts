@@ -11,6 +11,8 @@ import { Router } from '@angular/router';
 // import { AuthService } from 'src/app/auth.service';
 import { AuthService as Auth } from 'src/app/shared/services/auth/auth.service';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
+import { DataService } from 'src/app/shared/services/data.service';
+import { user } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-login',
@@ -25,6 +27,7 @@ export class LoginComponent implements OnInit {
   isForgotten: boolean = false;
   userData: any;
   auth = inject(Auth);
+  ds = inject(DataService)
   errorMsg: string|null = null;
 
   constructor(
@@ -49,20 +52,18 @@ export class LoginComponent implements OnInit {
       this.isLoggingIn = true;
 
       this.auth.signIn( email, password ).subscribe({
-        next: () => {
-          this.getUser();
-          this.route.navigateByUrl('/home');
+        next: (user) => {
+          // this.getUser();
+          console.log(user)
           localStorage.setItem('email', email);
+          this.route.navigateByUrl('/home');
+          
         },
         error: (error) => {
           console.log(error)
           this.isLoggingIn = false;
         },
       });
-
-      // this.as.getUser(email, password).subscribe((res:any) => {
-      //   if(res['success']) this.route.navigate(['/home'])
-      // })
     }
   }
 
@@ -80,17 +81,11 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  getUser(){
-    const email = this.loginForm.get('email')?.value;
-    this.firebase.getUserByEmail(email).subscribe(user => {
-      this.userData = user[0]
+  // async getUser(){
+  //   const email = this.loginForm.get('email')?.value;
 
-      localStorage.setItem('username', this.userData.name)
-      localStorage.setItem('email', this.userData.email)
-      localStorage.setItem('language', this.userData.userDetails.language)
-
-    })
+  //   this.userData = await this.ds.getUserByEmail(email)
     
-  }
+  // }
   
 }

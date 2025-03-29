@@ -1,17 +1,21 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { Auth, createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithEmailAndPassword, signOut, updateProfile, user } from '@angular/fire/auth';
+import { Auth, createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithEmailAndPassword, signOut, updateProfile, user, authState } from '@angular/fire/auth';
 import { Router } from '@angular/router';
-import { Observable, from } from 'rxjs';
+import { Observable, Subscription, from } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  firebaseAuth = inject(Auth);
+  private firebaseAuth = inject(Auth);
   user$ = user(this.firebaseAuth);
   currentUserSignal = signal<any|null|undefined>(undefined)
+  authState$ = authState(this.firebaseAuth);
+  authStateSubscription!: Subscription;
 
-  constructor( private route: Router) { }
+  constructor( private route: Router) {
+  
+   }
 
   getUserEmail(): string|null{
     const user = localStorage.getItem('email');
@@ -41,7 +45,21 @@ export class AuthService {
   }
 
   signIn(email: string, password: string):Observable<void>{
-    const promise = signInWithEmailAndPassword(this.firebaseAuth, email, password).then(()=> {});
+    const promise = signInWithEmailAndPassword(this.firebaseAuth, email, password)
+      .then(()=> {
+        console.log("Signed In successfully!")
+      }).catch(err => console.error(err));
     return from(promise);
   }
+
+  handleLoginSuccess(user: any) {
+    localStorage.setItem('authState', JSON.stringify(user)); // Store in localStorage
+    // ...
+  }
+
+  getAuthState() {
+    const storedAuthState = localStorage.getItem('authState');
+    return storedAuthState ? JSON.parse(storedAuthState) : null;
+  }
+
 }

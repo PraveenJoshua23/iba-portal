@@ -1,410 +1,97 @@
-<h2 mat-dialog-title>Edit User</h2>
+<h2 mat-dialog-title class="font-semibold">User Details</h2>
 <form
   [formGroup]="myUserForm"
   (ngSubmit)="onSubmit()"
   class="flex flex-col space-y-10"
 >
   <mat-dialog-content class="mat-typography">
-    <section class="flex items-center mx-auto">
-      <div class="flex flex-col space-y-10">
-        <div class="flex w-full justify-between space-x-5">
-          <div class="flex flex-col space-y-2 w-1/2">
-            <label for="">Full Name</label>
-            <input
-              type="text"
-              placeholder="Enter your full name"
-              formControlName="name"
-              class="form-input rounded-md border p-3 w-full"
-              [ngClass]="{
-                'border-red-500':
-                  myUserForm.get('name')?.hasError('required') &&
-                  myUserForm.get('name')?.touched
-              }"
-            />
-            <div
-              *ngIf="
-                myUserForm.get('name')?.hasError('required') &&
-                myUserForm.get('name')?.touched
-              "
-              class="text-sm text-red-500"
-            >
-              Name is required.
+    <section class="flex flex-col mx-auto w-[60vw]">
+      <div class="flex w-full space-x-6">
+        <div class="w-1/2 rounded-md px-4 py-5 bg-gray-200">
+          <div class="flex justify-between">
+            <h4 class="text-black pb-1 border-b border-b-gray-300">Main Information</h4>
+            <div class="text-red-500 focus:outline-none cursor-pointer" (click)="editDetails()">Edit Mode: {{!editMode() ? 'ON' : 'OFF'}}</div>
+          </div>
+          <div class="flex flex-col space-y-5 mt-4">
+            <div class="flex justify-between">
+              <label for="name">Name:</label>
+              <input type="text" formControlName="name" class="ring-none bg-gray-200 focus:outline-none" [readOnly]="editMode()">
+            </div>
+  
+            <div class="flex justify-between">
+              <label for="email">Email:</label>
+              <input type="text" formControlName="email" class="ring-none bg-gray-200 focus:outline-none" [readOnly]="editMode()">
+            </div>
+
+            <div class="flex justify-between">
+              <label for="instructor">Instructor:</label>
+              <input type="text" formControlName="instructor" class="ring-none bg-gray-200 focus:outline-none" [readOnly]="editMode()">
+            </div>
+
+            <div class="flex justify-between">
+              <label for="networker">Networker:</label>
+              <input type="text" formControlName="networker" class="ring-none bg-gray-200 focus:outline-none" [readOnly]="editMode()">
+            </div>
+
+            <div class="flex justify-between">
+              <label for="classId">Class ID:</label>
+              <input type="text" formControlName="classId" class="ring-none bg-gray-200 focus:outline-none" [readOnly]="editMode()">
+            </div>
+
+            <div class="flex justify-between">
+              <label for="language">Language:</label>
+              <input type="text" formControlName="language" class="ring-none bg-gray-200 focus:outline-none" [readOnly]="editMode()">
+            </div>
+          </div>
+          
+        </div>
+        <div class="w-1/2">
+          <h4 class="text-black py-1 border-b border-b-gray-300">Other Information</h4>
+          <div class="flex flex-col space-y-2 mt-4">
+            <div class="flex justify-between">
+              <label for="age">Age:</label>
+              <input type="text" formControlName="age" class="ring-none focus:outline-none" [readOnly]="editMode()">
+            </div>
+            <div class="flex justify-between">
+              <label for="phone">Phone:</label>
+              <input type="text" formControlName="phone" class="ring-none focus:outline-none" [readOnly]="editMode()">
+            </div>
+            <div class="flex justify-between">
+              <label for="dob">Date of Birth:</label>
+              <input type="text" formControlName="dob" class="ring-none focus:outline-none" [readOnly]="editMode()">
+            </div>
+
+            <div class="flex justify-between">
+              <label for="gender">Gender:</label>
+              <input type="text" formControlName="gender" class="ring-none focus:outline-none" [readOnly]="editMode()">
+            </div>
+
+            <div class="flex justify-between">
+              <label for="marital">Marital Status:</label>
+              <input type="text" formControlName="marital" class="ring-none focus:outline-none" [readOnly]="editMode()">
+            </div>
+
+            <div class="flex justify-between">
+              <label for="occupation">Occupation</label>
+              <input type="text" formControlName="occupation" class="ring-none focus:outline-none" [readOnly]="editMode()">
+            </div>
+
+            <div class="flex justify-between">
+              <label for="religion">Religion:</label>
+              <input type="text" formControlName="religion" class="ring-none focus:outline-none" [readOnly]="editMode()">
+            </div>
+
+            <div class="flex justify-between">
+              <label for="studying">Status:</label>
+              <input type="text" formControlName="studying" class="ring-none focus:outline-none" [readOnly]="editMode()">
+            </div>
+
+            <div class="flex justify-between">
+              <label for="whyApply">Reason to Regsiter:</label>
+              <input type="text" formControlName="whyApply" class="ring-none focus:outline-none" [readOnly]="editMode()">
             </div>
           </div>
         </div>
-
-        <div class="flex w-full justify-between space-x-5">
-          <div class="flex flex-col space-y-2 w-1/2">
-            <label for="">Date of Birth</label>
-            <input
-              type="date"
-              placeholder="dd-mm-yyyy"
-              class="form-input rounded-md border p-3 w-full"
-              formControlName="dob"
-              [ngClass]="{
-                'border-red-500':
-                  myUserForm.get('dob')?.hasError('dobFormatValidator') &&
-                  myUserForm.get('dob')?.touched
-              }"
-            />
-            <!-- Display if date format is incorrect -->
-            <div
-              *ngIf="
-                myUserForm.get('dob')?.hasError('passwordStrength') &&
-                myUserForm.get('dob')?.touched
-              "
-              class="text-sm text-red-500"
-            >
-              Password must contain at least one uppercase letter, one lowercase
-              letter, and one numeric digit.
-            </div>
-          </div>
-
-          <div class="flex flex-col space-y-2 w-1/2">
-            <label for="">Religion</label>
-            <div class="flex items-center space-x-3 h-[52px] px-3 w-full">
-              <div class="flex items-center space-x-2">
-                <label for="religion1">
-                  <input
-                    type="radio"
-                    id="religion1"
-                    formControlName="religion"
-                    class="w-3 h-3"
-                    value="Christian"
-                  />
-                  Christian
-                </label>
-              </div>
-
-              <div class="flex items-center space-x-2">
-                <label for="religion2">
-                  <input
-                    type="radio"
-                    id="religion2"
-                    formControlName="religion"
-                    value="Non-Christian"
-                  />
-                  Non-Christian
-                </label>
-              </div>
-            </div>
-            <div
-              *ngIf="
-                myUserForm.get('religion')?.hasError('required') &&
-                myUserForm.get('religion')?.touched
-              "
-              class="text-sm text-red-500"
-            >
-              Religion is required.
-            </div>
-          </div>
-        </div>
-
-        <div class="flex w-full justify-between space-x-5">
-          <div class="flex flex-col space-y-2 w-1/2">
-            <label for="">Phone Number</label>
-            <input
-              type="text"
-              placeholder="Enter your Phone Number"
-              class="form-input rounded-md border p-3 w-full"
-              formControlName="phone"
-              [ngClass]="{
-                'border-red-500':
-                  myUserForm.get('phone')?.hasError('required') &&
-                  myUserForm.get('phone')?.touched
-              }"
-            />
-            <div
-              *ngIf="
-                myUserForm.get('phone')?.hasError('required') &&
-                myUserForm.get('phone')?.touched
-              "
-              class="text-sm text-red-500"
-            >
-              Phone is required.
-            </div>
-          </div>
-
-          <div class="flex flex-col space-y-2 w-1/2">
-            <label for="">Email</label>
-            <input
-              type="email"
-              placeholder="Enter your Email"
-              class="form-input rounded-md border p-3"
-              formControlName="email"
-              [ngClass]="{
-                'border-red-500':
-                  myUserForm.get('email')?.hasError('required') &&
-                  myUserForm.get('email')?.touched
-              }"
-            />
-            <div
-              *ngIf="
-                myUserForm.get('email')?.hasError('required') &&
-                myUserForm.get('email')?.touched
-              "
-              class="text-sm text-red-500"
-            >
-              Email is required.
-            </div>
-          </div>
-        </div>
-
-        <div class="flex w-full justify-between space-x-5">
-          <div class="flex flex-col space-y-2 w-1/2">
-            <label for="">Years of Faith</label>
-            <input
-              type="text"
-              placeholder="Enter your Years of Faith(No. of Years)"
-              class="form-input rounded-md border p-3 w-full"
-              formControlName="faith"
-              [ngClass]="{
-                'border-red-500':
-                  myUserForm.get('faith')?.hasError('required') &&
-                  myUserForm.get('faith')?.touched
-              }"
-            />
-            <div
-              *ngIf="
-                myUserForm.get('faith')?.hasError('required') &&
-                myUserForm.get('faith')?.touched
-              "
-              class="text-sm text-red-500"
-            >
-              Faith is required.
-            </div>
-          </div>
-
-          <div class="flex flex-col space-y-2 w-1/2">
-            <label for="">Occupation</label>
-            <input
-              type="text"
-              placeholder="Enter your Occupation"
-              class="form-input rounded-md border p-3"
-              formControlName="occupation"
-              [ngClass]="{
-                'border-red-500':
-                  myUserForm.get('occupation')?.hasError('required') &&
-                  myUserForm.get('occupation')?.touched
-              }"
-            />
-            <div
-              *ngIf="
-                myUserForm.get('occupation')?.hasError('required') &&
-                myUserForm.get('occupation')?.touched
-              "
-              class="text-sm text-red-500"
-            >
-              Occupation is required.
-            </div>
-          </div>
-        </div>
-
-        <div class="flex w-full justify-between space-x-5">
-          <div class="flex flex-col space-y-2 w-1/2">
-            <label for="">Gender</label>
-            <div class="flex items-center space-x-3 h-[52px] px-3 w-full">
-              <div class="flex items-center space-x-2">
-                <label for="gender1">
-                  <input
-                    type="radio"
-                    id="gender1"
-                    formControlName="gender"
-                    class="w-3 h-3"
-                    value="Male"
-                  />
-                  Male
-                </label>
-              </div>
-
-              <div class="flex items-center space-x-2">
-                <label for="gender2">
-                  <input
-                    type="radio"
-                    id="gender2"
-                    formControlName="gender"
-                    class="w-3 h-3"
-                    value="Female"
-                  />
-                  Female
-                </label>
-              </div>
-            </div>
-            <div
-              *ngIf="
-                myUserForm.get('gender')?.hasError('required') &&
-                myUserForm.get('gender')?.touched
-              "
-              class="text-sm text-red-500"
-            >
-              Gender is required.
-            </div>
-          </div>
-
-          <div class="flex flex-col space-y-2 w-1/2">
-            <label for="">Marital Status</label>
-            <div class="flex items-center space-x-3 h-[52px] px-3 w-full">
-              <div class="flex items-center space-x-2">
-                <label for="marital1">
-                  <input
-                    type="radio"
-                    id="marital1"
-                    formControlName="marital"
-                    class="w-3 h-3"
-                    value="Married"
-                  />
-                  Married
-                </label>
-              </div>
-
-              <div class="flex items-center space-x-2">
-                <label for="marital2">
-                  <input
-                    type="radio"
-                    id="marital2"
-                    formControlName="marital"
-                    class="w-3 h-3"
-                    value="Unmarried/Single"
-                  />
-                  Unmarried/Single
-                </label>
-              </div>
-            </div>
-            <div
-              *ngIf="
-                myUserForm.get('marital')?.hasError('required') &&
-                myUserForm.get('marital')?.touched
-              "
-              class="text-sm text-red-500"
-            >
-              Marital is required.
-            </div>
-          </div>
-        </div>
-
-        <div class="flex w-full justify-between space-x-5">
-          <div class="flex flex-col space-y-2 w-1/2">
-            <label for="language">Select Language</label>
-            <select
-              id="language"
-              name="language"
-              autocomplete="language-name"
-              formControlName="language"
-              class="block w-full rounded-md border-0 py-2.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6"
-            >
-              <option value="English">English</option>
-              <option value="Tamil">Tamil</option>
-              <option value="Hindi">Hindi</option>
-              <option value="Telugu">Telugu</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="flex w-full justify-between space-x-5">
-          <div class="flex flex-col space-y-2">
-            <label for="whyApply">Why did you apply for this Course?</label>
-            <input
-              type="text"
-              placeholder="Your answer"
-              class="form-input rounded-md border p-3 w-[972px]"
-              formControlName="whyApply"
-              [ngClass]="{
-                'border-red-500':
-                  myUserForm.get('whyApply')?.hasError('required') &&
-                  myUserForm.get('whyApply')?.touched
-              }"
-            />
-            <div
-              *ngIf="
-                myUserForm.get('whyApply')?.hasError('required') &&
-                myUserForm.get('whyApply')?.touched
-              "
-              class="text-sm text-red-500"
-            >
-              This is required.
-            </div>
-          </div>
-        </div>
-
-        <div class="flex w-full justify-between space-x-5">
-          <div class="flex flex-col space-y-2">
-            <label for="linkFrom">Who sent you the registration link?</label>
-            <input
-              type="text"
-              placeholder="Your answer"
-              class="form-input rounded-md border p-3 w-[972px]"
-              formControlName="linkFrom"
-              [ngClass]="{
-                'border-red-500':
-                  myUserForm.get('linkFrom')?.hasError('required') &&
-                  myUserForm.get('linkFrom')?.touched
-              }"
-            />
-            <div
-              *ngIf="
-                myUserForm.get('linkFrom')?.hasError('required') &&
-                myUserForm.get('linkFrom')?.touched
-              "
-              class="text-sm text-red-500"
-            >
-              This is required.
-            </div>
-          </div>
-        </div>
-
-        <div class="flex flex-col space-y-2 w-full">
-          <label class="w-1/2" for=""
-            >Are you studying the online Bible class with us already?</label
-          >
-          <div class="flex items-center space-x-3 h-[52px] px-3 w-1/2">
-            <div class="flex items-center space-x-2">
-              <label for="studying1">
-                <input
-                  type="radio"
-                  id="studying1"
-                  formControlName="studying"
-                  class="w-3 h-3"
-                  value="Yes"
-                />
-                Yes
-              </label>
-            </div>
-            <div class="flex items-center space-x-2">
-              <label for="studying2">
-                <input
-                  type="radio"
-                  id="studying2"
-                  formControlName="studying"
-                  class="w-3 h-3"
-                  value="No"
-                />
-                No
-              </label>
-            </div>
-          </div>
-
-          <div
-            *ngIf="
-              myUserForm.get('studying')?.hasError('required') &&
-              myUserForm.get('studying')?.touched
-            "
-            class="text-sm text-red-500"
-          >
-            This is required.
-          </div>
-        </div>
-
-        
-
-        <div
-          *ngIf="myUserForm.invalid && myUserForm.get('confirmPassword')?.dirty"
-          class="text-sm text-red-500"
-        >
-          Please check if all entries are correct.
-        </div>
-        <!-- <div class="flex justify-end w-full">
-              <button type="submit" class="bg-golden-500 rounded-md px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed" [disabled]="myUserForm.invalid">Submit</button>
-            </div> -->
       </div>
     </section>
   </mat-dialog-content>

@@ -11,7 +11,9 @@ module.exports = {
     "./app/**/*.ts",
   ],
   plugins: [
-    require('@tailwindcss/forms'),
+    require('@tailwindcss/forms')({
+      strategy: "base"
+    }),
     // ...
   ],
   theme: {
