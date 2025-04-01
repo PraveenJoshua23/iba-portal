@@ -1,4 +1,3 @@
-
 // Custom Theming for Angular Material
 // For more information: https://material.angular.io/guide/theming
 @use '@angular/material' as mat;
@@ -20,13 +19,15 @@ $hztc-website-warn: mat.define-palette(mat.$red-palette);
 
 // Create the theme object. A theme consists of configurations for individual
 // theming systems such as "color" or "typography".
-$hztc-website-theme: mat.define-light-theme((
-  color: (
-    primary: $hztc-website-primary,
-    accent: $hztc-website-accent,
-    warn: $hztc-website-warn,
-  )
-));
+$hztc-website-theme: mat.define-light-theme(
+    (
+        color: (
+            primary: $hztc-website-primary,
+            accent: $hztc-website-accent,
+            warn: $hztc-website-warn,
+        ),
+    )
+);
 
 // Include theme styles for core and each component used in your app.
 // Alternatively, you can import and @include the theme mixins for each component
@@ -38,12 +39,12 @@ $hztc-website-theme: mat.define-light-theme((
 @tailwind components;
 @tailwind utilities;
 
-@layer base{
-    body{
+@layer base {
+    body {
         @apply font-sans;
     }
 
-    h1{
+    h1 {
         @apply text-4xl;
         margin-top: 0.67em;
         margin-bottom: 0.67em;
@@ -51,28 +52,49 @@ $hztc-website-theme: mat.define-light-theme((
         margin-right: 0;
     }
 
-    h2{
-        @apply text-2xl
+    h2 {
+        @apply text-2xl;
     }
 
-    h3{
-        @apply text-xl
+    h3 {
+        @apply text-xl;
     }
 
-    h4{
-        @apply text-lg
+    h4 {
+        @apply text-lg;
     }
 
-    h5{
-        @apply text-base
+    h5 {
+        @apply text-base;
     }
 
-    h6{
-        @apply text-sm
+    h6 {
+        @apply text-sm;
     }
 }
 
+html,
+body {
+    height: 100%;
+}
+body {
+    margin: 0;
+    font-family: Roboto, 'Helvetica Neue', sans-serif;
+}
 
+/* Snackbar styles */
+.success-snackbar {
+    background-color: #4caf50 !important; /* Green */
+    color: white !important;
+}
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+.error-snackbar {
+    background-color: #f44336 !important; /* Red */
+    color: white !important;
+}
+
+/* Ensure the snackbar close button is visible */
+.success-snackbar .mat-button,
+.error-snackbar .mat-button {
+    color: white !important;
+}

@@ -9,7 +9,8 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TermsDialogComponent } from 'src/app/components/terms-dialog/terms-dialog.component';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { UserService } from 'src/app/shared/services/users/user.service';
-import { Subscription } from 'rxjs';
+import { ProfileService } from 'src/app/shared/services/profile/profile.service';
+import { Subscription, finalize, switchMap } from 'rxjs';
 
 @Component({
     selector: 'app-sign-up',
@@ -23,8 +24,10 @@ export class SignUpComponent implements OnDestroy {
     auth = inject(AuthService);
     auth$!: Subscription;
     userService = inject(UserService);
+    profileService = inject(ProfileService);
     errorMsg: string | null = null;
     readonly defaultRole: 'student' | 'instructor' | 'admin' = 'student';
+    isSubmitting = false;
 
     // Occupation options
     occupationOptions = ['Office Worker', 'Student', 'Government Official', 'Teacher', 'Housewife', 'Other'];
@@ -72,7 +75,10 @@ export class SignUpComponent implements OnDestroy {
     }
 
     async onSubmit() {
-        if (this.myForm.invalid) return;
+        if (this.myForm.invalid || this.isSubmitting) return;
+
+        this.isSubmitting = true;
+        this.errorMsg = null;
 
         const formData = this.myForm.value;
 
@@ -99,22 +105,45 @@ export class SignUpComponent implements OnDestroy {
         };
 
         try {
+            // First, add the user to Firestore
             this.userService
                 .addUser(signUpData)
-                .then((v) => {
-                    console.log(v);
-                    this.auth$ = this.auth.register(formData.email, formData.password, formData.name).subscribe({
-                        next: () => this.router.navigateByUrl('/login'),
-                        error: (err) => (this.errorMsg = err.code),
-                    });
+                .then(() => {
+                    // Register the user with Firebase Authentication
+                    this.auth$ = this.auth
+                        .register(formData.email, formData.password, formData.name)
+                        .pipe(
+                            // Initialize profile after successful registration
+                            switchMap(() => this.profileService.initializeUserProfile(formData.email)),
+                            finalize(() => (this.isSubmitting = false)),
+                        )
+                        .subscribe({
+                            next: (profileResult) => {
+                                if (profileResult.success) {
+                                    console.log('User registered and profile initialized');
+                                    this.router.navigateByUrl('/login');
+                                } else {
+                                    console.warn('User registered but profile initialization failed');
+                                    // Still navigate to login since the user account was created
+                                    this.router.navigateByUrl('/login');
+                                }
+                            },
+                            error: (err) => {
+                                console.error('Registration error:', err);
+                                this.errorMsg = err.code || 'An error occurred during registration';
+                                this.isSubmitting = false;
+                            },
+                        });
                 })
                 .catch((err) => {
-                    console.error(err);
+                    console.error('Error adding user to Firestore:', err);
                     this.errorMsg = 'An error occurred during registration. Please try again.';
+                    this.isSubmitting = false;
                 });
         } catch (error) {
             console.error('Error during form submission:', error);
             this.errorMsg = 'An unexpected error occurred. Please try again later.';
+            this.isSubmitting = false;
         }
     }
 

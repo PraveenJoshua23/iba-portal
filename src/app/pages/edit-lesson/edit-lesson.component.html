@@ -1,14 +1,237 @@
-<p>edit-lesson works!</p>
-<div id="edit-lesson" class="container mx-auto">
-    <div class="flex w-full items-center justify-between">
-        <span class="font-semibold text-lg">Edit/Update Lesson</span>
-        <!-- <mat-form-field [appearance]="appearance">
-          <mat-label>Search User</mat-label>
-          <input matInput (keyup)="applyFilter($event)" placeholder="Ex. Mia" #input>
-        </mat-form-field> -->
+<div id="edit-lesson" class="container mx-auto mb-8">
+    <!-- Notification Banner -->
+    <div
+        *ngIf="notification.show"
+        [ngClass]="{
+            'bg-green-100 border-green-500 text-green-700': notification.type === 'success',
+            'bg-red-100 border-red-500 text-red-700': notification.type === 'error',
+            'bg-blue-100 border-blue-500 text-blue-700': notification.type === 'info',
+        }"
+        class="px-4 py-3 relative mb-4 border-l-4 rounded shadow-sm"
+    >
+        <span>{{ notification.message }}</span>
+        <button (click)="hideNotification()" class="absolute top-3 right-3">
+            <span class="text-lg font-bold">&times;</span>
+        </button>
     </div>
 
-    <!-- <table mat-table [dataSource]="dataSource" matSort>
+    <div class="flex w-full items-center justify-between mb-4">
+        <span class="font-semibold text-xl">Lesson Management</span>
+        <div class="flex items-center gap-4">
+            <!-- Search Box -->
+            <div class="relative">
+                <input type="text" (keyup)="applyFilter($event)" placeholder="Search lessons..." class="w-64 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                <span class="absolute right-3 top-2.5 text-gray-400"> 🔍 </span>
+            </div>
+            <!-- Add Button -->
+            <button (click)="openAddLessonForm()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors"><span>+</span> Add New Lesson</button>
+        </div>
+    </div>
 
-    </table> -->
+    <!-- Lesson Form (Add/Edit) -->
+    <div *ngIf="showForm" class="bg-white p-6 rounded-lg shadow-md mb-6 border border-gray-200">
+        <h2 class="text-lg font-semibold mb-4">{{ isEditing ? 'Edit Lesson' : 'Add New Lesson' }}</h2>
+
+        <form [formGroup]="lessonForm" (ngSubmit)="saveLesson()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Lesson Name -->
+            <div class="form-group">
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Lesson Name <span class="text-red-500">*</span></label>
+                <input
+                    type="text"
+                    id="name"
+                    formControlName="name"
+                    placeholder="Enter lesson name"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    [ngClass]="{ 'border-red-500': lessonForm.get('name')?.invalid && lessonForm.get('name')?.touched }"
+                />
+                <div *ngIf="lessonForm.get('name')?.invalid && lessonForm.get('name')?.touched" class="text-red-500 text-sm mt-1">Lesson name is required</div>
+            </div>
+
+            <!-- Lesson Number -->
+            <div class="form-group">
+                <label for="lessonNo" class="block text-sm font-medium text-gray-700 mb-1">Lesson Number <span class="text-red-500">*</span></label>
+                <input
+                    type="text"
+                    id="lessonNo"
+                    formControlName="lessonNo"
+                    placeholder="e.g. 1.1"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    [ngClass]="{ 'border-red-500': lessonForm.get('lessonNo')?.invalid && lessonForm.get('lessonNo')?.touched }"
+                />
+                <div *ngIf="lessonForm.get('lessonNo')?.invalid && lessonForm.get('lessonNo')?.touched" class="text-red-500 text-sm mt-1">Lesson number is required</div>
+            </div>
+
+            <!-- Category -->
+            <div class="form-group">
+                <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+                <select
+                    id="category"
+                    formControlName="category"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    [ngClass]="{ 'border-red-500': lessonForm.get('category')?.invalid && lessonForm.get('category')?.touched }"
+                >
+                    <option value="" disabled selected>Select a category</option>
+                    <option *ngFor="let cat of categories" [value]="cat.value">{{ cat.display }}</option>
+                </select>
+                <div *ngIf="lessonForm.get('category')?.invalid && lessonForm.get('category')?.touched" class="text-red-500 text-sm mt-1">Category is required</div>
+            </div>
+
+            <!-- Language -->
+            <div class="form-group">
+                <label for="language" class="block text-sm font-medium text-gray-700 mb-1">Language <span class="text-red-500">*</span></label>
+                <select
+                    id="language"
+                    formControlName="language"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    [ngClass]="{ 'border-red-500': lessonForm.get('language')?.invalid && lessonForm.get('language')?.touched }"
+                >
+                    <option value="" disabled selected>Select a language</option>
+                    <option *ngFor="let lang of languages" [value]="lang">{{ lang }}</option>
+                </select>
+                <div *ngIf="lessonForm.get('language')?.invalid && lessonForm.get('language')?.touched" class="text-red-500 text-sm mt-1">Language is required</div>
+            </div>
+
+            <!-- Instructor -->
+            <div class="form-group">
+                <label for="instructor" class="block text-sm font-medium text-gray-700 mb-1">Instructor</label>
+                <input type="text" id="instructor" formControlName="instructor" placeholder="Enter instructor name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            <!-- Description -->
+            <div class="form-group col-span-2">
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description <span class="text-red-500">*</span></label>
+                <textarea
+                    id="description"
+                    formControlName="description"
+                    rows="3"
+                    placeholder="Enter lesson description"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    [ngClass]="{ 'border-red-500': lessonForm.get('description')?.invalid && lessonForm.get('description')?.touched }"
+                ></textarea>
+                <div *ngIf="lessonForm.get('description')?.invalid && lessonForm.get('description')?.touched" class="text-red-500 text-sm mt-1">Description is required</div>
+            </div>
+
+            <!-- Video Upload -->
+            <div class="form-group col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Lesson Video</label>
+                <div class="flex items-center gap-2">
+                    <button type="button" (click)="fileInput.click()" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                        <span class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            {{ selectedFile ? 'Change Video' : 'Upload Video' }}
+                        </span>
+                    </button>
+                    <input #fileInput type="file" hidden accept="video/mp4" (change)="onFileSelected($event)" />
+                    <span *ngIf="selectedFile" class="text-sm"> {{ selectedFile.name }} ({{ (selectedFile.size / 1024 / 1024).toFixed(2) }} MB) </span>
+                    <span *ngIf="lessonForm.get('path')?.value && !selectedFile" class="text-sm"> Current video: {{ lessonForm.get('path')?.value }}.mp4 </span>
+                </div>
+
+                <!-- Upload Progress Bar -->
+                <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="mt-2">
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" [style.width.%]="uploadProgress"></div>
+                    </div>
+                    <span class="text-xs text-gray-500">{{ uploadProgress.toFixed(0) }}% uploaded</span>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="col-span-2 flex justify-end gap-2 mt-4">
+                <button type="button" (click)="cancelForm()" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors">Cancel</button>
+                <button
+                    type="submit"
+                    [disabled]="lessonForm.invalid || isLoading"
+                    [ngClass]="{ 'bg-blue-600 hover:bg-blue-700': !lessonForm.invalid && !isLoading, 'bg-blue-400 cursor-not-allowed': lessonForm.invalid || isLoading }"
+                    class="px-4 py-2 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors flex items-center gap-2"
+                >
+                    <svg *ngIf="isLoading" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <svg *ngIf="!isLoading" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                    Save Lesson
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lessons Table -->
+    <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+        <div *ngIf="isLoading" class="flex justify-center items-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            <span class="ml-4 text-gray-500">Loading lessons...</span>
+        </div>
+
+        <table *ngIf="!isLoading" mat-table [dataSource]="dataSource" matSort class="w-full">
+            <!-- Lesson Number Column -->
+            <ng-container matColumnDef="lessonNo">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>No.</th>
+                <td mat-cell *matCellDef="let lesson">{{ lesson.lessonNo }}</td>
+            </ng-container>
+
+            <!-- Name Column -->
+            <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
+                <td mat-cell *matCellDef="let lesson">{{ lesson.name }}</td>
+            </ng-container>
+
+            <!-- Category Column -->
+            <ng-container matColumnDef="category">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Category</th>
+                <td mat-cell *matCellDef="let lesson">
+                    <span *ngIf="lesson.category === 'bb'" class="inline-block px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Beginning Basics</span>
+                    <span *ngIf="lesson.category === 'intro'" class="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Introductory</span>
+                    <span *ngIf="lesson.category === 'intermediate'" class="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Intermediate</span>
+                    <span *ngIf="lesson.category === 'advanced'" class="inline-block px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Advanced</span>
+                </td>
+            </ng-container>
+
+            <!-- Language Column -->
+            <ng-container matColumnDef="language">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header>Language</th>
+                <td mat-cell *matCellDef="let lesson">{{ lesson.language }}</td>
+            </ng-container>
+
+            <!-- Description Column -->
+            <ng-container matColumnDef="description">
+                <th mat-header-cell *matHeaderCellDef>Description</th>
+                <td mat-cell *matCellDef="let lesson" class="truncate max-w-xs" [title]="lesson.description">
+                    {{ lesson.description }}
+                </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef class="w-24">Actions</th>
+                <td mat-cell *matCellDef="let lesson">
+                    <div class="flex items-center gap-2">
+                        <button (click)="openEditLessonForm(lesson)" title="Edit Lesson" class="text-blue-600 hover:bg-blue-100 p-1 rounded-full transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </button>
+                        <button (click)="deleteLesson(lesson)" title="Delete Lesson" class="text-red-600 hover:bg-red-100 p-1 rounded-full transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+
+            <!-- Row shown when there is no data that matches the filter -->
+            <tr class="mat-row" *matNoDataRow>
+                <td class="mat-cell py-4 text-center text-gray-500" [attr.colspan]="displayedColumns.length">No lessons found.</td>
+            </tr>
+        </table>
+
+        <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" showFirstLastButtons></mat-paginator>
+    </div>
 </div>

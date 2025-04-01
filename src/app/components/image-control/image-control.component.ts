@@ -1,90 +1,69 @@
-import { Component, EventEmitter, Input, Output, computed, effect, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {MatButtonModule} from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
-import { CropperDialogComponent, CropperDialogResult } from '../cropper-dialog/cropper-dialog.component';
-import { filter } from 'rxjs';
-import { Storage, ref, uploadBytes } from '@angular/fire/storage';
-import { getDownloadURL } from 'firebase/storage';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner'
-import { FirebaseService } from 'src/app/shared/services/firebase.service';
-
+import { Storage, getDownloadURL, ref } from '@angular/fire/storage';
 
 @Component({
-  selector: 'app-image-control',
-  standalone: true,
-  imports: [CommonModule, MatButtonModule, MatProgressSpinnerModule],
-  templateUrl: './image-control.component.html',
-  styleUrls: ['./image-control.component.scss']
+    selector: 'app-image-control',
+    standalone: true,
+    imports: [CommonModule],
+    template: `
+        <div class="flex flex-col items-center">
+            <div [style.width.px]="width" [style.height.px]="height" class="relative overflow-hidden rounded-full">
+                <img [src]="imageUrl || defaultImageUrl" [alt]="alt" class="object-cover w-full h-full" (error)="handleImageError()" />
+            </div>
+            <div *ngIf="showUploadOption" class="mt-2">
+                <input type="file" accept="image/*" (change)="onFileSelected($event)" class="hidden" #fileInput />
+                <button class="px-3 py-1 bg-golden-400 rounded-md cursor-pointer text-slate-900 text-sm" (click)="fileInput.click()">Upload image</button>
+            </div>
+        </div>
+    `,
+    styles: [],
 })
-export class ImageControlComponent {
-  imageWidth = signal(0);
-  @Input({ required: true}) set width(val: number){
-    this.imageWidth.set(val);
-  }
+export class ImageControlComponent implements OnInit {
+    @Input() width = 100;
+    @Input() height = 100;
+    @Input() path = '';
+    @Input() alt = 'Profile Image';
+    @Input() showUploadOption = true;
+    @Input() defaultImageUrl = 'assets/images/default-profile.png';
 
-  imageHeight = signal(0);
-  @Input({ required: true}) set height(val: number){
-    this.imageHeight.set(val);
-  }
+    @Output() imageReady = new EventEmitter<{ status: string; url?: string }>();
 
-  imagePath = signal('');
-  @Input({ required: true}) set path(val: string){
-    this.imagePath.set(val);
-  }
+    storage = inject(Storage);
+    imageUrl: string | null = null;
 
-  uploading = signal(false);
-
-  placeholder = computed(() => `https://placehold.co/${this.imageWidth()}x${this.imageHeight()}`)
-
-  dialog = inject(MatDialog)
-  croppedImageUrl = signal<string|undefined>(undefined)
-
-  fileSelected(event: any){
-    const file = event.target.files[0];
-    if(file){
-      const dialogRef = this.dialog.open(CropperDialogComponent,{
-        data: { image: file, width: this.imageWidth(), height: this.imageHeight()},
-        width: '500px'
-      });
-
-      dialogRef.afterClosed().pipe(filter(result => !!result)).subscribe((result)=>{
-        this.uploadImage(result.blob)
-      })
+    ngOnInit() {
+        this.loadImage();
     }
-  }
 
-  imageSource = computed(()=>{
-    return this.croppedImageUrl() ?? this.placeholder();
-  })
+    loadImage() {
+        if (!this.path) {
+            this.imageReady.emit({ status: 'error', url: this.defaultImageUrl });
+            return;
+        }
 
-  @Output() imageReady = new EventEmitter<string>();
+        const storageRef = ref(this.storage, this.path);
 
-  constructor(private firebase: FirebaseService){
+        getDownloadURL(storageRef)
+            .then((url) => {
+                this.imageUrl = url;
+                this.imageReady.emit({ status: 'success', url });
+            })
+            .catch((error) => {
+                console.error('Error loading image:', error);
+                this.imageReady.emit({ status: 'error' });
+            });
+    }
 
-    this.getImage();
-    effect(()=>{
-      if(this.croppedImageUrl()){
-        this.imageReady.emit(this.croppedImageUrl())
-      }
-    })
-  }
+    handleImageError() {
+        this.imageUrl = this.defaultImageUrl;
+    }
 
-  storage = inject(Storage)
-
-  async uploadImage(blob: Blob){
-    this.uploading.set(true)
-    const storageRef = ref(this.storage, this.imagePath());
-    const uploadTask = await uploadBytes(storageRef, blob);
-    const downloadUrl = await getDownloadURL(uploadTask.ref);
-    this.croppedImageUrl.set(downloadUrl);
-    this.uploading.set(false)
-  }
-
-  async getImage(){
-    const email = localStorage.getItem('email') ?? ''
-    this.firebase.getProfile(email).then((v)=>{
-      this.croppedImageUrl.set(v)
-    })
-  }
+    onFileSelected(event: any) {
+        const file = event.target.files[0];
+        if (file) {
+            // Handle file upload to Firebase Storage
+            // Implement your file upload logic here
+        }
+    }
 }

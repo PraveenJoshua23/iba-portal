@@ -71,7 +71,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
     lessonId!: string;
     lessonNo!: number;
     category!: string;
-    tabs = ['Materials', 'Notes', 'Quiz', 'QnA Forum'];
+    tabs = ['Notes', 'Quiz']; //Removed Materials and QnA tabs
     activeTabIndex = 0;
     progress$!: Subscription;
     fileList: { name: string; videolink: any }[] = [];
@@ -82,6 +82,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
 
     private lastSavedProgress = 0;
     private PROGRESS_THRESHOLD = 10; // Only save when progress changes by 10%
+    paramSubscription: Subscription | undefined;
 
     constructor(
         private route: Router,
@@ -96,20 +97,30 @@ export class LessonsComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this._lesson = this.ds.getSelectedLesson() ?? this.lessonId;
-        this._email = this.ds.getUserEmail() ?? localStorage.getItem('email');
-        this._progress = this.getProgress();
-        this.initLesson();
+        this.paramSubscription = this.ar.params.subscribe((params) => {
+            this.lessonId = params['id'];
+            this._category = params['category'];
 
-        console.log('progress: ', this._progress);
+            // Reset component state for new lesson
+            this._lesson = this.ds.getSelectedLesson() ?? this.lessonId;
+            this._email = this.ds.getUserEmail() ?? localStorage.getItem('email');
+            this._progress = this.getProgress();
+            this.isQuizOpen = false;
+            this.showCorrectAnswer = false;
+            this.videoSrc = null;
 
-        this.materialList = [];
+            // Load the new lesson data
+            this.initLesson();
+        });
+
         const encoded = this.route.url.split('/')[3];
         this.title = decodeURIComponent(encoded);
     }
 
     ngOnDestroy(): void {
-        // this.progress$.unsubscribe();
+        if (this.paramSubscription) {
+            this.paramSubscription.unsubscribe();
+        }
     }
 
     initLesson() {
@@ -181,11 +192,10 @@ export class LessonsComponent implements OnInit, OnDestroy {
 
         const score = (correctAnswers / this.questions.length) * 100;
 
-        // Show answers and unlock next lesson if pass threshold
+        // Show answers
         this.showCorrectAnswer = true;
 
         // Store quiz results
-        // Only call storeQuiz if we have valid lesson data
         if (this.currentLesson()) {
             this.storeQuiz();
         } else {
@@ -196,7 +206,22 @@ export class LessonsComponent implements OnInit, OnDestroy {
         if (score >= 70) {
             // Assuming 70% is passing
             // Update progress to mark lesson as completed
-            // Unlock next lesson
+            if (this._progress) {
+                this._progress.completed = true;
+
+                // Update in database
+                const currentLesson = this.currentLesson();
+                if (currentLesson?.id && this._email && this._category) {
+                    // Call your service to update lesson completion status
+                    this.ps
+                        .updateLessonCompletion(this._email, this._category, currentLesson.id)
+                        .then(() => console.log('Lesson completion status updated'))
+                        .catch((err) => console.error('Error updating lesson completion:', err));
+
+                    // Also update localStorage if that's how you're caching progress
+                    this.updateLocalStorageProgress(currentLesson.id, true);
+                }
+            }
         }
     }
 
@@ -227,16 +252,56 @@ export class LessonsComponent implements OnInit, OnDestroy {
             const nextLessonId = prefix + nextNumericPart; // e.g., "bblesson02"
 
             // Navigate to the next lesson
-            this.route.navigate(['/lesson', this._category, nextLessonId]);
+            console.log('Navigating to next lesson:', '/lesson' + this._category + nextLessonId);
+            // Navigate to the next lesson with a page reload
+            window.location.href = `/lesson/${this._category}/${nextLessonId}`;
         } else {
             console.error('Could not determine next lesson ID from current ID:', currentId);
         }
     }
 
+    navigateToPreviousLesson() {
+        // Extract the current lesson number from the ID
+        const currentLesson = this.currentLesson();
+        if (!currentLesson) return;
+
+        // Parse the current lesson ID format (e.g., bblesson01)
+        const currentId = currentLesson.id || '';
+
+        // Extract the numeric part and decrement
+        const currentNumericPart = currentId.match(/\d+$/)?.[0]; // Get the digits at the end
+
+        if (currentNumericPart) {
+            // Prevent going to lesson 0 or negative
+            const currentNum = parseInt(currentNumericPart);
+            if (currentNum <= 1) {
+                console.warn('Already at the first lesson');
+                return;
+            }
+
+            // Convert to number, decrement, and format back with leading zeros
+            const prevNum = currentNum - 1;
+            const prevNumericPart = prevNum.toString().padStart(currentNumericPart.length, '0');
+
+            // Reconstruct the ID with the same prefix
+            const prefix = currentId.replace(/\d+$/, ''); // Remove the digits at the end
+            const prevLessonId = prefix + prevNumericPart; // e.g., "bblesson01" from "bblesson02"
+
+            // Navigate to the previous lesson
+            console.log('Navigating to previous lesson:', `/lesson/${this._category}/${prevLessonId}`);
+            this.route.navigateByUrl(`/lesson/${this._category}/${prevLessonId}`);
+        } else {
+            console.error('Could not determine previous lesson ID from current ID:', currentId);
+        }
+    }
+
     onVideoEnd() {
-        console.log('triggered');
         this.isQuizOpen = true;
         this.isVideoCompleted = true;
+
+        // Force save the final progress (100%)
+        this.progressRate.set(100);
+        this.saveProgressToDatabase();
 
         // Extract lessonNo from currentLesson if available
         const currentLesson = this.currentLesson();
@@ -245,6 +310,13 @@ export class LessonsComponent implements OnInit, OnDestroy {
         if (lessonNo !== null && this._category) {
             // Use _category instead of category
             this.firebase.vidEndNxtLessonUpdate(lessonNo, this._category, this.progressRate());
+
+            // Update local progress object
+            if (this._progress) {
+                this._progress.progress = '100';
+                this._progress.watchDuration = 100;
+                // Note: completed status will be set to true after quiz completion
+            }
         } else {
             console.error('Cannot update lesson progress: Missing lesson number or category');
             console.log('LessonNo:', lessonNo, 'Category:', this._category);
@@ -264,7 +336,52 @@ export class LessonsComponent implements OnInit, OnDestroy {
 
             const currentLesson = this.currentLesson();
             if (currentLesson?.id && this._category) {
-                this.firebase.updateLessonProgress(currentLesson.id, this._category, currentProgress);
+                // Use DataService instead of FirebaseService
+                this.ds.updateLessonProgress(this._email || '', this._category, currentLesson.id, currentProgress);
+            }
+        }
+    }
+
+    // Add this helper method to the LessonsComponent class
+    private updateLocalStorageProgress(lessonId: string, completed: boolean) {
+        const categoryProgress = localStorage.getItem('categoryProgress');
+        if (categoryProgress) {
+            const parsedCategory = JSON.parse(categoryProgress);
+
+            // Find the category matching the current category
+            const updatedCategories = parsedCategory.map((category: any) => {
+                if (category.categoryName.toLowerCase() === this._category.toLowerCase()) {
+                    // Update the specific lesson within this category
+                    const updatedLessons = category.lessons.map((lesson: any) => {
+                        if (lesson.id === lessonId) {
+                            return {
+                                ...lesson,
+                                completed: completed,
+                                progress: '100',
+                                completedDate: completed ? new Date() : null,
+                            };
+                        }
+                        return lesson;
+                    });
+
+                    return { ...category, lessons: updatedLessons };
+                }
+                return category;
+            });
+
+            // Update localStorage with the modified data
+            localStorage.setItem('categoryProgress', JSON.stringify(updatedCategories));
+
+            // Also update the local reference
+            if (this._progress) {
+                this._progress.completed = completed;
+                this._progress.progress = '100';
+                this._progress.completedDate = completed
+                    ? {
+                          seconds: Math.floor(Date.now() / 1000),
+                          nanoseconds: 0,
+                      }
+                    : null;
             }
         }
     }
@@ -420,5 +537,41 @@ export class LessonsComponent implements OnInit, OnDestroy {
         const base64Content = dataUri.substring(base64Index + 8); // Extract base64 content
 
         return { base64Content, contentType };
+    }
+
+    // Add this to your component class (such as a user profile or admin component)
+    resetUserProgress() {
+        // Confirm with the user before resetting
+        if (confirm('Are you sure you want to reset all progress? This action cannot be undone.')) {
+            // Get the current user's email
+            const userEmail = this._email || localStorage.getItem('email');
+
+            if (!userEmail) {
+                console.error('Cannot reset progress: No user email found');
+                return;
+            }
+
+            // Show loading indicator if you have one
+            // this.isLoading = true;
+
+            // Call the DataService to reset progress
+            this.ds
+                .resetProgressStructure(userEmail)
+                .then(() => {
+                    // Success message
+                    alert('Progress has been reset successfully.');
+
+                    // Reload the current page or navigate to refresh the UI
+                    window.location.reload();
+                })
+                .catch((error) => {
+                    console.error('Error resetting progress:', error);
+                    alert('Failed to reset progress. Please try again later.');
+                })
+                .finally(() => {
+                    // Hide loading indicator
+                    // this.isLoading = false;
+                });
+        }
     }
 }
