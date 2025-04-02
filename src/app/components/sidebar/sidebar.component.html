@@ -1,46 +1,35 @@
-<aside
-  class=" flex h-[100dvh] lg:h-screen flex-col items-center space-y-6 w-72 overflow-hidden bg-gray-900 px-3 py-4"
->
-  <div class="p-0.5 space-x-3 flex justify-center items-center w-full mx-5 cursor-pointer" [routerLink]="['/home']">
-    <img
-      class="mx-auto h-16 w-auto bg-white rounded-full"
-      src="assets/images/logo.png"
-      alt="hsztc-logo"
-    />
-    <span class="text-white text-md font-bold"
-      >Holy Spirit Zion Theology College</span
-    >
-  </div>
+<aside class="flex h-[100dvh] lg:h-screen flex-col items-center space-y-6 w-72 overflow-hidden bg-gray-900 px-3 py-4">
+    <div class="p-0.5 space-x-3 flex justify-center items-center w-full mx-5 cursor-pointer" [routerLink]="['/home']">
+        <img class="mx-auto h-16 w-auto rounded-full" src="assets/images/IBA-logo.png" alt="hsztc-logo" />
+        <span class="text-white text-xl font-bold">International Bible Academy</span>
+    </div>
 
-  <div class="flex flex-col justify-start items-center w-full h-full px-5 py-10">
-    <!-- <h3 class="uppercase text-gray-300 text-md font-semibold pb-5 pl-2">Menu</h3> -->
-    <ul class="flex flex-col  text-white space-y-2">
-        <li class="px-2 py-2 flex space-x-2 items-center text-white rounded-md" routerLink="/home" routerLinkActive="active">
-          <span>
-            <img src="../../../assets/icons/book.svg" alt="lessons">
-          </span>
-          <span>Lessons</span>
-        </li>
+    <div class="flex flex-col justify-start items-center w-full h-full px-5 py-10">
+        <!-- <h3 class="uppercase text-gray-300 text-md font-semibold pb-5 pl-2">Menu</h3> -->
+        <ul class="flex flex-col text-white space-y-2">
+            <li class="px-2 py-2 flex space-x-2 items-center text-white rounded-md" routerLink="/home" routerLinkActive="active">
+                <span>
+                    <img src="../../../assets/icons/book.svg" alt="lessons" />
+                </span>
+                <span>Lessons</span>
+            </li>
 
-        <li class="px-2 py-2 flex space-x-2 items-center text-white rounded-md" routerLink="/profile" routerLinkActive="active">
-          <span>
-            <img src="../../../assets/icons/book.svg" alt="profile">
-          </span>
-          <span>My Profile</span>
-        </li>
-        <!-- <li class="px-2 py-2">Quizes</li>
+            <li class="px-2 py-2 flex space-x-2 items-center text-white rounded-md" routerLink="/profile" routerLinkActive="active">
+                <span>
+                    <img src="../../../assets/icons/book.svg" alt="profile" />
+                </span>
+                <span>My Profile</span>
+            </li>
+            <!-- <li class="px-2 py-2">Quizes</li>
         <li class="px-2 py-2">Resources</li>
         <li class="px-2 py-2">Your Notes</li> -->
-    </ul>
-  </div>
+        </ul>
+    </div>
 
-  <div class="flex justify-end items-center space-x-3 py-5">
-    <span>
-      <img src="../../../assets/icons/profile.svg" alt="profile">
-    </span>
-    <span class="text-gray-300 text-sm">{{usrEmail}}</span>
-  </div>
-
-
-  
+    <div class="flex justify-end items-center space-x-3 py-5">
+        <span>
+            <img src="../../../assets/icons/profile.svg" alt="profile" />
+        </span>
+        <span class="text-gray-300 text-sm">{{ usrEmail }}</span>
+    </div>
 </aside>
