@@ -1,41 +1,28 @@
 <div style="width: 800px">
-    <!-- <h2>VIDEO PLAYER YT ANGULAR</h2> -->
-
     <vg-player (onPlayerReady)="onPlayerReady($event)">
-      <vg-overlay-play></vg-overlay-play>
-      <vg-buffering vgFor="singleVideo"></vg-buffering>
-      <vg-scrub-bar>
-        <vg-scrub-bar-current-time></vg-scrub-bar-current-time>
-        <vg-scrub-bar-buffering-time></vg-scrub-bar-buffering-time>
-      </vg-scrub-bar>
-      <vg-controls>
-        <vg-play-pause></vg-play-pause>
-        <vg-playback-button></vg-playback-button>
-        <vg-time-display
-          vgProperty="current"
-          vgFormat="mm:ss"
-        ></vg-time-display>
-        <vg-scrub-bar style="pointer-events: none"></vg-scrub-bar>
-        <!-- <vg-time-display
-          vgProperty="left"
-          vgFormat="mm:ss"
-        ></vg-time-display> -->
-        <vg-time-display
-          vgProperty="total"
-          vgFormat="mm:ss"
-        ></vg-time-display>
-        <!-- <vg-track-selector></vg-track-selector> -->
-        <vg-mute></vg-mute>
-        <vg-volume></vg-volume>
-        <vg-fullscreen></vg-fullscreen>
-      </vg-controls>
-      <video
-        [vgMedia]="$any(media)"
-        #media
-        id="singleVideo"
-        preload="auto"
-        [src]="src"
-        crossorigin
-      ></video>
+        <vg-overlay-play></vg-overlay-play>
+        <vg-buffering vgFor="singleVideo"></vg-buffering>
+        <div #scrubBarContainer>
+            <vg-scrub-bar [class.disabled-scrub-bar]="!allowScrubbing">
+                <vg-scrub-bar-current-time></vg-scrub-bar-current-time>
+                <vg-scrub-bar-buffering-time></vg-scrub-bar-buffering-time>
+            </vg-scrub-bar>
+        </div>
+        <vg-controls>
+            <vg-play-pause></vg-play-pause>
+            <vg-playback-button></vg-playback-button>
+            <vg-time-display vgProperty="current" vgFormat="mm:ss"></vg-time-display>
+
+            <!-- Custom scrub bar wrapper for more control -->
+            <div class="scrub-bar-wrapper" #scrubBarContainer>
+                <vg-scrub-bar [class.disabled-scrub-bar]="!allowScrubbing" [attr.data-scrubbing-enabled]="allowScrubbing"> </vg-scrub-bar>
+            </div>
+
+            <vg-time-display vgProperty="total" vgFormat="mm:ss"></vg-time-display>
+            <vg-mute></vg-mute>
+            <vg-volume></vg-volume>
+            <vg-fullscreen></vg-fullscreen>
+        </vg-controls>
+        <video [vgMedia]="$any(media)" #media id="singleVideo" preload="auto" [src]="src" crossorigin></video>
     </vg-player>
-  </div>
+</div>

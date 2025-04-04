@@ -1,0 +1,73 @@
+/* Add these styles to your video-player.component.scss file */
+
+:host ::ng-deep {
+    .disabled-scrub-bar {
+        pointer-events: none !important;
+    }
+
+    .disabled-scrub-bar .scrub-bar,
+    .disabled-scrub-bar .scrub-bar-line {
+        pointer-events: none !important;
+        cursor: default !important;
+    }
+
+    /* These target the internal scrubbing elements */
+    .disabled-scrub-bar .scrub-bar-current-time,
+    .disabled-scrub-bar .scrub-bar-buffering-time,
+    .disabled-scrub-bar .scrub-bar-line-scrubber {
+        pointer-events: none !important;
+        cursor: default !important;
+    }
+
+    /* Optionally hide the scrubber handle completely */
+    .disabled-scrub-bar .scrub-bar-line-scrubber {
+        display: none !important;
+    }
+
+    /* For the controls vg-scrub-bar specifically */
+    vg-controls .disabled-scrub-bar {
+        pointer-events: none !important;
+    }
+
+    /* Override any hover effects that might still be active */
+    .disabled-scrub-bar:hover .scrub-bar-line-scrubber {
+        transform: scale(1) !important;
+        opacity: 0 !important;
+    }
+}
+
+/* Add a custom cursor style when scrubbing is disabled */
+.scrub-bar-wrapper {
+    width: 100%;
+    position: relative;
+}
+
+.scrub-bar-wrapper [data-scrubbing-enabled='false'] {
+    cursor: not-allowed;
+}
+
+.disabled-scrub-bar {
+    pointer-events: none !important;
+}
+
+.disabled-scrub-bar .scrub-bar {
+    pointer-events: none !important;
+    cursor: default !important;
+}
+
+.disabled-scrub-bar .scrub-bar-line {
+    pointer-events: none !important;
+}
+
+/* More aggressive disabling - these target the internal elements */
+.disabled-scrub-bar .scrub-bar-line-scrubber,
+.disabled-scrub-bar .scrub-bar-current-time,
+.disabled-scrub-bar .scrub-bar-buffering-time {
+    pointer-events: none !important;
+    cursor: default !important;
+}
+
+/* Hide the slider handle completely for disabled scrub bars */
+.disabled-scrub-bar .scrub-bar-line-scrubber {
+    display: none !important;
+}

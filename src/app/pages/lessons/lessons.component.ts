@@ -105,6 +105,10 @@ export class LessonsComponent implements OnInit, OnDestroy {
             this._lesson = this.ds.getSelectedLesson() ?? this.lessonId;
             this._email = this.ds.getUserEmail() ?? localStorage.getItem('email');
             this._progress = this.getProgress();
+
+            // Check if lesson is already completed and set progressRate accordingly
+            this.checkAndSetProgress();
+
             this.isQuizOpen = false;
             this.showCorrectAnswer = false;
             this.videoSrc = null;
@@ -120,6 +124,26 @@ export class LessonsComponent implements OnInit, OnDestroy {
     ngOnDestroy(): void {
         if (this.paramSubscription) {
             this.paramSubscription.unsubscribe();
+        }
+    }
+
+    // New method to check and set progress
+    checkAndSetProgress(): void {
+        if (this._progress) {
+            // Check if progress is already 100%
+            if (this._progress.progress === '100' || this._progress.completed) {
+                this.progressRate.set(100);
+                this.isVideoCompleted = true;
+                console.log('Lesson already completed, setting progressRate to 100');
+            } else {
+                // If progress exists but is not 100%
+                const currentProgress = parseInt(this._progress.progress || '0');
+                this.progressRate.set(currentProgress);
+                this.isVideoCompleted = currentProgress === 100;
+                console.log(`Setting progressRate to existing progress: ${currentProgress}`);
+            }
+        } else {
+            console.log('No progress data found');
         }
     }
 
@@ -150,11 +174,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
         } else {
             console.log('Cannot find progress from localStorage.');
         }
-        // this.ps.getProgressByEmail(this._email!).then(progress=> {
-        //   const categoryLesson = progress.categoryProgress.filter((progress: { categoryName: string; })=> progress.categoryName === category)
-        //   console.log(progress)
-        //   return categoryLesson
-        // });
+        return null;
     }
 
     async initializeLesson(email: string) {
@@ -296,6 +316,12 @@ export class LessonsComponent implements OnInit, OnDestroy {
     }
 
     onVideoEnd() {
+        // Skip if lesson is already completed
+        if (this.progressRate() === 100 || this.isVideoCompleted) {
+            console.log('Video end event ignored - lesson already completed');
+            return;
+        }
+
         this.isQuizOpen = true;
         this.isVideoCompleted = true;
 
@@ -324,7 +350,12 @@ export class LessonsComponent implements OnInit, OnDestroy {
     }
 
     progressUpdate(update: number) {
-        this.progressRate.set(update);
+        // Only update if progress is less than what's coming in
+        // This ensures we don't reduce progress when rewatching
+        if (update > this.progressRate()) {
+            this.progressRate.set(update);
+            this.saveProgressToDatabase();
+        }
     }
 
     saveProgressToDatabase() {
