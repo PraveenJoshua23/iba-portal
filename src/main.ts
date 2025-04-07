@@ -10,6 +10,7 @@ import { provideFirebaseApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, provideFirestore } from '@angular/fire/firestore';
+import { provideHttpClient } from '@angular/common/http';
 
 const firebaseConfig = {
     apiKey: 'AIzaSyAh_Ppv8G1bsyY7ax4vMVc7IeHKt6ch9ug',
@@ -24,6 +25,7 @@ const firebaseConfig = {
 bootstrapApplication(AppComponent, {
     providers: [
         provideRouter(APP_ROUTE),
+        provideHttpClient(),
         importProvidersFrom(AngularFireModule.initializeApp(firebaseConfig)),
         provideFirebaseApp(() => initializeApp(firebaseConfig)),
         provideAuth(() => getAuth()),

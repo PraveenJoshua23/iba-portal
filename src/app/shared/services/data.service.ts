@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, from, of } from 'rxjs';
+import { Observable, from, lastValueFrom, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
 import { Lesson } from '../models/lesson.model';
@@ -8,6 +8,7 @@ import { Auth } from '@angular/fire/auth';
 import { IProgress } from '../models/progress.interface';
 import { Storage, getDownloadURL, ref } from '@angular/fire/storage';
 import { IUser, IUserDetails } from '../models/user.interface';
+import { VimeoService } from './vimeo/vimeo.service';
 
 @Injectable({
     providedIn: 'root',
@@ -26,6 +27,7 @@ export class DataService {
     fs = inject(Firestore);
     auth = inject(Auth);
     s = inject(Storage);
+    vimeoService = inject(VimeoService);
 
     constructor() {
         this.usersRef = collection(this.fs, 'users');
@@ -96,19 +98,19 @@ export class DataService {
         }
     }
 
-    async getVideo(category: string, lang: string, path: string) {
-        try {
-            const storagePath = `lessons/${category}/${lang}/${path}.mp4`;
-            const storageRef = ref(this.s, storagePath);
+    // async getVideo(category: string, lang: string, path: string) {
+    //     try {
+    //         const storagePath = `lessons/${category}/${lang}/${path}.mp4`;
+    //         const storageRef = ref(this.s, storagePath);
 
-            // Directly await the Promise from getDownloadURL
-            const url = await getDownloadURL(storageRef);
-            return url;
-        } catch (error) {
-            console.error('Error getting video URL:', error);
-            return null;
-        }
-    }
+    //         // Directly await the Promise from getDownloadURL
+    //         const url = await getDownloadURL(storageRef);
+    //         return url;
+    //     } catch (error) {
+    //         console.error('Error getting video URL:', error);
+    //         return null;
+    //     }
+    // }
 
     async getUserByEmail(email: string): Promise<IUser | null> {
         const q = query(this.usersRef, where('email', '==', email));
@@ -411,5 +413,52 @@ export class DataService {
         };
 
         return categoryMap[category.toLowerCase()] || category;
+    }
+
+    // New method to get video from Vimeo instead of Firebase Storage
+    async getVideoFromVimeo(category: string, lang: string, path: string): Promise<string | null> {
+        try {
+            // First, map the path to a Vimeo ID
+            const vimeoId = await lastValueFrom(this.vimeoService.mapPathToVimeoId(category, lang, path));
+
+            // Then get the actual video URL with the requested quality
+            const videoUrl = await lastValueFrom(this.vimeoService.getVideoUrl(vimeoId));
+
+            return videoUrl;
+        } catch (error) {
+            console.error('Error getting video URL from Vimeo:', error);
+            return null;
+        }
+    }
+
+    // Keep the original method for backward compatibility during migration
+    async getVideo(category: string, lang: string, path: string, quality: 'sd' | 'hd' | 'highest' = 'highest'): Promise<string | null> {
+        try {
+            // First attempt to get video from Vimeo
+            const vimeoUrl = await this.getVideoFromVimeo(category, lang, path);
+            if (vimeoUrl) {
+                return vimeoUrl;
+            }
+
+            // Fallback to Firebase Storage if Vimeo fails
+            console.log('Falling back to Firebase Storage for video');
+            const storagePath = `lessons/${category}/${lang}/${path}.mp4`;
+            const storageRef = ref(this.s, storagePath);
+            const url = await getDownloadURL(storageRef);
+            return url;
+        } catch (error) {
+            console.error('Error getting video URL:', error);
+
+            // As a last resort, try Firebase directly if Vimeo fails
+            try {
+                console.log('Attempting direct Firebase Storage access as final fallback');
+                const storagePath = `lessons/${category}/${lang}/${path}.mp4`;
+                const storageRef = ref(this.s, storagePath);
+                return await getDownloadURL(storageRef);
+            } catch (fbError) {
+                console.error('All video retrieval methods failed:', fbError);
+                return null;
+            }
+        }
     }
 }

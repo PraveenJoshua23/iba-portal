@@ -11,6 +11,8 @@ import { DataService } from 'src/app/shared/services/data.service';
 import { LessonsService } from 'src/app/shared/services/lessons/lessons.service';
 import { ProgressService } from 'src/app/shared/services/progress/progress.service';
 import { ILesson } from 'src/app/shared/models/lessons.interface';
+import { VimeoService } from 'src/app/shared/services/vimeo/vimeo.service';
+import { firstValueFrom } from 'rxjs';
 
 interface Progress {
     BB: LessonProg[];
@@ -57,6 +59,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
     ds = inject(DataService);
     ls = inject(LessonsService);
     ps = inject(ProgressService);
+    vimeoService = inject(VimeoService);
 
     title!: string;
     isQuizOpen: boolean = false;
@@ -79,6 +82,8 @@ export class LessonsComponent implements OnInit, OnDestroy {
     imageArray: any[] = [];
     files: any[] = [];
     uploadCompleted = signal(false);
+    qualityMenuOpen: boolean = false;
+    currentQuality: 'sd' | 'hd' | 'highest' = 'highest';
 
     private lastSavedProgress = 0;
     private PROGRESS_THRESHOLD = 10; // Only save when progress changes by 10%
@@ -147,12 +152,50 @@ export class LessonsComponent implements OnInit, OnDestroy {
         }
     }
 
+    // Get video from Vimeo
+    async getVideoFromVimeo(lesson: ILesson): Promise<string | null> {
+        if (!lesson) {
+            console.error('Cannot get video URL: Lesson is undefined');
+            return null;
+        }
+
+        let lang;
+        switch (lesson.language) {
+            case 'Tamil':
+                lang = 'ta';
+                break;
+            case 'English':
+            default:
+                lang = 'en';
+                break;
+        }
+
+        try {
+            // Use the data service without quality parameter
+            return await this.ds.getVideo(lesson.category, lang, lesson.path);
+        } catch (error) {
+            console.error('Failed to get video URL:', error);
+            return null;
+        }
+    }
+
+    // The initLesson method updated to use async/await with error handling
     initLesson() {
         this.ls.getLessonById(this._lesson, this._category).subscribe({
-            next: (lesson) => {
+            next: async (lesson) => {
                 this.currentLesson.set(lesson);
-                console.log(this.currentLesson());
-                if (!this.videoSrc) this.getVideoFromFirebase(this.currentLesson()!).then((url) => (this.videoSrc = url));
+                console.log('Current lesson:', this.currentLesson());
+
+                if (lesson && !this.videoSrc) {
+                    try {
+                        // Get video from Vimeo without quality parameter
+                        const url = await this.getVideoFromVimeo(lesson);
+                        this.videoSrc = url;
+                        console.log('Video URL loaded:', !!this.videoSrc);
+                    } catch (error) {
+                        console.error('Failed to load video:', error);
+                    }
+                }
 
                 // Initialize quiz if it exists
                 if (lesson && lesson.quiz) {
@@ -160,8 +203,51 @@ export class LessonsComponent implements OnInit, OnDestroy {
                     this.userAnswers = new Array(this.questions.length).fill(-1);
                 }
             },
-            error: (err) => console.error(err),
+            error: (err) => console.error('Error fetching lesson:', err),
         });
+    }
+
+    // Method to handle video quality selection
+    async changeVideoQuality(quality: 'sd' | 'hd' | 'highest'): Promise<void> {
+        if (!this.currentLesson()) {
+            return;
+        }
+
+        try {
+            // Store current playback position
+            const currentTime = this.getCurrentVideoTime();
+
+            // Get new video URL with selected quality
+            const newUrl = await this.getVideoFromVimeo(this.currentLesson()!);
+            if (newUrl) {
+                this.videoSrc = newUrl;
+                this.currentQuality = quality;
+
+                // We need to wait for video to load and then set the time
+                setTimeout(() => {
+                    this.setVideoTime(currentTime);
+                }, 1000); // Allow some time for the video to load
+            }
+        } catch (error) {
+            console.error('Failed to change video quality:', error);
+        }
+    }
+
+    // Get current video playback time
+    getCurrentVideoTime(): number {
+        // Implement based on your video player implementation
+        // For example, if using the HTML5 video element:
+        const videoElement = document.querySelector('video');
+        return videoElement ? videoElement.currentTime : 0;
+    }
+
+    // Set video playback time
+    setVideoTime(time: number): void {
+        // Implement based on your video player implementation
+        const videoElement = document.querySelector('video');
+        if (videoElement) {
+            videoElement.currentTime = time;
+        }
     }
 
     getProgress() {

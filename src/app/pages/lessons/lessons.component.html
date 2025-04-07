@@ -6,7 +6,7 @@
         <span class="text-sm">Back to Home</span>
     </div>
     <!-- <button class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors" (click)="resetUserProgress()">Reset Progress</button> -->
-    <section class="flex flex-col w-full h-full py-10 mt-4 px-[10%] space-y-5">
+    <section class="flex flex-col w-full h-full py-10 mt-4 px-4 lg:px-10 space-y-5">
         <div class="flex justify-between items-center px-5 border-b m-0">
             <h1>{{ currentLesson()?.lessonNo }}. {{ currentLesson()?.name }}</h1>
             <div class="flex items-center gap-x-5" [ngClass]="{ visible: _progress?.completed || progressRate() === 100, hidden: !(_progress?.completed || progressRate() === 100) }">
@@ -27,6 +27,41 @@
 
         @if (!isQuizOpen) {
             <div class="flex flex-col items-center justify-center">
+                <!-- Video Quality Selector -->
+                <!-- <div class="flex mb-2 justify-end w-[800px]">
+                    <div class="relative inline-block text-left">
+                        <div>
+                            <button
+                                type="button"
+                                class="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                                id="menu-button"
+                                aria-expanded="true"
+                                aria-haspopup="true"
+                                (click)="qualityMenuOpen = !qualityMenuOpen"
+                            >
+                                Quality
+                                <svg class="-mr-1 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div
+                            *ngIf="qualityMenuOpen"
+                            class="absolute right-0 z-10 mt-2 w-36 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                            role="menu"
+                            aria-orientation="vertical"
+                            aria-labelledby="menu-button"
+                            tabindex="-1"
+                        >
+                            <div class="py-1" role="none">
+                                <a (click)="changeVideoQuality('highest'); qualityMenuOpen = false" class="text-gray-700 block px-4 py-2 text-sm cursor-pointer hover:bg-gray-100" role="menuitem" tabindex="-1">High Quality</a>
+                                <a (click)="changeVideoQuality('hd'); qualityMenuOpen = false" class="text-gray-700 block px-4 py-2 text-sm cursor-pointer hover:bg-gray-100" role="menuitem" tabindex="-1">Medium Quality</a>
+                                <a (click)="changeVideoQuality('sd'); qualityMenuOpen = false" class="text-gray-700 block px-4 py-2 text-sm cursor-pointer hover:bg-gray-100" role="menuitem" tabindex="-1">Low Quality</a>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
                 <app-video-player [src]="videoSrc" (videoEnded)="onVideoEnd()" (videoProgress)="progressUpdate($event)" [allowScrubbing]="progressRate() === 100"></app-video-player>
             </div>
         } @else {
