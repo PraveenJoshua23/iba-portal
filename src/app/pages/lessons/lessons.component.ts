@@ -540,9 +540,67 @@ export class LessonsComponent implements OnInit, OnDestroy {
 
             const score = Math.round((correctAnswers / this.questions.length) * 100);
 
+            // Store answers in Firebase as before
             this.firebase.storeUserQuizAnswers(category, id, this.userAnswers, score);
+
+            // Also update the progress collection with the quiz answers
+            this.updateQuizAnswersInProgress(id, this.userAnswers);
         } else {
             console.error('Cannot store quiz results: Current lesson data is not available');
+        }
+    }
+
+    // New method to update quiz answers in the Progress collection
+    private updateQuizAnswersInProgress(lessonId: string, quizAnswers: number[]) {
+        if (!this._email) {
+            console.error('Cannot update quiz answers: No user email found');
+            return;
+        }
+
+        // Call method from progress service to update quiz answers
+        this.ps
+            .updateQuizAnswers(this._email, this._category, lessonId, quizAnswers)
+            .then(() => {
+                console.log('Quiz answers saved to progress data');
+
+                // Also update localStorage if you're caching progress there
+                this.updateLocalStorageQuizAnswers(lessonId, quizAnswers);
+            })
+            .catch((err) => console.error('Error saving quiz answers to progress:', err));
+    }
+
+    // New method to update quiz answers in localStorage
+    private updateLocalStorageQuizAnswers(lessonId: string, quizAnswers: number[]) {
+        const categoryProgress = localStorage.getItem('categoryProgress');
+        if (categoryProgress) {
+            const parsedCategory = JSON.parse(categoryProgress);
+
+            // Find the category matching the current category
+            const updatedCategories = parsedCategory.map((category: any) => {
+                if (category.categoryName.toLowerCase() === this._category.toLowerCase()) {
+                    // Update the specific lesson within this category
+                    const updatedLessons = category.lessons.map((lesson: any) => {
+                        if (lesson.id === lessonId) {
+                            return {
+                                ...lesson,
+                                quizAnswers: quizAnswers,
+                            };
+                        }
+                        return lesson;
+                    });
+
+                    return { ...category, lessons: updatedLessons };
+                }
+                return category;
+            });
+
+            // Update localStorage with the modified data
+            localStorage.setItem('categoryProgress', JSON.stringify(updatedCategories));
+
+            // Also update the local reference
+            if (this._progress) {
+                this._progress.quizAnswers = quizAnswers;
+            }
         }
     }
 

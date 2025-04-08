@@ -108,6 +108,7 @@ export const progressData: IProgress = {
                     startDate: null,
                     completedDate: null,
                     postQuizId: null,
+                    quizAnswers: null,
                 },
                 {
                     id: 'bblesson02',
@@ -120,6 +121,7 @@ export const progressData: IProgress = {
                     startDate: null,
                     completedDate: null,
                     postQuizId: null,
+                    quizAnswers: null,
                 },
                 {
                     id: 'bblesson03',
@@ -132,6 +134,7 @@ export const progressData: IProgress = {
                     startDate: null,
                     completedDate: null,
                     postQuizId: null,
+                    quizAnswers: null,
                 },
                 {
                     id: 'bblesson04',
@@ -144,6 +147,7 @@ export const progressData: IProgress = {
                     startDate: null,
                     completedDate: null,
                     postQuizId: null,
+                    quizAnswers: null,
                 },
                 {
                     id: 'bblesson05',
@@ -156,6 +160,7 @@ export const progressData: IProgress = {
                     startDate: null,
                     completedDate: null,
                     postQuizId: null,
+                    quizAnswers: null,
                 },
                 {
                     id: 'bblesson06',
@@ -168,6 +173,7 @@ export const progressData: IProgress = {
                     startDate: null,
                     completedDate: null,
                     postQuizId: null,
+                    quizAnswers: null,
                 },
                 {
                     id: 'bblesson07',
@@ -180,6 +186,7 @@ export const progressData: IProgress = {
                     startDate: null,
                     completedDate: null,
                     postQuizId: null,
+                    quizAnswers: null,
                 },
                 {
                     id: 'bblesson08',
@@ -192,6 +199,7 @@ export const progressData: IProgress = {
                     startDate: null,
                     completedDate: null,
                     postQuizId: null,
+                    quizAnswers: null,
                 },
             ],
         },

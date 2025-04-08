@@ -155,4 +155,56 @@ export class ProgressService {
 
         return categoryMap[category.toLowerCase()] || category;
     }
+
+    // Add this method to the ProgressService class
+    async updateQuizAnswers(userEmail: string, category: string, lessonId: string, quizAnswers: number[]): Promise<void> {
+        try {
+            // First, get the progress document for this user
+            const q = query(this.progressRef, where('email', '==', userEmail));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                throw new Error(`No progress found for user ${userEmail}`);
+            }
+
+            const progressDoc = querySnapshot.docs[0];
+            const progressData = progressDoc.data() as IProgress;
+
+            // Find the correct category
+            const categoryIndex = progressData.categoryProgress.findIndex((catProgress) => catProgress.categoryName.toLowerCase() === this.mapCategoryName(category).toLowerCase());
+
+            if (categoryIndex === -1) {
+                throw new Error(`Category ${category} not found in progress data`);
+            }
+
+            // Find the lesson within that category
+            const lessonIndex = progressData.categoryProgress[categoryIndex].lessons.findIndex((lesson) => lesson.id === lessonId);
+
+            if (lessonIndex === -1) {
+                throw new Error(`Lesson ${lessonId} not found in category ${category}`);
+            }
+
+            // Create a deep copy of the progress data to modify
+            const updatedProgress = JSON.parse(JSON.stringify(progressData));
+
+            // Update the quiz answers
+            updatedProgress.categoryProgress[categoryIndex].lessons[lessonIndex].quizAnswers = quizAnswers;
+
+            // Update the document in Firestore
+            const docRef = doc(this.fs, 'progress', progressDoc.id);
+
+            // Convert to a plain object for Firestore update
+            const updateObject: any = {};
+
+            // Only update the specific categoryProgress array
+            updateObject['categoryProgress'] = updatedProgress.categoryProgress;
+
+            await updateDoc(docRef, updateObject);
+
+            return Promise.resolve();
+        } catch (error) {
+            console.error('Error updating quiz answers:', error);
+            return Promise.reject(error);
+        }
+    }
 }

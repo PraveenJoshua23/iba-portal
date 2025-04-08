@@ -151,6 +151,7 @@ export class DataService {
             const querySnapshot = await getDocs(q);
 
             // Initialize the default progress structure
+            // Inside resetProgressStructure method in data.service.ts
             const defaultProgress: IProgress = {
                 id: querySnapshot.empty ? '' : querySnapshot.docs[0].id,
                 email: userEmail,
@@ -173,6 +174,7 @@ export class DataService {
                                 startDate: null,
                                 completedDate: null,
                                 postQuizId: null,
+                                quizAnswers: null, // Added the new field with default value
                             },
                             {
                                 id: 'bblesson02',
@@ -185,6 +187,7 @@ export class DataService {
                                 startDate: null,
                                 completedDate: null,
                                 postQuizId: null,
+                                quizAnswers: null, // Added the new field with default value
                             },
                             {
                                 id: 'bblesson03',
@@ -197,6 +200,7 @@ export class DataService {
                                 startDate: null,
                                 completedDate: null,
                                 postQuizId: null,
+                                quizAnswers: null, // Added the new field with default value
                             },
                             {
                                 id: 'bblesson04',
@@ -209,6 +213,7 @@ export class DataService {
                                 startDate: null,
                                 completedDate: null,
                                 postQuizId: null,
+                                quizAnswers: null, // Added the new field with default value
                             },
                             {
                                 id: 'bblesson05',
@@ -221,6 +226,7 @@ export class DataService {
                                 startDate: null,
                                 completedDate: null,
                                 postQuizId: null,
+                                quizAnswers: null, // Added the new field with default value
                             },
                             {
                                 id: 'bblesson06',
@@ -233,6 +239,7 @@ export class DataService {
                                 startDate: null,
                                 completedDate: null,
                                 postQuizId: null,
+                                quizAnswers: null, // Added the new field with default value
                             },
                             {
                                 id: 'bblesson07',
@@ -245,6 +252,7 @@ export class DataService {
                                 startDate: null,
                                 completedDate: null,
                                 postQuizId: null,
+                                quizAnswers: null, // Added the new field with default value
                             },
                             {
                                 id: 'bblesson08',
@@ -257,6 +265,7 @@ export class DataService {
                                 startDate: null,
                                 completedDate: null,
                                 postQuizId: null,
+                                quizAnswers: null, // Added the new field with default value
                             },
                         ],
                     },
