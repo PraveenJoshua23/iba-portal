@@ -1,5 +1,27 @@
-<div class="flex justify-end items-center w-full py-4 px-8 border-b border-gray-100 h-[80px]">
+<div class="flex justify-end items-center w-full py-4 px-8 border-b gap-6 border-gray-100 h-[80px]">
+    <!-- Language Selector -->
+    <div class="flex items-center">
+        <div class="relative" clickOutside (clickOutside)="closeDropdown()">
+            <button (click)="toggleLanguageDropdown()" class="flex items-center space-x-2 bg-white rounded-md px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors">
+                <span>{{ getCurrentLanguageName() }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            <div *ngIf="isLanguageDropdownOpen" class="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                <div class="py-1" role="menu" aria-orientation="vertical">
+                    <a *ngFor="let lang of availableLanguages" (click)="selectLanguage(lang.code)" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer" [class.font-medium]="currentLanguage === lang.code">
+                        {{ lang.name }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sign Out Button -->
     <div class="flex items-center h-full">
-        <a class="font-medium text-sm cursor-pointer" (click)="signOut()">Sign Out</a>
+        <a class="font-medium text-sm cursor-pointer" (click)="signOut()">
+            {{ 'signOut' | translate }}
+        </a>
     </div>
 </div>
