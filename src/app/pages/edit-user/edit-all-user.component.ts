@@ -13,7 +13,7 @@ import { EditUserComponent } from 'src/app/components/edit-user/edit-user.compon
 import { UserService } from 'src/app/shared/services/users/user.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ConfirmDialogComponent } from 'src/app/components/confirm-dialog/confirm-dialog.component';
-import { AddUserDialogComponent } from 'src/app/components/add-user/add-user-dialog.component';
+import { AddUserDialogComponent } from 'src/app/components/add-user-dialog/add-user-dialog.component';
 
 @Component({
     selector: 'app-edit-user',

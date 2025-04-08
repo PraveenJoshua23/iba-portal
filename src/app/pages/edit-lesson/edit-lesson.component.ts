@@ -6,12 +6,15 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatIconModule } from '@angular/material/icon';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { LessonsService } from 'src/app/shared/services/lessons/lessons.service';
 import { DataService } from 'src/app/shared/services/data.service';
 import { ILesson } from 'src/app/shared/models/lessons.interface';
 import { Storage, deleteObject, getDownloadURL, ref, uploadBytesResumable } from '@angular/fire/storage';
 import { Firestore, addDoc, collection, deleteDoc, doc, updateDoc } from '@angular/fire/firestore';
+import { VimeoService } from 'src/app/shared/services/vimeo/vimeo.service';
+import { firstValueFrom } from 'rxjs';
+import { VimeoMappingService, IVimeoMapping } from 'src/app/shared/services/vimeo/vimeo-mapping.service';
 
 @Component({
     selector: 'app-edit-lesson',
@@ -22,7 +25,7 @@ import { Firestore, addDoc, collection, deleteDoc, doc, updateDoc } from '@angul
 })
 export class EditLessonComponent implements OnInit {
     // Table configuration
-    displayedColumns: string[] = ['lessonNo', 'name', 'category', 'language', 'description', 'actions'];
+    displayedColumns: string[] = ['lessonNo', 'name', 'category', 'language', 'vimeoIds', 'description', 'actions'];
     dataSource = new MatTableDataSource<ILesson>([]);
 
     // UI controls
@@ -31,6 +34,10 @@ export class EditLessonComponent implements OnInit {
     uploadProgress = 0;
     selectedFile: File | null = null;
     showForm = false;
+    isTestingVimeo = false;
+    vimeoTestMessage = '';
+    vimeoTestType: 'success' | 'error' | 'info' = 'info';
+    currentTestingLang: string = '';
 
     // Notification handling
     notification = {
@@ -47,7 +54,15 @@ export class EditLessonComponent implements OnInit {
         { value: 'intermediate', display: 'Intermediate' },
         { value: 'advanced', display: 'Advanced' },
     ];
-    languages = ['English', 'Spanish', 'French', 'German', 'Chinese', 'Arabic'];
+    languages = ['English', 'Tamil', 'Hindi', 'Telugu', 'Odia'];
+    instructors = ['Instructor 1', 'Instructor 2', 'Instructor 3'];
+    languageCodes = {
+        English: 'en',
+        Tamil: 'ta',
+        Telugu: 'te',
+        Hindi: 'hi',
+        Odia: 'or',
+    };
 
     // Pagination
     @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -59,7 +74,8 @@ export class EditLessonComponent implements OnInit {
     storage = inject(Storage);
     firestore = inject(Firestore);
     fb = inject(FormBuilder);
-    // We'll use a custom notification method instead of MatSnackBar
+    vimeoService = inject(VimeoService);
+    vimeoMappingService = inject(VimeoMappingService);
 
     constructor(public dialog: MatDialog) {
         this.lessonForm = this.fb.group({
@@ -70,6 +86,7 @@ export class EditLessonComponent implements OnInit {
             category: ['', Validators.required],
             language: ['', Validators.required],
             path: [''],
+            vimeoEntries: this.fb.array([]), // Form array for language-specific Vimeo IDs
             instructor: [''],
         });
     }
@@ -81,6 +98,29 @@ export class EditLessonComponent implements OnInit {
     ngAfterViewInit() {
         this.dataSource.paginator = this.paginator;
         this.dataSource.sort = this.sort;
+    }
+
+    // Getter for vimeoEntries form array
+    get vimeoEntries(): FormArray {
+        return this.lessonForm.get('vimeoEntries') as FormArray;
+    }
+
+    // Create a new vimeo entry form group
+    createVimeoEntry(language: string = '', vimeoId: string = ''): FormGroup {
+        return this.fb.group({
+            language: [language, Validators.required],
+            vimeoId: [vimeoId, Validators.required],
+        });
+    }
+
+    // Add a new vimeo entry to the form array
+    addVimeoEntry(language: string = '', vimeoId: string = ''): void {
+        this.vimeoEntries.push(this.createVimeoEntry(language, vimeoId));
+    }
+
+    // Remove a vimeo entry from the form array
+    removeVimeoEntry(index: number): void {
+        this.vimeoEntries.removeAt(index);
     }
 
     loadLessons(): void {
@@ -169,6 +209,9 @@ export class EditLessonComponent implements OnInit {
     }
 
     openEditLessonForm(lesson: ILesson): void {
+        this.resetForm(); // Clear the form first
+
+        // Patch the basic info
         this.lessonForm.patchValue({
             id: lesson.id,
             name: lesson.name,
@@ -180,14 +223,35 @@ export class EditLessonComponent implements OnInit {
             instructor: lesson.instructor,
         });
 
+        // Add entries for each language-specific Vimeo ID
+        if (lesson.vimeoIds) {
+            Object.entries(lesson.vimeoIds).forEach(([lang, id]) => {
+                // Find a human-readable language name for the code
+                const languageName = Object.entries(this.languageCodes).find(([name, code]) => code === lang)?.[0] || lang;
+                this.addVimeoEntry(languageName, id);
+            });
+        }
+
+        // If there are no entries, add an empty one for the lesson's main language
+        if (this.vimeoEntries.length === 0) {
+            this.addVimeoEntry(lesson.language, '');
+        }
+
         this.isEditing = true;
         this.showForm = true;
     }
 
     resetForm(): void {
         this.lessonForm.reset();
+
+        // Clear the vimeoEntries form array
+        while (this.vimeoEntries.length > 0) {
+            this.vimeoEntries.removeAt(0);
+        }
+
         this.selectedFile = null;
         this.uploadProgress = 0;
+        this.vimeoTestMessage = '';
     }
 
     cancelForm(): void {
@@ -202,6 +266,37 @@ export class EditLessonComponent implements OnInit {
         }
     }
 
+    // Test Vimeo ID for a specific language
+    async testVimeoId(index: number): Promise<void> {
+        const entry = this.vimeoEntries.at(index) as FormGroup;
+        const vimeoId = entry.get('vimeoId')?.value;
+        const language = entry.get('language')?.value;
+
+        if (!vimeoId) {
+            this.vimeoTestMessage = 'Please enter a Vimeo ID to test';
+            this.vimeoTestType = 'error';
+            this.currentTestingLang = language;
+            return;
+        }
+
+        this.isTestingVimeo = true;
+        this.vimeoTestMessage = `Testing Vimeo ID for ${language}...`;
+        this.vimeoTestType = 'info';
+        this.currentTestingLang = language;
+
+        try {
+            const details = await firstValueFrom(this.vimeoService.getVideoDetails(vimeoId));
+            this.vimeoTestMessage = `Vimeo video for ${language} found: "${details.name}" (Duration: ${Math.floor(details.duration / 60)}m ${details.duration % 60}s)`;
+            this.vimeoTestType = 'success';
+        } catch (error) {
+            this.vimeoTestMessage = `Error: Invalid Vimeo ID for ${language} or video not accessible`;
+            this.vimeoTestType = 'error';
+            console.error('Vimeo test error:', error);
+        } finally {
+            this.isTestingVimeo = false;
+        }
+    }
+
     async saveLesson(): Promise<void> {
         if (this.lessonForm.invalid) {
             this.showNotification('Please fill all required fields', 'error');
@@ -209,7 +304,7 @@ export class EditLessonComponent implements OnInit {
         }
 
         this.isLoading = true;
-        const lessonData = this.lessonForm.value;
+        const lessonData = { ...this.lessonForm.value };
         const category = lessonData.category;
 
         try {
@@ -217,6 +312,36 @@ export class EditLessonComponent implements OnInit {
             if (this.selectedFile) {
                 const path = await this.uploadLessonVideo(category, lessonData.language, this.selectedFile);
                 lessonData.path = path;
+            }
+
+            // Process the vimeoEntries into a vimeoIds object
+            const vimeoIds: { [key: string]: string } = {};
+            lessonData.vimeoEntries.forEach((entry: { language: string; vimeoId: string }) => {
+                // Convert language name to language code
+                const langCode = Object.prototype.hasOwnProperty.call(this.languageCodes, entry.language) ? this.languageCodes[entry.language as keyof typeof this.languageCodes] : entry.language.toLowerCase();
+                vimeoIds[langCode] = entry.vimeoId;
+            });
+
+            // Replace the vimeoEntries array with the vimeoIds object
+            delete lessonData.vimeoEntries;
+            lessonData.vimeoIds = vimeoIds;
+
+            // Create mappings for each language
+            if (lessonData.path) {
+                for (const [langCode, vimeoId] of Object.entries(vimeoIds)) {
+                    const firebasePath = `${category}/${langCode}/${lessonData.path}`;
+
+                    // Create mapping
+                    const mapping: IVimeoMapping = {
+                        firebasePath: firebasePath,
+                        vimeoId: vimeoId,
+                        title: lessonData.name,
+                        description: lessonData.description,
+                    };
+
+                    // Add mapping to Firestore
+                    await firstValueFrom(this.vimeoMappingService.addMapping(mapping));
+                }
             }
 
             if (this.isEditing) {
@@ -327,6 +452,28 @@ export class EditLessonComponent implements OnInit {
                     }
                 },
             );
+        });
+    }
+
+    // Helper method to count entries in an object
+    getObjectLength(obj: any): number {
+        if (!obj) return 0;
+        return Object.keys(obj).length;
+    }
+
+    // Helper method to convert Vimeo IDs object to an array for display
+    getVimeoEntries(vimeoIds: { [key: string]: string }): { lang: string; id: string }[] {
+        if (!vimeoIds) return [];
+
+        // Convert language codes to readable names where possible
+        return Object.entries(vimeoIds).map(([code, id]) => {
+            // Find the language name for this code
+            const langName = Object.entries(this.languageCodes).find(([name, langCode]) => langCode === code)?.[0] || code;
+
+            return {
+                lang: langName,
+                id: id,
+            };
         });
     }
 }

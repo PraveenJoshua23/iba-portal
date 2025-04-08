@@ -4,7 +4,6 @@ import { Observable, from, of, throwError } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { VimeoMappingService } from './vimeo-mapping.service';
-import * as vimeo from 'vimeo';
 
 @Injectable({
     providedIn: 'root',
@@ -75,6 +74,7 @@ export class VimeoService {
         return this.mappingService.getVimeoIdForPath(category, lang, path).pipe(
             switchMap((vimeoId) => {
                 if (vimeoId) {
+                    console.log(`Found mapping in Firestore for ${category}/${lang}/${path}: ${vimeoId}`);
                     return of(vimeoId);
                 }
 
@@ -83,12 +83,20 @@ export class VimeoService {
                     // Format: `${category}/${lang}/${path}`: 'vimeoId'
                     'bb/en/BB Lesson 1': '1072835401',
                     'bb/en/BB Lesson 2': '1072835540',
-                    'bb/en/bblesson03': '1072835499',
-                    'bb/en/bblesson04': '1072835456',
-                    'bb/en/bblesson05': '1072835401',
-                    'bb/en/bblesson06': '1072835337',
-                    'bb/en/bblesson07': '1072835263',
-                    'bb/en/bblesson08': '1072835222',
+                    'bb/en/BB Lesson 3': '1072835499',
+                    'bb/en/BB Lesson 4': '1072835456',
+                    'bb/en/BB Lesson 5': '1072835401',
+                    'bb/en/BB Lesson 6': '1072835337',
+                    'bb/en/BB Lesson 7': '1072835263',
+                    'bb/en/BB Lesson 8': '1072835222',
+                    'bb/ta/BB Lesson 1': '1072835401', // Tamil versions (using same IDs for demo)
+                    'bb/ta/BB Lesson 2': '1072835540',
+                    'bb/ta/BB Lesson 3': '1072835499',
+                    'bb/ta/BB Lesson 4': '1072835456',
+                    'bb/ta/BB Lesson 5': '1072835401',
+                    'bb/ta/BB Lesson 6': '1072835337',
+                    'bb/ta/BB Lesson 7': '1072835263',
+                    'bb/ta/BB Lesson 8': '1072835222',
                     // Add more mappings as needed
                 };
 
@@ -97,6 +105,10 @@ export class VimeoService {
 
                 if (hardcodedId) {
                     console.log(`Found hardcoded mapping for ${key}: ${hardcodedId}`);
+
+                    // Also add this mapping to Firestore for future use
+                    this.createMappingInFirestore(category, lang, path, hardcodedId);
+
                     return of(hardcodedId);
                 }
 
@@ -104,6 +116,28 @@ export class VimeoService {
                 return throwError(() => new Error(`No Vimeo ID mapping found for: ${key}`));
             }),
         );
+    }
+
+    /**
+     * Helper method to create a mapping in Firestore
+     * This is used to migrate hardcoded mappings to Firestore
+     */
+    private createMappingInFirestore(category: string, lang: string, path: string, vimeoId: string): void {
+        const firebasePath = `${category}/${lang}/${path}`;
+
+        // Create a simple mapping object
+        const mapping = {
+            firebasePath: firebasePath,
+            vimeoId: vimeoId,
+            title: path, // Use path as title for now
+            description: `Auto-migrated from hardcoded mapping for ${firebasePath}`,
+        };
+
+        // Add the mapping to Firestore (ignoring result)
+        this.mappingService.addMapping(mapping).subscribe({
+            next: (id) => console.log(`Created Firestore mapping with ID: ${id}`),
+            error: (err) => console.error('Failed to create Firestore mapping:', err),
+        });
     }
 
     /**

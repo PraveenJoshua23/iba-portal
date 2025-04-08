@@ -1,7 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, from, lastValueFrom, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
-
+import { Observable, lastValueFrom } from 'rxjs';
 import { Lesson } from '../models/lesson.model';
 import { CollectionReference, Firestore, addDoc, collection, collectionData, doc, getDocs, orderBy, query, setDoc, updateDoc, where } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
@@ -97,20 +95,6 @@ export class DataService {
             console.error('Error managing progress entry:', error);
         }
     }
-
-    // async getVideo(category: string, lang: string, path: string) {
-    //     try {
-    //         const storagePath = `lessons/${category}/${lang}/${path}.mp4`;
-    //         const storageRef = ref(this.s, storagePath);
-
-    //         // Directly await the Promise from getDownloadURL
-    //         const url = await getDownloadURL(storageRef);
-    //         return url;
-    //     } catch (error) {
-    //         console.error('Error getting video URL:', error);
-    //         return null;
-    //     }
-    // }
 
     async getUserByEmail(email: string): Promise<IUser | null> {
         const q = query(this.usersRef, where('email', '==', email));
@@ -424,7 +408,32 @@ export class DataService {
         return categoryMap[category.toLowerCase()] || category;
     }
 
-    // New method to get video from Vimeo instead of Firebase Storage
+    // Helper method to convert language name to code
+    private getLanguageCode(language: string): string {
+        const langMap: { [key: string]: string } = {
+            English: 'en',
+            Tamil: 'ta',
+            Telugu: 'te',
+            Hindi: 'hi',
+            Odia: 'or',
+        };
+
+        return langMap[language] || 'en';
+    }
+
+    // New method to get video directly from Vimeo using the vimeoId field for a specific language
+    async getVideoDirectlyFromVimeo(vimeoId: string): Promise<string | null> {
+        try {
+            // Get the actual video URL with the requested quality
+            const videoUrl = await lastValueFrom(this.vimeoService.getVideoUrl(vimeoId));
+            return videoUrl;
+        } catch (error) {
+            console.error('Error getting video URL directly from Vimeo:', error);
+            return null;
+        }
+    }
+
+    // Updated method that gets video from Vimeo using the mapping service
     async getVideoFromVimeo(category: string, lang: string, path: string): Promise<string | null> {
         try {
             // First, map the path to a Vimeo ID
@@ -440,10 +449,42 @@ export class DataService {
         }
     }
 
-    // Keep the original method for backward compatibility during migration
+    // Updated to check for language-specific vimeoIds first before falling back to path-based methods
     async getVideo(category: string, lang: string, path: string, quality: 'sd' | 'hd' | 'highest' = 'highest'): Promise<string | null> {
         try {
-            // First attempt to get video from Vimeo
+            // First try to get the lesson document
+            const lessonRef = doc(this.fs, 'lessons', category);
+            const lessonSubcollection = collection(lessonRef, 'lesson');
+            const q = query(lessonSubcollection, where('path', '==', path));
+
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
+                const lessonData = querySnapshot.docs[0].data();
+
+                // If the lesson has vimeoIds and there's an entry for this language
+                if (lessonData['vimeoIds'] && lessonData['vimeoIds'][lang]) {
+                    console.log(`Using language-specific vimeoId ${lessonData['vimeoIds'][lang]} for ${lang}`);
+                    return await this.getVideoDirectlyFromVimeo(lessonData['vimeoIds'][lang]);
+                }
+
+                // If no language-specific ID but the lesson has any vimeoIds, try to find a fallback
+                if (lessonData['vimeoIds']) {
+                    // Try to use English as fallback
+                    if (lessonData['vimeoIds']['en']) {
+                        console.log(`Using English vimeoId as fallback: ${lessonData['vimeoIds']['en']}`);
+                        return await this.getVideoDirectlyFromVimeo(lessonData['vimeoIds']['en']);
+                    }
+
+                    // Or use the first available language
+                    const firstLang = Object.keys(lessonData['vimeoIds'])[0];
+                    if (firstLang) {
+                        console.log(`Using ${firstLang} vimeoId as fallback: ${lessonData['vimeoIds'][firstLang]}`);
+                        return await this.getVideoDirectlyFromVimeo(lessonData['vimeoIds'][firstLang]);
+                    }
+                }
+            }
+
+            // If no direct vimeoId, try to get video from Vimeo using mapping
             const vimeoUrl = await this.getVideoFromVimeo(category, lang, path);
             if (vimeoUrl) {
                 return vimeoUrl;
