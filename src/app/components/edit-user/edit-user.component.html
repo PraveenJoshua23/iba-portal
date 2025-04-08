@@ -1,110 +1,181 @@
-<h2 mat-dialog-title class="font-semibold">User Details</h2>
-<form
-  [formGroup]="myUserForm"
-  (ngSubmit)="onSubmit()"
-  class="flex flex-col space-y-10"
->
-  <mat-dialog-content class="mat-typography">
-    <section class="flex flex-col mx-auto w-[60vw]">
-      <div class="flex w-full space-x-6">
-        <div class="w-1/2 rounded-md px-4 py-5 bg-gray-200">
-          <div class="flex justify-between">
-            <h4 class="text-black pb-1 border-b border-b-gray-300">Main Information</h4>
-            <div class="text-red-500 focus:outline-none cursor-pointer" (click)="editDetails()">Edit Mode: {{!editMode() ? 'ON' : 'OFF'}}</div>
-          </div>
-          <div class="flex flex-col space-y-5 mt-4">
-            <div class="flex justify-between">
-              <label for="name">Name:</label>
-              <input type="text" formControlName="name" class="ring-none bg-gray-200 focus:outline-none" [readOnly]="editMode()">
-            </div>
-  
-            <div class="flex justify-between">
-              <label for="email">Email:</label>
-              <input type="text" formControlName="email" class="ring-none bg-gray-200 focus:outline-none" [readOnly]="editMode()">
+<div class="p-4">
+    <h2 mat-dialog-title class="text-xl font-semibold border-b pb-2 mb-4">User Details</h2>
+
+    <form [formGroup]="myUserForm" (ngSubmit)="onSubmit()" class="flex flex-col space-y-4">
+        <mat-dialog-content class="max-h-[70vh] overflow-y-auto">
+            <!-- Toggle Edit Mode Button -->
+            <div class="flex justify-end mb-4">
+                <button type="button" class="px-3 py-1 rounded-md text-sm" [ngClass]="{ 'bg-green-500 text-white': !editMode(), 'bg-blue-500 text-white': editMode() }" (click)="editDetails()">
+                    {{ editMode() ? 'Enable Editing' : 'Disable Editing' }}
+                </button>
             </div>
 
-            <div class="flex justify-between">
-              <label for="instructor">Instructor:</label>
-              <input type="text" formControlName="instructor" class="ring-none bg-gray-200 focus:outline-none" [readOnly]="editMode()">
-            </div>
+            <!-- User Form Sections -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Primary Information -->
+                <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                    <h3 class="font-medium text-lg mb-3 border-b pb-1 text-gray-700">Primary Information</h3>
 
-            <div class="flex justify-between">
-              <label for="networker">Networker:</label>
-              <input type="text" formControlName="networker" class="ring-none bg-gray-200 focus:outline-none" [readOnly]="editMode()">
-            </div>
+                    <div class="space-y-3">
+                        <!-- User ID (Display Only) -->
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 mb-1">User ID</label>
+                            <input type="text" [value]="prevUser.id" class="bg-gray-100 p-2 rounded-md text-gray-500" readonly />
+                        </div>
 
-            <div class="flex justify-between">
-              <label for="classId">Class ID:</label>
-              <input type="text" formControlName="classId" class="ring-none bg-gray-200 focus:outline-none" [readOnly]="editMode()">
-            </div>
+                        <!-- Role -->
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 mb-1">Role</label>
+                            <select formControlName="role" class="p-2 border rounded-md" [attr.disabled]="editMode() ? true : null">
+                                <option value="student">Student</option>
+                                <option value="instructor">Instructor</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
 
-            <div class="flex justify-between">
-              <label for="language">Language:</label>
-              <input type="text" formControlName="language" class="ring-none bg-gray-200 focus:outline-none" [readOnly]="editMode()">
-            </div>
-          </div>
-          
-        </div>
-        <div class="w-1/2">
-          <h4 class="text-black py-1 border-b border-b-gray-300">Other Information</h4>
-          <div class="flex flex-col space-y-2 mt-4">
-            <div class="flex justify-between">
-              <label for="age">Age:</label>
-              <input type="text" formControlName="age" class="ring-none focus:outline-none" [readOnly]="editMode()">
-            </div>
-            <div class="flex justify-between">
-              <label for="phone">Phone:</label>
-              <input type="text" formControlName="phone" class="ring-none focus:outline-none" [readOnly]="editMode()">
-            </div>
-            <div class="flex justify-between">
-              <label for="dob">Date of Birth:</label>
-              <input type="text" formControlName="dob" class="ring-none focus:outline-none" [readOnly]="editMode()">
-            </div>
+                        <!-- Name -->
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 mb-1">Full Name</label>
+                            <input type="text" formControlName="name" class="p-2 border rounded-md" [attr.readonly]="editMode() ? true : null" />
+                        </div>
 
-            <div class="flex justify-between">
-              <label for="gender">Gender:</label>
-              <input type="text" formControlName="gender" class="ring-none focus:outline-none" [readOnly]="editMode()">
-            </div>
+                        <!-- Email -->
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 mb-1">Email</label>
+                            <input type="email" formControlName="email" class="p-2 border rounded-md" [attr.readonly]="editMode() ? true : null" />
+                        </div>
 
-            <div class="flex justify-between">
-              <label for="marital">Marital Status:</label>
-              <input type="text" formControlName="marital" class="ring-none focus:outline-none" [readOnly]="editMode()">
-            </div>
+                        <!-- Language -->
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 mb-1">Language</label>
+                            <select formControlName="language" class="p-2 border rounded-md" [attr.disabled]="editMode() ? true : null">
+                                <option value="English">English</option>
+                                <option value="Tamil">Tamil</option>
+                                <option value="Hindi">Hindi</option>
+                                <option value="Telugu">Telugu</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="flex justify-between">
-              <label for="occupation">Occupation</label>
-              <input type="text" formControlName="occupation" class="ring-none focus:outline-none" [readOnly]="editMode()">
-            </div>
+                <!-- Class & Instructor Information -->
+                <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+                    <h3 class="font-medium text-lg mb-3 border-b pb-1 text-gray-700">Class & Instructor</h3>
 
-            <div class="flex justify-between">
-              <label for="religion">Religion:</label>
-              <input type="text" formControlName="religion" class="ring-none focus:outline-none" [readOnly]="editMode()">
-            </div>
+                    <div class="space-y-3">
+                        <!-- Class ID -->
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 mb-1">Class ID</label>
+                            <input type="text" formControlName="classId" class="p-2 border rounded-md" [attr.readonly]="editMode() ? true : null" />
+                        </div>
 
-            <div class="flex justify-between">
-              <label for="studying">Status:</label>
-              <input type="text" formControlName="studying" class="ring-none focus:outline-none" [readOnly]="editMode()">
-            </div>
+                        <!-- Instructor -->
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 mb-1">Instructor</label>
+                            <input type="text" formControlName="instructor" class="p-2 border rounded-md" [attr.readonly]="editMode() ? true : null" />
+                        </div>
 
-            <div class="flex justify-between">
-              <label for="whyApply">Reason to Regsiter:</label>
-              <input type="text" formControlName="whyApply" class="ring-none focus:outline-none" [readOnly]="editMode()">
+                        <!-- Networker -->
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 mb-1">Networker</label>
+                            <input type="text" formControlName="networker" class="p-2 border rounded-md" [attr.readonly]="editMode() ? true : null" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personal Details -->
+                <div class="bg-gray-50 p-4 rounded-lg shadow-sm md:col-span-2">
+                    <h3 class="font-medium text-lg mb-3 border-b pb-1 text-gray-700">Personal Details</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Age -->
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 mb-1">Age</label>
+                            <input type="text" formControlName="age" class="p-2 border rounded-md" [attr.readonly]="editMode() ? true : null" />
+                        </div>
+
+                        <!-- Date of Birth -->
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 mb-1">Date of Birth</label>
+                            <input type="date" formControlName="dob" class="p-2 border rounded-md" [attr.readonly]="editMode() ? true : null" />
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 mb-1">Phone</label>
+                            <input type="text" formControlName="phone" class="p-2 border rounded-md" [attr.readonly]="editMode() ? true : null" />
+                        </div>
+
+                        <!-- Gender -->
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 mb-1">Gender</label>
+                            <select formControlName="gender" class="p-2 border rounded-md" [attr.disabled]="editMode() ? true : null">
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+
+                        <!-- Marital Status -->
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 mb-1">Marital Status</label>
+                            <select formControlName="marital" class="p-2 border rounded-md" [attr.disabled]="editMode() ? true : null">
+                                <option value="Married">Married</option>
+                                <option value="Single">Single</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Religion -->
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 mb-1">Religion</label>
+                            <select formControlName="religion" class="p-2 border rounded-md" [attr.disabled]="editMode() ? true : null">
+                                <option value="Christian">Christian</option>
+                                <option value="Non-Christian">Non-Christian</option>
+                            </select>
+                        </div>
+
+                        <!-- Occupation -->
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 mb-1">Occupation</label>
+                            <select formControlName="occupation" class="p-2 border rounded-md" [attr.disabled]="editMode() ? true : null">
+                                <option value="Office Worker">Office Worker</option>
+                                <option value="Student">Student</option>
+                                <option value="Government Official">Government Official</option>
+                                <option value="Teacher">Teacher</option>
+                                <option value="Housewife">Housewife</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- Studying Status -->
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 mb-1">Studying Status</label>
+                            <select formControlName="studying" class="p-2 border rounded-md" [attr.disabled]="editMode() ? true : null">
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Application Information -->
+                <div class="bg-gray-50 p-4 rounded-lg shadow-sm md:col-span-2">
+                    <h3 class="font-medium text-lg mb-3 border-b pb-1 text-gray-700">Application Information</h3>
+
+                    <div class="space-y-3">
+                        <!-- Why Apply -->
+                        <div class="flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 mb-1">Reason for Applying</label>
+                            <textarea formControlName="whyApply" class="p-2 border rounded-md resize-none" rows="3" [attr.readonly]="editMode() ? true : null"></textarea>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </mat-dialog-content>
-  <mat-dialog-actions align="end">
-    <button mat-button mat-dialog-close>Cancel</button>
-    <button
-      mat-button
-      [mat-dialog-close]="true"
-      type="submit"
-      class="mdc-button-submit"
-      [disabled]="myUserForm.invalid"
-    >
-      Update
-    </button>
-  </mat-dialog-actions>
-</form>
+        </mat-dialog-content>
+
+        <mat-dialog-actions align="end" class="pt-4 border-t">
+            <button type="button" mat-button mat-dialog-close class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md mr-2">Cancel</button>
+            <button type="submit" mat-button [mat-dialog-close]="true" [disabled]="myUserForm.invalid || editMode()" class="px-4 py-2 bg-blue-600 text-white rounded-md disabled:bg-blue-300">Update User</button>
+        </mat-dialog-actions>
+    </form>
+</div>

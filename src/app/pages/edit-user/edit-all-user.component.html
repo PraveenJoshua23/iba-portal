@@ -1,37 +1,43 @@
-
 <div id="edit-user" class="container mx-auto">
-            
     <div class="flex w-full items-center justify-between">
-      <span class="font-semibold text-lg">Edit/Update Users</span>
-      <mat-form-field [appearance]="appearance">
-        <mat-label>Search User</mat-label>
-        <input matInput (keyup)="applyFilter($event)" placeholder="Ex. Mia" #input>
-      </mat-form-field>
+        <div class="flex items-center gap-4">
+            <span class="font-semibold text-lg">Edit/Update Users</span>
+            <button (click)="openAddUserDialog()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md flex items-center gap-2 transition-colors duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Add User
+            </button>
+        </div>
+        <mat-form-field [appearance]="appearance">
+            <mat-label>Search User</mat-label>
+            <input matInput (keyup)="applyFilter($event)" placeholder="Ex. Mia" #input />
+        </mat-form-field>
     </div>
-   
+
     <table mat-table [dataSource]="dataSource" matSort>
         <!-- ID Column -->
         <ng-container matColumnDef="id">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
-          <td mat-cell *matCellDef="let element; let index= index">{{ index+1}}</td>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
+            <td mat-cell *matCellDef="let element; let index = index">{{ index + 1 }}</td>
         </ng-container>
-  
+
         <!-- Name Column -->
         <ng-container matColumnDef="name">
-          <th mat-header-cell mat-sort-header *matHeaderCellDef >Name</th>
-          <td mat-cell *matCellDef="let element">{{ element.name }}</td>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let element">{{ element.name }}</td>
         </ng-container>
-  
+
         <!-- Language Column -->
         <ng-container matColumnDef="language">
-          <th mat-header-cell mat-sort-header *matHeaderCellDef >Language</th>
-          <td mat-cell *matCellDef="let element">{{ element.language }}</td>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Language</th>
+            <td mat-cell *matCellDef="let element">{{ element.language }}</td>
         </ng-container>
-  
+
         <!-- Networker Column -->
         <ng-container matColumnDef="networker">
-          <th mat-header-cell mat-sort-header *matHeaderCellDef>Networker</th>
-          <td mat-cell *matCellDef="let element" [style.color]="">{{ element.networker }}</td>
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Networker</th>
+            <td mat-cell *matCellDef="let element" [style.color]="">{{ element.networker }}</td>
         </ng-container>
 
         <!-- Instructor Column -->
@@ -40,30 +46,40 @@
             <td mat-cell *matCellDef="let element" [style.color]="">{{ element.instructor ? element.instructor : 'Daniel' }}</td>
         </ng-container>
 
-         <!-- Class Column -->
-         <ng-container matColumnDef="class">
+        <!-- Class Column -->
+        <ng-container matColumnDef="class">
             <th mat-header-cell mat-sort-header *matHeaderCellDef>Class</th>
             <td mat-cell *matCellDef="let element" [style.color]="">{{ element.class ? element.class : 'Class 141' }}</td>
         </ng-container>
 
-         <!-- Progress -->
-         <ng-container matColumnDef="progress">
+        <!-- Progress -->
+        <ng-container matColumnDef="progress">
             <th mat-header-cell mat-sort-header *matHeaderCellDef>Progress</th>
-            <td mat-cell *matCellDef="let element" >{{ element.progress ? element.progress : '0%' }}</td>
+            <td mat-cell *matCellDef="let element">{{ element.progress ? element.progress : '0%' }}</td>
         </ng-container>
 
-         <!-- Progress -->
-         <ng-container matColumnDef="action">
-            <th mat-header-cell mat-sort-header *matHeaderCellDef>Action</th>
-            <td mat-cell *matCellDef="let element" (click)="openDialog(element)">Edit user</td>
+        <!-- Action Column -->
+        <ng-container matColumnDef="action">
+            <th mat-header-cell mat-sort-header *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let element">
+                <div class="flex items-center gap-2">
+                    <button class="text-blue-600 hover:bg-blue-100 p-1 rounded-full transition-colors" (click)="openDialog(element)">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                    </button>
+                    <button class="text-red-600 hover:bg-red-100 p-1 rounded-full transition-colors" (click)="deleteUser(element)">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
+            </td>
         </ng-container>
-  
-        <tr mat-header-row  *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
-      <div *ngIf="dataSource.filteredData.length === 0 && searchTerm !== ''" class="text-center py-4 bg-white">
-        No results found for "{{ searchTerm }}"
-      </div>
-      <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 15]" showFirstLastButtons
-        ></mat-paginator>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+    <div *ngIf="dataSource.filteredData.length === 0 && searchTerm !== ''" class="text-center py-4 bg-white">No results found for "{{ searchTerm }}"</div>
+    <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 15]" showFirstLastButtons></mat-paginator>
 </div>

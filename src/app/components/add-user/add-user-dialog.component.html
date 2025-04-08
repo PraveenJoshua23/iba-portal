@@ -1,0 +1,215 @@
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-4xl h-[90vh] overflow-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-gray-800">Add New User</h2>
+                <button (click)="onNoClick()" class="text-gray-500 hover:text-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Basic Information Section -->
+                    <div class="col-span-2">
+                        <h3 class="text-md font-medium mb-2 text-gray-700 border-b pb-1">Basic Information</h3>
+                    </div>
+
+                    <!-- Name -->
+                    <div class="col-span-1">
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <input type="text" id="name" formControlName="name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-golden-500" placeholder="Enter full name" />
+                        <div *ngIf="userForm.get('name')?.invalid && userForm.get('name')?.touched" class="text-red-500 text-sm mt-1">Name is required</div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="col-span-1">
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="email" formControlName="email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-golden-500" placeholder="Enter email address" />
+                        <div *ngIf="userForm.get('email')?.hasError('required') && userForm.get('email')?.touched" class="text-red-500 text-sm mt-1">Email is required</div>
+                        <div *ngIf="userForm.get('email')?.hasError('email') && userForm.get('email')?.touched" class="text-red-500 text-sm mt-1">Please enter a valid email</div>
+                    </div>
+
+                    <!-- Role Dropdown -->
+                    <div class="col-span-1 relative">
+                        <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                        <div class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-golden-500 cursor-pointer flex justify-between items-center" (click)="toggleDropdown('role', $event)">
+                            <span>{{ userForm.get('role')?.value | titlecase }}</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <div *ngIf="showRoleDropdown" class="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto">
+                            <div *ngFor="let role of roleOptions" class="cursor-pointer px-4 py-2 hover:bg-gray-100" (click)="selectOption('role', role)">
+                                {{ role | titlecase }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Class ID -->
+                    <div class="col-span-1">
+                        <label for="classId" class="block text-sm font-medium text-gray-700 mb-1">Class ID</label>
+                        <input type="text" id="classId" formControlName="classId" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-golden-500" placeholder="Enter class ID" />
+                        <div *ngIf="userForm.get('classId')?.invalid && userForm.get('classId')?.touched" class="text-red-500 text-sm mt-1">Class ID is required</div>
+                    </div>
+
+                    <!-- Language Dropdown -->
+                    <div class="col-span-1 relative">
+                        <label for="language" class="block text-sm font-medium text-gray-700 mb-1">Language</label>
+                        <div class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-golden-500 cursor-pointer flex justify-between items-center" (click)="toggleDropdown('language', $event)">
+                            <span>{{ userForm.get('language')?.value }}</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <div *ngIf="showLanguageDropdown" class="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto">
+                            <div *ngFor="let lang of languageOptions" class="cursor-pointer px-4 py-2 hover:bg-gray-100" (click)="selectOption('language', lang)">
+                                {{ lang }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Instructor -->
+                    <div class="col-span-1">
+                        <label for="instructor" class="block text-sm font-medium text-gray-700 mb-1">Instructor</label>
+                        <input type="text" id="instructor" formControlName="instructor" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-golden-500 bg-gray-50" readonly />
+                        <div class="text-xs text-gray-500 mt-1">Auto-assigned based on language</div>
+                    </div>
+
+                    <!-- Networker -->
+                    <div class="col-span-1">
+                        <label for="networker" class="block text-sm font-medium text-gray-700 mb-1">Networker</label>
+                        <input type="text" id="networker" formControlName="networker" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-golden-500" placeholder="Who referred this user" />
+                        <div *ngIf="userForm.get('networker')?.invalid && userForm.get('networker')?.touched" class="text-red-500 text-sm mt-1">Networker is required</div>
+                    </div>
+
+                    <!-- Personal Information Section -->
+                    <div class="col-span-2 mt-4">
+                        <h3 class="text-md font-medium mb-2 text-gray-700 border-b pb-1">Personal Information</h3>
+                    </div>
+
+                    <!-- Date of Birth -->
+                    <div class="col-span-1">
+                        <label for="dob" class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                        <input type="date" id="dob" formControlName="dob" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-golden-500" />
+                        <div *ngIf="userForm.get('dob')?.invalid && userForm.get('dob')?.touched" class="text-red-500 text-sm mt-1">Date of birth is required</div>
+                    </div>
+
+                    <!-- Phone -->
+                    <div class="col-span-1">
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                        <input type="text" id="phone" formControlName="phone" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-golden-500" placeholder="Enter phone number" />
+                        <div *ngIf="userForm.get('phone')?.invalid && userForm.get('phone')?.touched" class="text-red-500 text-sm mt-1">Phone is required</div>
+                    </div>
+
+                    <!-- Occupation Dropdown -->
+                    <div class="col-span-1 relative">
+                        <label for="occupation" class="block text-sm font-medium text-gray-700 mb-1">Occupation</label>
+                        <div class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-golden-500 cursor-pointer flex justify-between items-center" (click)="toggleDropdown('occupation', $event)">
+                            <span>{{ userForm.get('occupation')?.value || 'Select occupation' }}</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                        <div *ngIf="showOccupationDropdown" class="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto">
+                            <div *ngFor="let occ of occupationOptions" class="cursor-pointer px-4 py-2 hover:bg-gray-100" (click)="selectOption('occupation', occ)">
+                                {{ occ }}
+                            </div>
+                        </div>
+                        <div *ngIf="userForm.get('occupation')?.invalid && userForm.get('occupation')?.touched" class="text-red-500 text-sm mt-1">Occupation is required</div>
+                    </div>
+
+                    <!-- Gender -->
+                    <div class="col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                        <div class="flex space-x-4">
+                            <label class="inline-flex items-center">
+                                <input type="radio" formControlName="gender" value="Male" class="form-radio h-4 w-4 text-golden-600 border-gray-300 focus:ring-golden-500" />
+                                <span class="ml-2 text-sm text-gray-700">Male</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" formControlName="gender" value="Female" class="form-radio h-4 w-4 text-golden-600 border-gray-300 focus:ring-golden-500" />
+                                <span class="ml-2 text-sm text-gray-700">Female</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Marital Status -->
+                    <div class="col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Marital Status</label>
+                        <div class="flex space-x-4">
+                            <label class="inline-flex items-center">
+                                <input type="radio" formControlName="marital" value="Married" class="form-radio h-4 w-4 text-golden-600 border-gray-300 focus:ring-golden-500" />
+                                <span class="ml-2 text-sm text-gray-700">Married</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" formControlName="marital" value="Single" class="form-radio h-4 w-4 text-golden-600 border-gray-300 focus:ring-golden-500" />
+                                <span class="ml-2 text-sm text-gray-700">Single</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" formControlName="marital" value="Other" class="form-radio h-4 w-4 text-golden-600 border-gray-300 focus:ring-golden-500" />
+                                <span class="ml-2 text-sm text-gray-700">Other</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Religion -->
+                    <div class="col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Religion</label>
+                        <div class="flex space-x-4">
+                            <label class="inline-flex items-center">
+                                <input type="radio" formControlName="religion" value="Christian" class="form-radio h-4 w-4 text-golden-600 border-gray-300 focus:ring-golden-500" />
+                                <span class="ml-2 text-sm text-gray-700">Christian</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" formControlName="religion" value="Non-Christian" class="form-radio h-4 w-4 text-golden-600 border-gray-300 focus:ring-golden-500" />
+                                <span class="ml-2 text-sm text-gray-700">Non-Christian</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Currently Studying -->
+                    <div class="col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Currently Studying</label>
+                        <div class="flex space-x-4">
+                            <label class="inline-flex items-center">
+                                <input type="radio" formControlName="studying" value="Yes" class="form-radio h-4 w-4 text-golden-600 border-gray-300 focus:ring-golden-500" />
+                                <span class="ml-2 text-sm text-gray-700">Yes</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" formControlName="studying" value="No" class="form-radio h-4 w-4 text-golden-600 border-gray-300 focus:ring-golden-500" />
+                                <span class="ml-2 text-sm text-gray-700">No</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Why Apply -->
+                    <div class="col-span-2">
+                        <label for="whyApply" class="block text-sm font-medium text-gray-700 mb-1">Why did you apply for this Course?</label>
+                        <textarea id="whyApply" formControlName="whyApply" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-golden-500" placeholder="Enter reason for applying"></textarea>
+                        <div *ngIf="userForm.get('whyApply')?.invalid && userForm.get('whyApply')?.touched" class="text-red-500 text-sm mt-1">This field is required</div>
+                    </div>
+                </div>
+
+                <!-- Error message -->
+                <div *ngIf="errorMsg" class="p-3 my-4 bg-red-100 text-red-700 rounded-md">
+                    {{ errorMsg }}
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end space-x-3 mt-8">
+                    <button type="button" (click)="onNoClick()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-golden-500">Cancel</button>
+                    <button
+                        type="submit"
+                        [disabled]="userForm.invalid || isSubmitting"
+                        class="px-4 py-2 bg-golden-600 rounded-md text-white hover:bg-golden-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-golden-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {{ isSubmitting ? 'Adding...' : 'Add User' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

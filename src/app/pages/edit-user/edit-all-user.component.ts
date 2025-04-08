@@ -6,15 +6,19 @@ import { UserFilterPipe } from '../../shared/pipes/user-filter.pipe';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { DataService } from 'src/app/shared/services/data.service';
 import { EditUserComponent } from 'src/app/components/edit-user/edit-user.component';
+import { UserService } from 'src/app/shared/services/users/user.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ConfirmDialogComponent } from 'src/app/components/confirm-dialog/confirm-dialog.component';
+import { AddUserDialogComponent } from 'src/app/components/add-user/add-user-dialog.component';
 
 @Component({
     selector: 'app-edit-user',
     standalone: true,
-    imports: [CommonModule, MatTableModule, MatButtonModule, MatDialogModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule, UserFilterPipe],
+    imports: [CommonModule, MatTableModule, MatButtonModule, MatDialogModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule, UserFilterPipe, MatSnackBarModule],
     templateUrl: './edit-all-user.component.html',
     styleUrl: './edit-all-user.component.scss',
 })
@@ -27,6 +31,8 @@ export class EditAllUserComponent implements OnInit, AfterViewInit {
     appearance: MatFormFieldAppearance = 'fill';
 
     ds = inject(DataService);
+    userService = inject(UserService);
+    snackBar = inject(MatSnackBar);
 
     @ViewChild(MatPaginator) paginator!: MatPaginator;
     @ViewChild(MatSort) sort!: MatSort;
@@ -40,10 +46,62 @@ export class EditAllUserComponent implements OnInit, AfterViewInit {
     openDialog(item: any) {
         const dialogRef = this.dialog.open(EditUserComponent, {
             data: item,
+            width: '800px',
         });
 
         dialogRef.afterClosed().subscribe((result) => {
-            console.log(`Dialog result: ${result}`);
+            if (result) {
+                // Refresh the table data
+                this.getAllUsers();
+                this.snackBar.open('User updated successfully', 'Close', {
+                    duration: 3000,
+                });
+            }
+        });
+    }
+
+    openAddUserDialog() {
+        const dialogRef = this.dialog.open(AddUserDialogComponent, {
+            width: '800px',
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+            if (result) {
+                // Refresh the table data after adding a new user
+                this.getAllUsers();
+                this.snackBar.open('User added successfully', 'Close', {
+                    duration: 3000,
+                });
+            }
+        });
+    }
+
+    deleteUser(user: any) {
+        const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+            width: '350px',
+            data: {
+                title: 'Confirm Delete',
+                message: `Are you sure you want to delete ${user.name}? This action cannot be undone.`,
+            },
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+            if (result) {
+                this.userService
+                    .deleteUser(user.id)
+                    .then(() => {
+                        this.getAllUsers();
+                        this.snackBar.open('User deleted successfully', 'Close', {
+                            duration: 3000,
+                        });
+                    })
+                    .catch((error) => {
+                        console.error('Error deleting user:', error);
+                        this.snackBar.open('Error deleting user', 'Close', {
+                            duration: 3000,
+                        });
+                    });
+            }
         });
     }
 
@@ -70,8 +128,12 @@ export class EditAllUserComponent implements OnInit, AfterViewInit {
 
         this.dataSource.data = this.searchTerm
             ? this.originalData.filter(
-                  (user: { name: string }) => user.name.toLowerCase().includes(this.searchTerm),
-                  // ... add more filter conditions for other fields
+                  (user: { name: string; email: string; language: string; networker: string; instructor: string }) =>
+                      user.name.toLowerCase().includes(this.searchTerm) ||
+                      (user.email && user.email.toLowerCase().includes(this.searchTerm)) ||
+                      (user.language && user.language.toLowerCase().includes(this.searchTerm)) ||
+                      (user.networker && user.networker.toLowerCase().includes(this.searchTerm)) ||
+                      (user.instructor && user.instructor.toLowerCase().includes(this.searchTerm)),
               )
             : this.originalData;
     }

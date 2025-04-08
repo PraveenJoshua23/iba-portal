@@ -1,17 +1,21 @@
 import { Component, Inject, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
 import { IUser } from 'src/app/shared/models/user.interface';
 import { UserService } from 'src/app/shared/services/users/user.service';
+import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
     selector: 'app-edit-user',
     standalone: true,
-    imports: [CommonModule, MatDialogModule, MatButtonModule, ReactiveFormsModule],
+    imports: [CommonModule, MatDialogModule, MatButtonModule, ReactiveFormsModule, MatSelectModule, MatInputModule, MatFormFieldModule],
     templateUrl: './edit-user.component.html',
     styleUrls: ['./edit-user.component.scss'],
 })
@@ -20,41 +24,65 @@ export class EditUserComponent implements OnInit {
     prevUser: any;
     editedValue: any = {};
     editMode = signal(true);
-    us = inject(UserService);
+
+    // Inject services
+    userService = inject(UserService);
+    snackBar = inject(MatSnackBar);
+
+    // Dropdown options
+    occupationOptions = ['Office Worker', 'Student', 'Government Official', 'Teacher', 'Housewife', 'Other'];
+    roleOptions = ['student', 'instructor', 'admin'];
+    languageOptions = ['English', 'Tamil', 'Hindi', 'Telugu'];
 
     constructor(
         private form: FormBuilder,
         @Inject(MAT_DIALOG_DATA) public data: any,
-        private fire: FirebaseService,
+        private dialogRef: MatDialogRef<EditUserComponent>,
     ) {}
 
     ngOnInit(): void {
         this.prevUser = this.data;
+
+        // Initialize the form with values from the user data
+        this.initializeForm();
+    }
+
+    initializeForm(): void {
         this.myUserForm = this.form.group({
+            role: [this.prevUser.role || 'student', Validators.required],
             name: [this.prevUser.name, Validators.required],
             instructor: [this.prevUser.instructor, Validators.required],
             networker: [this.prevUser.networker, Validators.required],
-            classId: [this.prevUser.classId, Validators.required],
-            age: [this.prevUser.userDetails.age, Validators.required],
-            dob: [this.prevUser.userDetails.dob, [Validators.required]],
-            phone: [this.prevUser.userDetails.phone, Validators.required],
+            classId: [this.prevUser.classId || '', Validators.required],
+            age: [this.prevUser.userDetails?.age || '', Validators.required],
+            dob: [this.prevUser.userDetails?.dob || '', Validators.required],
+            phone: [this.prevUser.userDetails?.phone || '', Validators.required],
             email: [this.prevUser.email, [Validators.required, Validators.email]],
-            religion: [this.prevUser.userDetails.religion, Validators.required],
-            faith: [this.prevUser.userDetails.faith, Validators.required],
-            occupation: [this.prevUser.userDetails.occupation, Validators.required],
-            gender: [this.prevUser.userDetails.gender, Validators.required],
-            marital: [this.prevUser.userDetails.marital, Validators.required],
-            language: [this.prevUser.language, Validators.required],
-            whyApply: [this.prevUser.userDetails.whyApply, Validators.required],
-            studying: [this.prevUser.userDetails.studying, Validators.required],
+            religion: [this.prevUser.userDetails?.religion || 'Christian', Validators.required],
+            occupation: [this.prevUser.userDetails?.occupation || '', Validators.required],
+            gender: [this.prevUser.userDetails?.gender || 'Male', Validators.required],
+            marital: [this.prevUser.userDetails?.marital || 'Single', Validators.required],
+            language: [this.prevUser.language || 'English', Validators.required],
+            whyApply: [this.prevUser.userDetails?.whyApply || '', Validators.required],
+            studying: [this.prevUser.userDetails?.studying || 'Yes', Validators.required],
         });
     }
 
     onSubmit() {
+        if (this.myUserForm.invalid) {
+            this.snackBar.open('Please correct form errors before submitting', 'Close', {
+                duration: 3000,
+            });
+            return;
+        }
+
         const form = this.myUserForm.value;
+
+        // Create updated user object with the form values
         const editedData: IUser = {
             ...this.prevUser,
             name: form.name,
+            role: form.role,
             classId: form.classId,
             email: form.email,
             instructor: form.instructor,
@@ -63,7 +91,6 @@ export class EditUserComponent implements OnInit {
             userDetails: {
                 age: form.age,
                 dob: form.dob,
-                faith: form.faith,
                 phone: form.phone,
                 gender: form.gender,
                 marital: form.marital,
@@ -73,18 +100,25 @@ export class EditUserComponent implements OnInit {
                 occupation: form.occupation,
             },
         };
-        // for (const key in this.myUserForm.value) {
-        //   if (this.myUserForm.value[key] !== this.prevUser[key]) {
-        //     this.editedValue[key] = this.myUserForm.value[key];
-        //   }
-        // }
-        this.us.updateUser(editedData);
 
-        // this.fire.updateUserByEmail(this.editedValue, this.prevUser.email).then(() => console.log(`User ${this.prevUser.email} Updated`))
+        // Update the user in Firestore
+        this.userService
+            .updateUser(editedData)
+            .then(() => {
+                this.snackBar.open(`User ${form.name} updated successfully`, 'Close', {
+                    duration: 3000,
+                });
+                this.dialogRef.close(true); // Close dialog with success result
+            })
+            .catch((error) => {
+                console.error('Error updating user:', error);
+                this.snackBar.open('Error updating user', 'Close', {
+                    duration: 3000,
+                });
+            });
     }
 
     editDetails() {
-        this.editMode.set(!this.editMode());
-        console.log(this.editMode());
+        this.editMode.update((value) => !value);
     }
 }

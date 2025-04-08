@@ -33,7 +33,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         {
             label: 'My Profile',
             route: '/profile',
-            icon: '../../../assets/icons/book.svg',
+            icon: '../../../assets/icons/profile.svg',
         },
         {
             label: 'Admin Dashboard',
