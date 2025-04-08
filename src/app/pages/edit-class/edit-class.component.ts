@@ -8,53 +8,48 @@ import { ClassServiceService } from 'src/app/shared/services/class/class-service
 import { classData } from 'src/app/shared/utils/init-data';
 
 @Component({
-  selector: 'app-edit-class',
-  standalone: true,
-  imports: [],
-  templateUrl: './edit-class.component.html',
-  styleUrl: './edit-class.component.scss'
+    selector: 'app-edit-class',
+    standalone: true,
+    imports: [],
+    templateUrl: './edit-class.component.html',
+    styleUrl: './edit-class.component.scss',
 })
 export class EditClassComponent implements OnInit {
-  displayedColumns: string[] = ['id','name', 'language', 'networker', 'instructor', 'class', 'progress', 'action'];
-  cs = inject(ClassServiceService)
-  searchTerm: string = ''; 
-  originalData: any = [];  
-  dataSource = new MatTableDataSource<any>([]);
-  appearance: MatFormFieldAppearance = 'fill';
+    displayedColumns: string[] = ['id', 'name', 'language', 'networker', 'instructor', 'class', 'progress', 'action'];
+    cs = inject(ClassServiceService);
+    searchTerm: string = '';
+    originalData: any = [];
+    dataSource = new MatTableDataSource<any>([]);
+    appearance: MatFormFieldAppearance = 'fill';
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+    @ViewChild(MatPaginator) paginator!: MatPaginator;
+    @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(public dialog: MatDialog){}
+    constructor(public dialog: MatDialog) {}
 
-  ngOnInit(): void {
-      // this.cs.seedClassesToFirestore(classData);
-  }
+    ngOnInit(): void {
+        // this.cs.seedClassesToFirestore(classData);
+    }
 
-  addClass(){
-    
-  }
-  
-  getAllClass(){
-    return this.cs.getAllClassData().subscribe(cls=>{
-      this.dataSource.data = cls;
-      this.originalData = this.dataSource.data;
-      this.dataSource.sort = this.sort;
-    })
-  }
+    addClass() {}
 
-  applyFilter(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.searchTerm = filterValue.trim().toLowerCase();
-    console.log(filterValue)
-    this.dataSource.data = this.searchTerm ?
-      this.originalData.filter((user: { name: string; }) =>
-        user.name.toLowerCase().includes(this.searchTerm)
-        // ... add more filter conditions for other fields
-      ) : this.originalData;
+    getAllClass() {
+        return this.cs.getAllClassData().subscribe((cls) => {
+            this.dataSource.data = cls;
+            this.originalData = this.dataSource.data;
+            this.dataSource.sort = this.sort;
+        });
+    }
 
-      console.log(this.dataSource.data)
-  }
+    applyFilter(event: Event) {
+        const filterValue = (event.target as HTMLInputElement).value;
+        this.searchTerm = filterValue.trim().toLowerCase();
 
-
+        this.dataSource.data = this.searchTerm
+            ? this.originalData.filter(
+                  (user: { name: string }) => user.name.toLowerCase().includes(this.searchTerm),
+                  // ... add more filter conditions for other fields
+              )
+            : this.originalData;
+    }
 }

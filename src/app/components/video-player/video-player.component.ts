@@ -44,7 +44,7 @@ export class VideoPlayerComponent implements OnDestroy, AfterViewInit {
     onPlayerReady(source: VgApiService) {
         this.api = source;
         const media = this.api.getDefaultMedia();
-        // console.log("Player Ready, src:", this.src)
+
         const autoplay$ = media.subscriptions.loadedMetadata.subscribe(this.autoplay.bind(this));
 
         // Check if there is a last watched time in local storage

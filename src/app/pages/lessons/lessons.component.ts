@@ -139,16 +139,14 @@ export class LessonsComponent implements OnInit, OnDestroy {
             if (this._progress.progress === '100' || this._progress.completed) {
                 this.progressRate.set(100);
                 this.isVideoCompleted = true;
-                console.log('Lesson already completed, setting progressRate to 100');
             } else {
                 // If progress exists but is not 100%
                 const currentProgress = parseInt(this._progress.progress || '0');
                 this.progressRate.set(currentProgress);
                 this.isVideoCompleted = currentProgress === 100;
-                console.log(`Setting progressRate to existing progress: ${currentProgress}`);
             }
         } else {
-            console.log('No progress data found');
+            console.error('No progress data found');
         }
     }
 
@@ -184,14 +182,12 @@ export class LessonsComponent implements OnInit, OnDestroy {
         this.ls.getLessonById(this._lesson, this._category).subscribe({
             next: async (lesson) => {
                 this.currentLesson.set(lesson);
-                console.log('Current lesson:', this.currentLesson());
 
                 if (lesson && !this.videoSrc) {
                     try {
                         // Get video from Vimeo without quality parameter
                         const url = await this.getVideoFromVimeo(lesson);
                         this.videoSrc = url;
-                        console.log('Video URL loaded:', !!this.videoSrc);
                     } catch (error) {
                         console.error('Failed to load video:', error);
                     }
@@ -394,7 +390,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
             const prevLessonId = prefix + prevNumericPart; // e.g., "bblesson01" from "bblesson02"
 
             // Navigate to the previous lesson
-            console.log('Navigating to previous lesson:', `/lesson/${this._category}/${prevLessonId}`);
+
             this.route.navigateByUrl(`/lesson/${this._category}/${prevLessonId}`);
         } else {
             console.error('Could not determine previous lesson ID from current ID:', currentId);
@@ -404,7 +400,6 @@ export class LessonsComponent implements OnInit, OnDestroy {
     onVideoEnd() {
         // Skip if lesson is already completed
         if (this.progressRate() === 100 || this.isVideoCompleted) {
-            console.log('Video end event ignored - lesson already completed');
             return;
         }
 
@@ -431,7 +426,6 @@ export class LessonsComponent implements OnInit, OnDestroy {
             }
         } else {
             console.error('Cannot update lesson progress: Missing lesson number or category');
-            console.log('LessonNo:', lessonNo, 'Category:', this._category);
         }
     }
 
@@ -611,7 +605,6 @@ export class LessonsComponent implements OnInit, OnDestroy {
     getFileList() {
         const ref = this.storage.ref('materials/bb/english');
         let myurlsubscription = ref.listAll().subscribe((data) => {
-            console.log(data.items);
             data.items.forEach((item) => {
                 let metadata: fileMetadata;
                 item.getMetadata().then((meta) => {
@@ -625,7 +618,6 @@ export class LessonsComponent implements OnInit, OnDestroy {
                 item.getDownloadURL().then((val) => {
                     metadata.path = val;
                     this.materialList.push(metadata);
-                    console.log(this.materialList);
                 });
             });
         });
@@ -666,7 +658,6 @@ export class LessonsComponent implements OnInit, OnDestroy {
         reader.onload = () => {
             this.imageArray.push(reader.result);
         };
-        console.log(this.imageArray);
     }
 
     //Remove the image from the array
@@ -684,10 +675,9 @@ export class LessonsComponent implements OnInit, OnDestroy {
             const { base64Content, contentType } = this.splitDataUri(file);
             const fileRef = this.storage.ref(`notes/${email}/${this.lessonId}/note_${index}`);
             fileRef.putString(base64Content, 'base64', { contentType: contentType }).then((snapshot) => {
-                console.log('File uploaded successfully:', snapshot.totalBytes);
                 // Get download URL if needed:
                 const downloadURL = snapshot.ref.getDownloadURL();
-                console.log(downloadURL);
+
                 // Check if all files are uploaded
                 if (index === this.imageArray.length - 1) {
                     // Clear imageArray
@@ -695,8 +685,6 @@ export class LessonsComponent implements OnInit, OnDestroy {
 
                     // Set uploadCompleted to true
                     this.uploadCompleted.set(true);
-
-                    console.log('Upload completed');
                 }
             });
         });

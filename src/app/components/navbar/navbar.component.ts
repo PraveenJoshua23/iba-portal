@@ -118,9 +118,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
         // Show a success notification
         this.notificationService.show(message, 'success', 3000);
-
-        // Also log to console
-        console.log(`Language changed to ${this.languageService.getLanguageNameByCode(language)}`);
     }
 
     signOut() {
@@ -130,7 +127,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
             },
             error: (err) => {
                 this.errMsg = err.code;
-                console.log(this.errMsg);
             },
         });
 

@@ -120,7 +120,6 @@ export class SignUpComponent implements OnDestroy {
                         .subscribe({
                             next: (profileResult) => {
                                 if (profileResult.success) {
-                                    console.log('User registered and profile initialized');
                                     this.router.navigateByUrl('/login');
                                 } else {
                                     console.warn('User registered but profile initialization failed');
