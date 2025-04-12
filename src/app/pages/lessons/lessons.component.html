@@ -65,8 +65,10 @@
                 <app-video-player 
                     [src]="videoSrc" 
                     [lessonId]="currentLesson()?.id || ''" 
+                    [resumeFrom]="savedVideoPosition" 
                     (videoEnded)="onVideoEnd()" 
-                    (videoProgress)="progressUpdate($event)" 
+                    (videoProgress)="progressUpdate($event)"
+                    (positionUpdate)="onVideoPositionUpdate($event)" 
                     [allowScrubbing]="progressRate() === 100">
                 </app-video-player>
             </div>
