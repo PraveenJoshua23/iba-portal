@@ -207,4 +207,117 @@ export class ProgressService {
             return Promise.reject(error);
         }
     }
+    async saveVideoPosition(userEmail: string, category: string, lessonId: string, position: number): Promise<void> {
+        if (!userEmail) {
+            throw new Error('Cannot save position: No user email provided');
+        }
+    
+        try {
+            // Get the progress document for this user
+            const progressRef = collection(this.fs, 'progress');
+            const q = query(progressRef, where('email', '==', userEmail));
+            const querySnapshot = await getDocs(q);
+    
+            if (querySnapshot.empty) {
+                throw new Error('No progress document found for user');
+            }
+    
+            // Get the progress document
+            const progressDoc = querySnapshot.docs[0];
+            const progressData = progressDoc.data() as IProgress;
+    
+            // Find the category in the progress data
+            const categoryIndex = progressData.categoryProgress.findIndex(
+                cp => cp.categoryName.toLowerCase() === this.mapCategoryName(category).toLowerCase()
+            );
+    
+            if (categoryIndex === -1) {
+                throw new Error(`Category ${category} not found in progress data`);
+            }
+    
+            // Find the lesson within the category
+            const lessonIndex = progressData.categoryProgress[categoryIndex].lessons.findIndex(
+                lesson => lesson.id === lessonId
+            );
+    
+            if (lessonIndex === -1) {
+                throw new Error(`Lesson ${lessonId} not found in category ${category}`);
+            }
+    
+            // Create a copy of the progress data to modify
+            const updatedProgress = JSON.parse(JSON.stringify(progressData));
+            
+            // Update the watchDuration with the current position
+            updatedProgress.categoryProgress[categoryIndex].lessons[lessonIndex].watchDuration = position;
+            
+            // Update the document in Firestore
+            const progressDocRef = doc(this.fs, 'progress', progressDoc.id);
+            await updateDoc(progressDocRef, {
+                categoryProgress: updatedProgress.categoryProgress
+            });
+    
+            return Promise.resolve();
+        } catch (error) {
+            console.error('Error saving video position:', error);
+            return Promise.reject(error);
+        }
+    }
+    
+    /**
+     * Get saved video position for a specific lesson
+     */
+    /**
+ * Get saved video position for a specific lesson
+ */
+async getVideoPosition(userEmail: string, category: string, lessonId: string): Promise<number | undefined> {
+    if (!userEmail) {
+        throw new Error('Cannot get position: No user email provided');
+    }
+
+    try {
+        // Get the progress document for this user
+        const progressRef = collection(this.fs, 'progress');
+        const q = query(progressRef, where('email', '==', userEmail));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            return undefined; // No progress document found
+        }
+
+        // Get the progress document
+        const progressDoc = querySnapshot.docs[0];
+        const progressData = progressDoc.data() as IProgress;
+
+        // Find the category in the progress data
+        const categoryIndex = progressData.categoryProgress.findIndex(
+            cp => cp.categoryName.toLowerCase() === this.mapCategoryName(category).toLowerCase()
+        );
+
+        if (categoryIndex === -1) {
+            return undefined; // Category not found
+        }
+
+        // Find the lesson within the category
+        const lessonIndex = progressData.categoryProgress[categoryIndex].lessons.findIndex(
+            lesson => lesson.id === lessonId
+        );
+
+        if (lessonIndex === -1) {
+            return undefined; // Lesson not found
+        }
+
+        // Get the watchDuration value
+        const watchDuration = progressData.categoryProgress[categoryIndex].lessons[lessonIndex].watchDuration;
+        
+        // If it's a number and greater than 0, return it
+        if (typeof watchDuration === 'number' && watchDuration > 0) {
+            return watchDuration;
+        }
+        
+        return undefined;
+    } catch (error) {
+        console.error('Error getting video position:', error);
+        return undefined;
+    }
+}
 }
