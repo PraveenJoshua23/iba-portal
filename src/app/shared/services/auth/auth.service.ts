@@ -38,11 +38,11 @@ export class AuthService {
     }
 
     signIn(email: string, password: string): Observable<void> {
+        // Don't catch the error here, let it propagate to the subscriber
         const promise = signInWithEmailAndPassword(this.firebaseAuth, email, password)
             .then(() => {
                 console.log('Signed In successfully!');
-            })
-            .catch((err) => console.error(err));
+            });
         return from(promise);
     }
 
