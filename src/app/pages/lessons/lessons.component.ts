@@ -182,17 +182,31 @@ export class LessonsComponent implements OnInit, OnDestroy {
         this.ls.getLessonById(this._lesson, this._category).subscribe({
             next: async (lesson) => {
                 this.currentLesson.set(lesson);
+    
+                // Get the saved video position from Firestore
+                let savedPosition: number | undefined = undefined;
 
+                if (this._email && lesson?.id) {
+                    try {
+                        savedPosition = await this.ps.getVideoPosition(this._email, this._category, lesson.id);
+                        console.log(`Retrieved saved position from Firestore: ${savedPosition}`);
+                    } catch (error) {
+                        console.error('Failed to get saved position:', error);
+                    }
+                }
+    
                 if (lesson && !this.videoSrc) {
                     try {
                         // Get video from Vimeo without quality parameter
                         const url = await this.getVideoFromVimeo(lesson);
                         this.videoSrc = url;
+                        // Store the saved position to pass to video player
+                        this.savedVideoPosition = savedPosition;
                     } catch (error) {
                         console.error('Failed to load video:', error);
                     }
                 }
-
+    
                 // Initialize quiz if it exists
                 if (lesson && lesson.quiz) {
                     this.questions = lesson.quiz;
@@ -562,6 +576,25 @@ export class LessonsComponent implements OnInit, OnDestroy {
             })
             .catch((err) => console.error('Error saving quiz answers to progress:', err));
     }
+    savedVideoPosition: number | undefined = undefined;
+
+
+
+
+    onVideoPositionUpdate(event: {lessonId: string, position: number}): void {
+        if (!this._email) {
+            console.error('Cannot save video position: No user email');
+            return;
+        }
+        
+        console.log(`Saving position ${event.position.toFixed(2)} for lesson ${event.lessonId}`);
+        
+        // Use the progress service to save the position to Firestore
+        this.ps.saveVideoPosition(this._email, this._category, event.lessonId, event.position)
+            .then(() => console.log('Position saved to Firestore'))
+            .catch(err => console.error('Error saving position to Firestore:', err));
+    }
+    
 
     // New method to update quiz answers in localStorage
     private updateLocalStorageQuizAnswers(lessonId: string, quizAnswers: number[]) {
@@ -737,4 +770,5 @@ export class LessonsComponent implements OnInit, OnDestroy {
                 });
         }
     }
+    
 }

@@ -66,7 +66,15 @@
                         </div>
                     </div>
                 </div> -->
-                <app-video-player [src]="videoSrc" (videoEnded)="onVideoEnd()" (videoProgress)="progressUpdate($event)" [allowScrubbing]="progressRate() === 100"></app-video-player>
+                <app-video-player 
+                    [src]="videoSrc" 
+                    [lessonId]="currentLesson()?.id || ''" 
+                    [resumeFrom]="savedVideoPosition" 
+                    (videoEnded)="onVideoEnd()" 
+                    (videoProgress)="progressUpdate($event)"
+                    (positionUpdate)="onVideoPositionUpdate($event)" 
+                    [allowScrubbing]="progressRate() === 100">
+                </app-video-player>
             </div>
         } @else {
             <div class="flex justify-center items-center px-6 py-5 w-[800px] bg-white rounded-lg m-auto">
