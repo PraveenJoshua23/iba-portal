@@ -123,7 +123,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     signOut() {
         this.auth.signOut().subscribe({
             next: () => {
-                this.router.navigateByUrl('/');
+                this.router.navigateByUrl('/login');
             },
             error: (err) => {
                 this.errMsg = err.code;

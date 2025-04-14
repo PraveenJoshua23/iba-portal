@@ -1,42 +1,38 @@
 <main class="bg-gray-100 flex">
-    
     <section class="flex flex-col w-full py-8 px-[10%] space-y-5">
-        <div class="px-5 border-b ">
+        <div class="px-5 border-b">
             <h1>Lessons</h1>
         </div>
         <div class="flex flex-col space-y-2 px-3 py-5 w-full">
-            @if(categoryProgress){
+            @if (categoryProgress) {
                 <div class="flex justify-between items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600">
-                    <span>BB Lessons</span> 
-                    <button class="px-5 py-2 rounded-lg cursor-pointer border text-sm font-medium" (click)="startLesson('bb')" *ngIf="selectedCategory() !== 'bb' ">Start</button>
+                    <span>BB Lessons</span>
+                    <button class="px-5 py-2 rounded-lg cursor-pointer border text-sm font-medium" (click)="startLesson('bb')" *ngIf="selectedCategory() !== 'bb'">Start</button>
                 </div>
 
-                @for (lessons of allBBLessons$|async| sort; track lessons.id; let last = $last; let i = $index) {
-                    <div class="flex items-center justify-between px-4 py-3 rounded-sm"
-                    (click)="selectLesson(categoryProgress[i].id)" 
-                    [ngClass]="{ 'border-b' : !last, 'pointer-events-none opacity-60': categoryProgress[i].locked!, 'cursor-pointer':!categoryProgress[i].locked!}"  
+                @for (lessons of allBBLessons$ | async | sort; track lessons.id; let last = $last; let i = $index) {
+                    <div
+                        class="flex items-center justify-between px-4 py-3 rounded-sm"
+                        (click)="selectLesson(categoryProgress[i].id)"
+                        [ngClass]="{ 'border-b': !last, 'pointer-events-none opacity-60': categoryProgress[i].locked!, 'cursor-pointer': !categoryProgress[i].locked! }"
                     >
                         <div class="flex items-center gap-x-2">
-                            <span>{{lessons.lessonNo}}.</span>
-                            <span>{{lessons.name}}</span>
+                            <span>{{ lessons.lessonNo }}.</span>
+                            <span>{{ lessons.name }}</span>
                         </div>
-    
+
                         @if (i < categoryProgress.length && !categoryProgress[i]['locked']) {
-                            <div class="flex items-center space-x-3 ">
-                                <span class="bg-gray-300 px-4 py-1 rounded-md">{{'Progress: '+ categoryProgress[i].progress + '%' }}</span>
+                            <div class="flex items-center space-x-3">
+                                <span class="bg-gray-300 px-4 py-1 rounded-md">{{ 'Progress: ' + categoryProgress[i].progress + '%' }}</span>
                             </div>
                         }
-                        
                     </div>
-                }   
-            
+                }
+
                 <div class="flex items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600 opacity-50">Introductory Lessons</div>
                 <div class="flex items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600 opacity-50">Intermediate Lessons</div>
                 <div class="flex items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600 opacity-50">Advanced Lessons</div>
-
             }
-            
-            
         </div>
     </section>
 </main>

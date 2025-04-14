@@ -3,7 +3,7 @@ import { AppShellComponent } from './components/app-shell/app-shell.component';
 import { LoginComponent } from './pages/login/login.component';
 import { SignUpComponent } from './pages/sign-up/sign-up.component';
 import { authGuard } from './auth.guard';
-import { LandingComponent } from './pages/landing/landing.component';
+import { loggedInGuard } from './logged-in.guard';
 
 export const APP_ROUTE: Route[] = [
     {
@@ -31,9 +31,8 @@ export const APP_ROUTE: Route[] = [
         loadChildren: () => import('./admin.route').then((m) => m.ADMIN_ROUTE),
     },
 
-    { path: 'login', component: LoginComponent },
-    { path: 'signup', component: SignUpComponent },
-    { path: '', component: LandingComponent },
-    // { path: '', redirectTo: '/landing', pathMatch: 'full' }, // Redirect to login by default
-    { path: '**', redirectTo: '/landing' }, // Redirect to login for unknown routes
+    { path: 'login', component: LoginComponent, canActivate: [loggedInGuard] },
+    { path: 'signup', component: SignUpComponent, canActivate: [loggedInGuard] },
+    { path: '', redirectTo: '/home', pathMatch: 'full' }, // Redirect to home by default
+    { path: '**', redirectTo: '/home' } // Redirect to home for unknown routes
 ];
