@@ -4,7 +4,8 @@
     <form [formGroup]="myUserForm" (ngSubmit)="onSubmit()" class="flex flex-col space-y-4">
         <mat-dialog-content class="max-h-[70vh] overflow-y-auto">
             <!-- Toggle Edit Mode Button -->
-            <div class="flex justify-end mb-4">
+            <div class="flex justify-end mb-4 gap-2">
+                <button type="button" class="px-3 py-1 rounded-md text-sm bg-indigo-500 text-white" (click)="showUserProgress()">Show Progress</button>
                 <button type="button" class="px-3 py-1 rounded-md text-sm" [ngClass]="{ 'bg-green-500 text-white': !editMode(), 'bg-blue-500 text-white': editMode() }" (click)="editDetails()">
                     {{ editMode() ? 'Enable Editing' : 'Disable Editing' }}
                 </button>

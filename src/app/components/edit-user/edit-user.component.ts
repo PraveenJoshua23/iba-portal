@@ -4,13 +4,13 @@ import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dial
 import { MatButtonModule } from '@angular/material/button';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { FirebaseService } from 'src/app/shared/services/firebase.service';
 import { IUser } from 'src/app/shared/models/user.interface';
 import { UserService } from 'src/app/shared/services/users/user.service';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ProgressDialogComponent } from '../progress-dialog/progress-dialog.component';
 
 @Component({
     selector: 'app-edit-user',
@@ -28,6 +28,7 @@ export class EditUserComponent implements OnInit {
     // Inject services
     userService = inject(UserService);
     snackBar = inject(MatSnackBar);
+    dialog = inject(MatDialog);
 
     // Dropdown options
     occupationOptions = ['Office Worker', 'Student', 'Government Official', 'Teacher', 'Housewife', 'Other'];
@@ -65,6 +66,22 @@ export class EditUserComponent implements OnInit {
             language: [this.prevUser.language || 'English', Validators.required],
             whyApply: [this.prevUser.userDetails?.whyApply || '', Validators.required],
             studying: [this.prevUser.userDetails?.studying || 'Yes', Validators.required],
+        });
+    }
+
+    /**
+     * Opens a dialog to display the user's progress
+     */
+    showUserProgress(): void {
+        this.dialog.open(ProgressDialogComponent, {
+            width: '900px',
+            maxWidth: '95vw',
+            maxHeight: '90vh',
+            data: {
+                email: this.prevUser.email,
+                userName: this.prevUser.name,
+            },
+            panelClass: 'progress-dialog',
         });
     }
 
