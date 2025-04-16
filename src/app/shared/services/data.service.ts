@@ -4,7 +4,7 @@ import { Lesson } from '../models/lesson.model';
 import { CollectionReference, Firestore, addDoc, collection, collectionData, doc, getDocs, orderBy, query, setDoc, updateDoc, where } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 import { IProgress } from '../models/progress.interface';
-import { Storage, getDownloadURL, ref } from '@angular/fire/storage';
+import { Storage } from '@angular/fire/storage';
 import { IUser, IUserDetails } from '../models/user.interface';
 import { VimeoService } from './vimeo/vimeo.service';
 
@@ -69,32 +69,7 @@ export class DataService {
         return collectionData(q, { idField: 'id' });
     }
 
-    async checkUserProgress() {
-        try {
-            const user = await this.auth.currentUser;
-            if (user) {
-                const progressRef = collection(this.fs, 'progress');
-                const q = query(progressRef, where('email', '==', user.email));
-                const querySnapshot = await getDocs(q);
 
-                if (querySnapshot.empty) {
-                    // No existing progress for this user, create a new entry
-                    await addDoc(progressRef, { email: user.email, test: true });
-                    console.log('New progress entry added successfully!');
-                } else {
-                    // Update the existing progress (you'll need to decide how)
-                    const docId = querySnapshot.docs[0].id;
-                    const docRef = doc(this.fs, 'progress', docId);
-                    await setDoc(docRef, { test: true }, { merge: true });
-                    console.log('Existing progress updated successfully!');
-                }
-            } else {
-                console.error('User not authenticated.');
-            }
-        } catch (error) {
-            console.error('Error managing progress entry:', error);
-        }
-    }
 
     async getUserByEmail(email: string): Promise<IUser | null> {
         const q = query(this.usersRef, where('email', '==', email));
@@ -449,7 +424,7 @@ export class DataService {
         }
     }
 
-    // Updated to check for language-specific vimeoIds first before falling back to path-based methods
+    // Updated to use only Vimeo for video retrieval without Firebase fallback
     async getVideo(category: string, lang: string, path: string, quality: 'sd' | 'hd' | 'highest' = 'highest'): Promise<string | null> {
         try {
             // First try to get the lesson document
@@ -490,25 +465,12 @@ export class DataService {
                 return vimeoUrl;
             }
 
-            // Fallback to Firebase Storage if Vimeo fails
-            console.log('Falling back to Firebase Storage for video');
-            const storagePath = `lessons/${category}/${lang}/${path}.mp4`;
-            const storageRef = ref(this.s, storagePath);
-            const url = await getDownloadURL(storageRef);
-            return url;
+            // No fallback to Firebase Storage anymore
+            console.log('No video found on Vimeo');
+            return null;
         } catch (error) {
-            console.error('Error getting video URL:', error);
-
-            // As a last resort, try Firebase directly if Vimeo fails
-            try {
-                console.log('Attempting direct Firebase Storage access as final fallback');
-                const storagePath = `lessons/${category}/${lang}/${path}.mp4`;
-                const storageRef = ref(this.s, storagePath);
-                return await getDownloadURL(storageRef);
-            } catch (fbError) {
-                console.error('All video retrieval methods failed:', fbError);
-                return null;
-            }
+            console.error('Error getting video URL from Vimeo:', error);
+            return null;
         }
     }
 }

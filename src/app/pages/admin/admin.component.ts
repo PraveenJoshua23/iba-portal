@@ -15,15 +15,80 @@ import { UserFilterPipe } from '../../shared/pipes/user-filter.pipe';
 import { Observable } from 'rxjs';
 import { EditClassComponent } from '../edit-class/edit-class.component';
 import { EditLessonComponent } from '../edit-lesson/edit-lesson.component';
+import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
+import { FormsModule } from '@angular/forms';
+import { translations as initialTranslations, TranslationMap } from 'src/app/shared/services/language/translations';
+import { AddTranslationDialogComponent } from './add-translation-dialog/add-translation-dialog.component';
+// Browser-compatible approach for saving translations
 
 @Component({
     selector: 'app-admin',
     standalone: true,
     templateUrl: './admin.component.html',
     styleUrls: ['./admin.component.scss'],
-    imports: [CommonModule, MatTableModule, MatButtonModule, MatDialogModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule, EditAllUserComponent, EditClassComponent, EditLessonComponent, MatTabsModule],
+    imports: [CommonModule, MatTableModule, MatButtonModule, MatDialogModule, MatPaginatorModule, MatSortModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule, FormsModule, EditAllUserComponent, EditClassComponent, EditLessonComponent, MatTabsModule],
 })
 export class AdminComponent implements OnInit {
+    // --- Translations Management ---
+    translations: TranslationMap = JSON.parse(JSON.stringify(initialTranslations)); // Deep copy for editing
+    translationKeys: string[] = Object.keys(initialTranslations);
+    availableLanguages: string[] = Array.from(
+        new Set(
+            Object.values(initialTranslations).flatMap(obj => Object.keys(obj))
+        )
+    );
+    rightLanguage: string = 'Tamil'; // Default right-side language
+    editedTranslations: { [key: string]: string } = {};
+    isSaving: boolean = false;
+    saveMessage: string = '';
+
+    onLanguageChange(lang: string) {
+        this.rightLanguage = lang;
+    }
+
+    onTranslationEdit(key: string, event: Event) {
+        const value = (event.target as HTMLInputElement).value;
+        this.editedTranslations[key] = value;
+        this.translations[key][this.rightLanguage] = value;
+    }
+
+    saveTranslations() {
+        this.isSaving = true;
+        this.saveMessage = '';
+        const fileContent =
+`export interface TranslationMap {
+    [key: string]: {
+        [language: string]: string;
+    };
+}
+
+export const translations: TranslationMap = ${JSON.stringify(this.translations, null, 4)};
+`;
+        
+        try {
+            // Browser-only approach: Show code for manual copy
+            this.isSaving = false;
+            this.saveMessage = 'Copy the below code into translations.ts:';
+            // You could show fileContent in a modal or textarea for copy
+            alert('Copy the following into translations.ts:\n\n' + fileContent);
+            
+            // Alternative: Create a downloadable file
+            const blob = new Blob([fileContent], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'translations.ts';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (e) {
+            this.isSaving = false;
+            this.saveMessage = 'Failed to save: ' + e;
+        }
+    }
+    // --- End Translations Management ---
     displayedColumns: string[] = ['id', 'name', 'language', 'networker', 'instructor', 'class', 'progress', 'action'];
     dataSource = new MatTableDataSource<any>([]);
     visibleRowCount = 5; // Default number of visible rows
@@ -50,6 +115,32 @@ export class AdminComponent implements OnInit {
     onTabChange(event: any): void {
         this.selectedTabIndex = event.index;
         // You can add logic here if needed when tabs change
+    }
+
+    // Open dialog to add a new translation
+    openAddTranslationDialog(): void {
+        const dialogRef = this.dialog.open(AddTranslationDialogComponent, {
+            width: '500px',
+            data: { availableLanguages: this.availableLanguages }
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                // Add the new translation to the translations object
+                this.translations[result.key] = result.translations;
+                
+                // Update the keys array to include the new key
+                this.translationKeys = Object.keys(this.translations);
+                
+                // Show a temporary message
+                this.saveMessage = 'New translation added. Remember to save changes!';
+                setTimeout(() => {
+                    if (this.saveMessage === 'New translation added. Remember to save changes!') {
+                        this.saveMessage = '';
+                    }
+                }, 3000);
+            }
+        });
     }
 
     // openDialog(item:any) {

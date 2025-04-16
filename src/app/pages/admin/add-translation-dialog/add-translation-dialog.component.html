@@ -1,0 +1,21 @@
+<h2 mat-dialog-title>Add New Translation</h2>
+<div mat-dialog-content>
+  <div class="flex flex-col gap-4">
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>Translation Key</mat-label>
+      <input matInput [(ngModel)]="translationKey" placeholder="e.g. welcomeMessage" required>
+      <mat-hint>This is the identifier used in code to reference this translation</mat-hint>
+    </mat-form-field>
+
+    <div *ngFor="let lang of data.availableLanguages">
+      <mat-form-field appearance="fill" class="w-full">
+        <mat-label>{{ lang }}</mat-label>
+        <input matInput [(ngModel)]="translations[lang]" placeholder="Enter {{ lang }} translation">
+      </mat-form-field>
+    </div>
+  </div>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!translationKey">Add</button>
+</div>

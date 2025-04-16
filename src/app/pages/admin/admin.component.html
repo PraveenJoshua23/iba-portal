@@ -22,6 +22,47 @@
                         <app-edit-class></app-edit-class>
                     </div>
                 </mat-tab> -->
+                <mat-tab label="Translations">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-4">
+                                <label for="lang-select">Right Side Language:</label>
+                                <mat-form-field appearance="fill" style="min-width: 180px">
+                                    <mat-label>Language</mat-label>
+                                    <mat-select [(ngModel)]="rightLanguage" (selectionChange)="onLanguageChange($event.value)">
+                                        <mat-option *ngFor="let lang of availableLanguages" [value]="lang">{{ lang }}</mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                            <button mat-raised-button color="accent" (click)="openAddTranslationDialog()"><mat-icon>add</mat-icon> Add Translation</button>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table mat-table [dataSource]="translationKeys" class="min-w-full bg-white rounded shadow">
+                                <ng-container matColumnDef="key">
+                                    <th mat-header-cell *matHeaderCellDef>Key</th>
+                                    <td mat-cell *matCellDef="let key">{{ key }}</td>
+                                </ng-container>
+                                <ng-container matColumnDef="english">
+                                    <th mat-header-cell *matHeaderCellDef>English</th>
+                                    <td mat-cell *matCellDef="let key">{{ translations[key]['English'] }}</td>
+                                </ng-container>
+                                <ng-container matColumnDef="rightLang">
+                                    <th mat-header-cell *matHeaderCellDef>{{ rightLanguage }}</th>
+                                    <td mat-cell *matCellDef="let key">
+                                        <input matInput [value]="translations[key][rightLanguage] || ''" (input)="onTranslationEdit(key, $event)" />
+                                    </td>
+                                </ng-container>
+                                <tr mat-header-row *matHeaderRowDef="['key', 'english', 'rightLang']"></tr>
+                                <tr mat-row *matRowDef="let row; columns: ['key', 'english', 'rightLang']"></tr>
+                            </table>
+                        </div>
+                        <div class="mt-4 flex items-center gap-3">
+                            <button mat-raised-button color="primary" (click)="saveTranslations()" [disabled]="isSaving">Save</button>
+                            <span *ngIf="saveMessage" class="text-green-600">{{ saveMessage }}</span>
+                        </div>
+                    </div>
+                </mat-tab>
             </mat-tab-group>
         </div>
     </section>
