@@ -12,8 +12,9 @@ import { LessonsService } from 'src/app/shared/services/lessons/lessons.service'
 import { ProgressService } from 'src/app/shared/services/progress/progress.service';
 import { ILesson } from 'src/app/shared/models/lessons.interface';
 import { VimeoService } from 'src/app/shared/services/vimeo/vimeo.service';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, switchMap, of } from 'rxjs';
 import { LanguageService } from 'src/app/shared/services/language/language.service';
+import { GeminiService } from 'src/app/shared/services/gemini/gemini.service';
 
 interface Progress {
     BB: LessonProg[];
@@ -62,6 +63,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
     ps = inject(ProgressService);
     vimeoService = inject(VimeoService);
     languageService = inject(LanguageService);
+    geminiService = inject(GeminiService);
 
     title!: string;
     isQuizOpen: boolean = false;
@@ -86,6 +88,10 @@ export class LessonsComponent implements OnInit, OnDestroy {
     uploadCompleted = signal(false);
     qualityMenuOpen: boolean = false;
     currentQuality: 'sd' | 'hd' | 'highest' = 'highest';
+
+    // AI Summary related properties
+    lessonSummary: string | null = null;
+    isGeneratingSummary = false;
 
     private lastSavedProgress = 0;
     private PROGRESS_THRESHOLD = 10; // Only save when progress changes by 10%
@@ -772,5 +778,58 @@ export class LessonsComponent implements OnInit, OnDestroy {
         this.getVideoFromVimeo(lesson).then((url) => {
             this.videoSrc = url;
         });
+    }
+
+    /**
+     * Generate a summary of the current lesson using Gemini AI
+     * This method gets the video transcript from Vimeo and then uses Gemini AI to generate a summary
+     */
+    generateLessonSummary() {
+        const lesson = this.currentLesson();
+        if (!lesson) {
+            console.error('No lesson selected');
+            return;
+        }
+
+        this.isGeneratingSummary = true;
+        this.lessonSummary = null;
+
+        // Get the Vimeo ID first
+        // If the lesson already has vimeoIds, use that directly, otherwise map the path
+        if (lesson.vimeoIds && lesson.vimeoIds[lesson.language || 'en']) {
+            const vimeoId = lesson.vimeoIds[lesson.language || 'en'];
+            console.log('Using existing Vimeo ID:', vimeoId);
+            this.processVimeoIdForSummary(vimeoId);
+        } else {
+            console.error('No Vimeo ID or path found for this lesson');
+            this.isGeneratingSummary = false;
+            alert('Failed to find video ID. No Vimeo ID or path found for this lesson.');
+        }
+    }
+
+    /**
+     * Helper method to process a Vimeo ID for summary generation
+     * @param vimeoId The Vimeo ID to process
+     */
+    private processVimeoIdForSummary(vimeoId: string) {
+        this.vimeoService
+            .getVideoTranscript(vimeoId)
+            .pipe(
+                switchMap((transcript) => {
+                    // Use the direct method since we have the API key in environment
+                    return this.geminiService.generateSummaryDirect(transcript);
+                }),
+            )
+            .subscribe({
+                next: (summary) => {
+                    this.lessonSummary = summary;
+                    this.isGeneratingSummary = false;
+                },
+                error: (error) => {
+                    console.error('Error generating lesson summary:', error);
+                    this.isGeneratingSummary = false;
+                    alert('Failed to generate summary. ' + error.message);
+                },
+            });
     }
 }

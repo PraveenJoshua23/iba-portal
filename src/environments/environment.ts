@@ -1,4 +1,7 @@
 export const environment = {
+    gemini: {
+        apiKey: 'AIzaSyAGXZw0zVtmKI3DYAzB-JLoihEw07q2DY0',
+    },
     vimeo: {
         clientId: '4975a2d99df6fb7903ecc3859bacba0bae9dd0b1',
         clientSecret: '5/e5RXX3X+637aJf183ZcH9LYWkbhEaoOvi/oKtRKoDfOXjFuYTGZg+1xyAIztVG+oy2HcddBhgKMuBO/PXOsx55KQyzEOPBXa5nbvXVA7o2jprXjglzPrHHh0rpW9p7',

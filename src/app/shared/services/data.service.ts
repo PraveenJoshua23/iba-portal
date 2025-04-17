@@ -69,8 +69,6 @@ export class DataService {
         return collectionData(q, { idField: 'id' });
     }
 
-
-
     async getUserByEmail(email: string): Promise<IUser | null> {
         const q = query(this.usersRef, where('email', '==', email));
 
@@ -409,20 +407,20 @@ export class DataService {
     }
 
     // Updated method that gets video from Vimeo using the mapping service
-    async getVideoFromVimeo(category: string, lang: string, path: string): Promise<string | null> {
-        try {
-            // First, map the path to a Vimeo ID
-            const vimeoId = await lastValueFrom(this.vimeoService.mapPathToVimeoId(category, lang, path));
+    // async getVideoFromVimeo(category: string, lang: string, path: string): Promise<string | null> {
+    //     try {
+    //         // First, map the path to a Vimeo ID
+    //         const vimeoId = await lastValueFrom(this.vimeoService.mapPathToVimeoId(category, lang, path));
 
-            // Then get the actual video URL with the requested quality
-            const videoUrl = await lastValueFrom(this.vimeoService.getVideoUrl(vimeoId));
+    //         // Then get the actual video URL with the requested quality
+    //         const videoUrl = await lastValueFrom(this.vimeoService.getVideoUrl(vimeoId));
 
-            return videoUrl;
-        } catch (error) {
-            console.error('Error getting video URL from Vimeo:', error);
-            return null;
-        }
-    }
+    //         return videoUrl;
+    //     } catch (error) {
+    //         console.error('Error getting video URL from Vimeo:', error);
+    //         return null;
+    //     }
+    // }
 
     // Updated to use only Vimeo for video retrieval without Firebase fallback
     async getVideo(category: string, lang: string, path: string, quality: 'sd' | 'hd' | 'highest' = 'highest'): Promise<string | null> {
@@ -460,10 +458,10 @@ export class DataService {
             }
 
             // If no direct vimeoId, try to get video from Vimeo using mapping
-            const vimeoUrl = await this.getVideoFromVimeo(category, lang, path);
-            if (vimeoUrl) {
-                return vimeoUrl;
-            }
+            // const vimeoUrl = await this.getVideoFromVimeo(category, lang, path);
+            // if (vimeoUrl) {
+            //     return vimeoUrl;
+            // }
 
             // No fallback to Firebase Storage anymore
             console.log('No video found on Vimeo');

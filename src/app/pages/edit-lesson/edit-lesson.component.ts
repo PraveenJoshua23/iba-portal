@@ -14,7 +14,6 @@ import { Storage, deleteObject, getDownloadURL, ref, uploadBytesResumable } from
 import { Firestore, addDoc, collection, deleteDoc, doc, updateDoc } from '@angular/fire/firestore';
 import { VimeoService } from 'src/app/shared/services/vimeo/vimeo.service';
 import { firstValueFrom } from 'rxjs';
-import { VimeoMappingService, IVimeoMapping } from 'src/app/shared/services/vimeo/vimeo-mapping.service';
 
 @Component({
     selector: 'app-edit-lesson',
@@ -90,7 +89,6 @@ export class EditLessonComponent implements OnInit {
     firestore = inject(Firestore);
     fb = inject(FormBuilder);
     vimeoService = inject(VimeoService);
-    vimeoMappingService = inject(VimeoMappingService);
 
     constructor(public dialog: MatDialog) {
         this.lessonForm = this.fb.group({
@@ -381,24 +379,6 @@ export class EditLessonComponent implements OnInit {
             // Replace the vimeoEntries array with the vimeoIds object
             delete lessonData.vimeoEntries;
             lessonData.vimeoIds = vimeoIds;
-
-            // Create mappings for each language
-            if (lessonData.path) {
-                for (const [langCode, vimeoId] of Object.entries(vimeoIds)) {
-                    const firebasePath = `${category}/${langCode}/${lessonData.path}`;
-
-                    // Create mapping
-                    const mapping: IVimeoMapping = {
-                        firebasePath: firebasePath,
-                        vimeoId: vimeoId,
-                        title: lessonData.name,
-                        description: lessonData.description,
-                    };
-
-                    // Add mapping to Firestore
-                    await firstValueFrom(this.vimeoMappingService.addMapping(mapping));
-                }
-            }
 
             if (this.isEditing) {
                 await this.updateLesson(lessonData);

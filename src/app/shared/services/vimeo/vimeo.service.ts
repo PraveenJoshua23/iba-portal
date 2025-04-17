@@ -3,14 +3,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, from, of, throwError } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
-import { VimeoMappingService } from './vimeo-mapping.service';
 
 @Injectable({
     providedIn: 'root',
 })
 export class VimeoService {
     private http = inject(HttpClient);
-    private mappingService = inject(VimeoMappingService);
+
     private accessToken = environment.vimeo.accessToken;
     private apiUrl = 'https://api.vimeo.com';
 
@@ -69,18 +68,57 @@ export class VimeoService {
      * @param lang - language code
      * @param path - original path used in Firebase
      */
-    mapPathToVimeoId(category: string, lang: string, path: string): Observable<string> {
-        // Use the mapping service to get the Vimeo ID from Firestore
-        return this.mappingService.getVimeoIdForPath(category, lang, path).pipe(
-            switchMap((vimeoId) => {
-                if (vimeoId) {
-                    console.log(`Found mapping in Firestore for ${category}/${lang}/${path}: ${vimeoId}`);
-                    return of(vimeoId);
+    // mapPathToVimeoId(category: string, lang: string, path: string): Observable<string> {
+    //     // Use the mapping service to get the Vimeo ID from Firestore
+    //     return this.mappingService.getVimeoIdForPath(category, lang, path).pipe(
+    //         switchMap((vimeoId) => {
+    //             if (vimeoId) {
+    //                 console.log(`Found mapping in Firestore for ${category}/${lang}/${path}: ${vimeoId}`);
+    //                 return of(vimeoId);
+    //             }
+    //             // If not found in Firestore, return an error observable
+    //             const key = `${category}/${lang}/${path}`;
+    //             console.error(`No Vimeo ID found in Firestore for ${key}`);
+    //             return throwError(() => new Error(`No Vimeo ID mapping found for: ${key}`));
+    //         }),
+    //     );
+    // }
+
+    /**
+     * Get video transcript by video ID
+     * @param videoId - Vimeo video ID (numeric)
+     * @returns Observable with transcript text
+     */
+    getVideoTranscript(videoId: string): Observable<string> {
+        const headers = this.getAuthHeaders();
+        // First, get the text tracks (captions/subtitles) for the video
+        return this.http.get(`${this.apiUrl}/videos/${videoId}/texttracks`, { headers }).pipe(
+            switchMap((response: any) => {
+                const textTracks = response.data || [];
+
+                // If no text tracks are available
+                if (textTracks.length === 0) {
+                    return throwError(() => new Error('No transcript available for this video'));
                 }
-                // If not found in Firestore, return an error observable
-                const key = `${category}/${lang}/${path}`;
-                console.error(`No Vimeo ID found in Firestore for ${key}`);
-                return throwError(() => new Error(`No Vimeo ID mapping found for: ${key}`));
+
+                // Get the first available text track (usually the default one)
+                const textTrackId = textTracks[0].uri.split('/').pop();
+
+                // Get the transcript segments
+                return this.http.get(`${this.apiUrl}/videos/${videoId}/texttracks/${textTrackId}/segments`, { headers });
+            }),
+            map((response: any) => {
+                // Extract text from segments
+                if (response && response.data && response.data.length > 0) {
+                    // Combine all segments into a single transcript
+                    return response.data.map((segment: any) => segment.text).join(' ');
+                }
+
+                throw new Error('No transcript segments found');
+            }),
+            catchError((error) => {
+                console.error(`Error fetching transcript for video ID ${videoId}:`, error);
+                return throwError(() => new Error(`Failed to fetch transcript: ${error.message || 'Unknown error'}`));
             }),
         );
     }
