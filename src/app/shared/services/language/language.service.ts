@@ -1,5 +1,7 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { BehaviorSubject, Observable, from, of } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
+import { collection, getDocs, getFirestore, query } from '@angular/fire/firestore';
 
 export interface Language {
     name: string;
@@ -10,11 +12,9 @@ export interface Language {
     providedIn: 'root',
 })
 export class LanguageService {
-    private availableLanguages: Language[] = [
-        { name: 'English', code: 'English' },
-        { name: 'Tamil', code: 'Tamil' },
-        // Add more languages as needed
-    ];
+    private availableLanguages: Language[] = [];
+    private firestore = getFirestore();
+    private readonly LANGUAGES_STORAGE_KEY = 'availableLanguages';
 
     private currentLanguageSubject = new BehaviorSubject<string>('English');
 
@@ -24,6 +24,100 @@ export class LanguageService {
         if (savedLanguage) {
             this.currentLanguageSubject.next(savedLanguage);
         }
+
+        // Load available languages
+        this.loadAvailableLanguages();
+    }
+
+    /**
+     * Loads available languages from localStorage if present, otherwise fetches from Firestore
+     */
+    private loadAvailableLanguages(): void {
+        const cachedLanguages = localStorage.getItem(this.LANGUAGES_STORAGE_KEY);
+        
+        if (cachedLanguages) {
+            try {
+                this.availableLanguages = JSON.parse(cachedLanguages);
+                console.log('Languages loaded from localStorage:', this.availableLanguages);
+            } catch (error) {
+                console.error('Error parsing cached languages:', error);
+                this.fetchLanguagesFromFirestore();
+            }
+        } else {
+            this.fetchLanguagesFromFirestore();
+        }
+    }
+
+    /**
+     * Fetches available languages from Firestore and caches them in localStorage
+     */
+    private fetchLanguagesFromFirestore(): void {
+        const languagesCollection = collection(this.firestore, 'languages');
+        
+        getDocs(query(languagesCollection))
+            .then((querySnapshot) => {
+                const languages: Language[] = [];
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data() as Language;
+                    languages.push({
+                        name: data.name,
+                        code: data.code
+                    });
+                });
+                
+                if (languages.length === 0) {
+                    // Fallback to default languages if none found in Firestore
+                    this.availableLanguages = [
+                        { name: 'English', code: 'English' },
+                        { name: 'Tamil', code: 'Tamil' }
+                    ];
+                } else {
+                    this.availableLanguages = languages;
+                }
+                
+                // Cache languages in localStorage
+                localStorage.setItem(this.LANGUAGES_STORAGE_KEY, JSON.stringify(this.availableLanguages));
+                console.log('Languages fetched from Firestore and cached:', this.availableLanguages);
+            })
+            .catch((error) => {
+                console.error('Error fetching languages from Firestore:', error);
+                // Fallback to default languages on error
+                this.availableLanguages = [
+                    { name: 'English', code: 'English' },
+                    { name: 'Tamil', code: 'Tamil' }
+                ];
+            });
+    }
+
+    /**
+     * Refreshes the languages list from Firestore, ignoring cache
+     */
+    refreshLanguages(): Observable<Language[]> {
+        return from(getDocs(query(collection(this.firestore, 'languages')))).pipe(
+            map(querySnapshot => {
+                const languages: Language[] = [];
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data() as Language;
+                    languages.push({
+                        name: data.name,
+                        code: data.code
+                    });
+                });
+                
+                if (languages.length > 0) {
+                    this.availableLanguages = languages;
+                    localStorage.setItem(this.LANGUAGES_STORAGE_KEY, JSON.stringify(this.availableLanguages));
+                }
+                
+                return this.availableLanguages;
+            }),
+            catchError(error => {
+                console.error('Error refreshing languages:', error);
+                return of(this.availableLanguages);
+            })
+        );
     }
 
     getAvailableLanguages(): Language[] {
