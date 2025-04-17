@@ -25,8 +25,16 @@ import { VimeoMappingService, IVimeoMapping } from 'src/app/shared/services/vime
 })
 export class EditLessonComponent implements OnInit {
     // Table configuration
-    displayedColumns: string[] = ['lessonNo', 'name', 'category', 'language', 'vimeoIds', 'description', 'actions'];
-    dataSource = new MatTableDataSource<ILesson>([]);
+    displayedColumns: string[] = ['lessonNo', 'name', 'language', 'vimeoIds', 'description', 'actions'];
+
+    // Category-based data sources
+    bbDataSource = new MatTableDataSource<ILesson>([]);
+    introductoryDataSource = new MatTableDataSource<ILesson>([]);
+    intermediateDataSource = new MatTableDataSource<ILesson>([]);
+    advancedDataSource = new MatTableDataSource<ILesson>([]);
+
+    // Accordion expansion states
+    expandedCategory: 'bb' | 'intro' | 'intermediate' | 'advanced' | null = 'bb'; // Open BB by default
 
     // UI controls
     isLoading = false;
@@ -64,9 +72,16 @@ export class EditLessonComponent implements OnInit {
         Odia: 'or',
     };
 
-    // Pagination
-    @ViewChild(MatPaginator) paginator!: MatPaginator;
-    @ViewChild(MatSort) sort!: MatSort;
+    // Pagination and sorting for each table
+    @ViewChild('bbPaginator') bbPaginator!: MatPaginator;
+    @ViewChild('introPaginator') introPaginator!: MatPaginator;
+    @ViewChild('intermediatePaginator') intermediatePaginator!: MatPaginator;
+    @ViewChild('advancedPaginator') advancedPaginator!: MatPaginator;
+
+    @ViewChild('bbSort') bbSort!: MatSort;
+    @ViewChild('introSort') introSort!: MatSort;
+    @ViewChild('intermediateSort') intermediateSort!: MatSort;
+    @ViewChild('advancedSort') advancedSort!: MatSort;
 
     // Services
     lessonsService = inject(LessonsService);
@@ -96,8 +111,39 @@ export class EditLessonComponent implements OnInit {
     }
 
     ngAfterViewInit() {
-        this.dataSource.paginator = this.paginator;
-        this.dataSource.sort = this.sort;
+        // Set up pagination and sorting for each table
+        setTimeout(() => {
+            this.bbDataSource.paginator = this.bbPaginator;
+            this.introductoryDataSource.paginator = this.introPaginator;
+            this.intermediateDataSource.paginator = this.intermediatePaginator;
+            this.advancedDataSource.paginator = this.advancedPaginator;
+
+            this.bbDataSource.sort = this.bbSort;
+            this.introductoryDataSource.sort = this.introSort;
+            this.intermediateDataSource.sort = this.intermediateSort;
+            this.advancedDataSource.sort = this.advancedSort;
+        });
+    }
+
+    // Toggle accordion expansion
+    toggleCategory(category: 'bb' | 'intro' | 'intermediate' | 'advanced'): void {
+        this.expandedCategory = this.expandedCategory === category ? null : category;
+    }
+
+    // Get data source for a specific category
+    getDataSourceForCategory(category: string): MatTableDataSource<ILesson> {
+        switch (category) {
+            case 'bb':
+                return this.bbDataSource;
+            case 'intro':
+                return this.introductoryDataSource;
+            case 'intermediate':
+                return this.intermediateDataSource;
+            case 'advanced':
+                return this.advancedDataSource;
+            default:
+                return this.bbDataSource;
+        }
     }
 
     // Getter for vimeoEntries form array
@@ -125,40 +171,50 @@ export class EditLessonComponent implements OnInit {
 
     loadLessons(): void {
         this.isLoading = true;
-
-        // Use the existing data service method to get all lessons
-        this.dataService.getAllLessons().subscribe({
-            next: (lessons) => {
-                // Get more detailed lesson data from subcollections
-                this.loadAllLessonCategories();
-            },
-            error: (error) => {
-                console.error('Error loading lessons:', error);
-                this.showNotification('Failed to load lessons', 'error');
-                this.isLoading = false;
-            },
-        });
+        this.loadAllLessonCategories();
     }
 
     loadAllLessonCategories(): void {
-        const allLessons: ILesson[] = [];
         const categories = ['bb', 'intro', 'intermediate', 'advanced'];
         let completedCategories = 0;
 
         categories.forEach((category) => {
             this.dataService.getAllLessonSubCollection(category).subscribe({
                 next: (lessons) => {
-                    lessons.forEach((lesson: ILesson) => {
+                    const processedLessons = lessons.map((lesson: ILesson) => {
                         // Ensure the category is set on the lesson object if it's not already there
                         if (!lesson.category) {
                             lesson.category = category as any;
                         }
-                        allLessons.push(lesson);
+                        return lesson;
                     });
+
+                    // Sort lessons by lessonNo
+                    const sortedLessons = [...processedLessons].sort((a, b) => {
+                        // Parse to integer to ensure proper numeric sorting
+                        const aNo = parseInt(a.lessonNo);
+                        const bNo = parseInt(b.lessonNo);
+                        return aNo - bNo;
+                    });
+
+                    // Assign to appropriate data source
+                    switch (category) {
+                        case 'bb':
+                            this.bbDataSource.data = sortedLessons;
+                            break;
+                        case 'intro':
+                            this.introductoryDataSource.data = sortedLessons;
+                            break;
+                        case 'intermediate':
+                            this.intermediateDataSource.data = sortedLessons;
+                            break;
+                        case 'advanced':
+                            this.advancedDataSource.data = sortedLessons;
+                            break;
+                    }
 
                     completedCategories++;
                     if (completedCategories === categories.length) {
-                        this.dataSource.data = allLessons;
                         this.isLoading = false;
                     }
                 },
@@ -166,7 +222,6 @@ export class EditLessonComponent implements OnInit {
                     console.error(`Error loading ${category} lessons:`, error);
                     completedCategories++;
                     if (completedCategories === categories.length) {
-                        this.dataSource.data = allLessons;
                         this.isLoading = false;
                     }
                 },
@@ -174,12 +229,13 @@ export class EditLessonComponent implements OnInit {
         });
     }
 
-    applyFilter(event: Event): void {
+    applyFilter(event: Event, category: string): void {
         const filterValue = (event.target as HTMLInputElement).value;
-        this.dataSource.filter = filterValue.trim().toLowerCase();
+        const dataSource = this.getDataSourceForCategory(category);
+        dataSource.filter = filterValue.trim().toLowerCase();
 
-        if (this.dataSource.paginator) {
-            this.dataSource.paginator.firstPage();
+        if (dataSource.paginator) {
+            dataSource.paginator.firstPage();
         }
     }
 
@@ -354,6 +410,9 @@ export class EditLessonComponent implements OnInit {
             this.resetForm();
             this.loadLessons();
             this.showNotification('Lesson saved successfully', 'success');
+
+            // Ensure the relevant category is expanded to show the new/updated lesson
+            this.expandedCategory = category as 'bb' | 'intro' | 'intermediate' | 'advanced';
         } catch (error) {
             console.error('Error saving lesson:', error);
             this.showNotification('Failed to save lesson', 'error');

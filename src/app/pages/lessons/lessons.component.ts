@@ -13,6 +13,7 @@ import { ProgressService } from 'src/app/shared/services/progress/progress.servi
 import { ILesson } from 'src/app/shared/models/lessons.interface';
 import { VimeoService } from 'src/app/shared/services/vimeo/vimeo.service';
 import { firstValueFrom } from 'rxjs';
+import { LanguageService } from 'src/app/shared/services/language/language.service';
 
 interface Progress {
     BB: LessonProg[];
@@ -60,6 +61,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
     ls = inject(LessonsService);
     ps = inject(ProgressService);
     vimeoService = inject(VimeoService);
+    languageService = inject(LanguageService);
 
     title!: string;
     isQuizOpen: boolean = false;
@@ -88,6 +90,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
     private lastSavedProgress = 0;
     private PROGRESS_THRESHOLD = 10; // Only save when progress changes by 10%
     paramSubscription: Subscription | undefined;
+    private languageSubscription: Subscription | undefined;
 
     constructor(
         private route: Router,
@@ -111,6 +114,10 @@ export class LessonsComponent implements OnInit, OnDestroy {
             this._email = this.ds.getUserEmail() ?? localStorage.getItem('email');
             this._progress = this.getProgress();
 
+            this.languageSubscription = this.languageService.getCurrentLanguage().subscribe((lang) => {
+                this.reloadLessonVideoForLanguage(lang);
+            });
+
             // Check if lesson is already completed and set progressRate accordingly
             this.checkAndSetProgress();
 
@@ -129,6 +136,10 @@ export class LessonsComponent implements OnInit, OnDestroy {
     ngOnDestroy(): void {
         if (this.paramSubscription) {
             this.paramSubscription.unsubscribe();
+        }
+
+        if (this.languageSubscription) {
+            this.languageSubscription.unsubscribe();
         }
     }
 
@@ -182,7 +193,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
         this.ls.getLessonById(this._lesson, this._category).subscribe({
             next: async (lesson) => {
                 this.currentLesson.set(lesson);
-    
+
                 // Get the saved video position from Firestore
                 let savedPosition: number | undefined = undefined;
 
@@ -194,7 +205,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
                         console.error('Failed to get saved position:', error);
                     }
                 }
-    
+
                 if (lesson && !this.videoSrc) {
                     try {
                         // Get video from Vimeo without quality parameter
@@ -206,7 +217,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
                         console.error('Failed to load video:', error);
                     }
                 }
-    
+
                 // Initialize quiz if it exists
                 if (lesson && lesson.quiz) {
                     this.questions = lesson.quiz;
@@ -515,21 +526,6 @@ export class LessonsComponent implements OnInit, OnDestroy {
         return this.userAnswers[this.currentQuizIndex] === -1;
     }
 
-    async getVideoFromFirebase(lesson: ILesson) {
-        let lang;
-        switch (lesson.language) {
-            case 'English':
-                lang = 'en';
-                break;
-            case 'Tamil':
-                lang = 'ta';
-                break;
-            default:
-                lang = 'en';
-        }
-        return await this.ds.getVideo(lesson.category, lang, lesson.path);
-    }
-
     storeQuiz() {
         // Use the current lesson data instead of localStorage
         const currentLesson = this.currentLesson();
@@ -578,23 +574,20 @@ export class LessonsComponent implements OnInit, OnDestroy {
     }
     savedVideoPosition: number | undefined = undefined;
 
-
-
-
-    onVideoPositionUpdate(event: {lessonId: string, position: number}): void {
+    onVideoPositionUpdate(event: { lessonId: string; position: number }): void {
         if (!this._email) {
             console.error('Cannot save video position: No user email');
             return;
         }
-        
+
         console.log(`Saving position ${event.position.toFixed(2)} for lesson ${event.lessonId}`);
-        
+
         // Use the progress service to save the position to Firestore
-        this.ps.saveVideoPosition(this._email, this._category, event.lessonId, event.position)
+        this.ps
+            .saveVideoPosition(this._email, this._category, event.lessonId, event.position)
             .then(() => console.log('Position saved to Firestore'))
-            .catch(err => console.error('Error saving position to Firestore:', err));
+            .catch((err) => console.error('Error saving position to Firestore:', err));
     }
-    
 
     // New method to update quiz answers in localStorage
     private updateLocalStorageQuizAnswers(lessonId: string, quizAnswers: number[]) {
@@ -770,5 +763,14 @@ export class LessonsComponent implements OnInit, OnDestroy {
                 });
         }
     }
-    
+
+    reloadLessonVideoForLanguage(lang: string) {
+        const lesson = this.currentLesson();
+        if (!lesson) return;
+        // Optionally, update lesson.language if needed
+        lesson.language = lang;
+        this.getVideoFromVimeo(lesson).then((url) => {
+            this.videoSrc = url;
+        });
+    }
 }
