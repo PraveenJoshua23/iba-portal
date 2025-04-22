@@ -9,7 +9,7 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { DataService } from 'src/app/shared/services/data.service';
-import { EditUserComponent } from 'src/app/components/edit-user/edit-user.component';
+import { EditUserComponent } from 'src/app/components/edit-user-dialog/edit-user.component';
 import { UserService } from 'src/app/shared/services/users/user.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ConfirmDialogComponent } from 'src/app/components/confirm-dialog/confirm-dialog.component';

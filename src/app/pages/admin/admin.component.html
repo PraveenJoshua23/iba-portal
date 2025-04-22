@@ -35,9 +35,8 @@
                                 </mat-form-field>
                             </div>
                             <div class="flex items-center gap-2">
-                                <button mat-raised-button color="accent" (click)="openAddTranslationDialog()">
-                                    <mat-icon>add</mat-icon> Add Translation
-                                </button>
+                                <button mat-raised-button color="primary" (click)="openLanguageManagementDialog()"><mat-icon>language</mat-icon> Manage Languages</button>
+                                <button mat-raised-button color="accent" (click)="openAddTranslationDialog()"><mat-icon>add</mat-icon> Add Translation</button>
                             </div>
                         </div>
 
@@ -45,7 +44,7 @@
                         <div *ngIf="isLoading" class="flex justify-center py-8">
                             <mat-spinner diameter="40"></mat-spinner>
                         </div>
-                        
+
                         <!-- Translations table -->
                         <div class="overflow-x-auto" *ngIf="!isLoading">
                             <table mat-table [dataSource]="translationKeys" class="min-w-full bg-white rounded shadow">
@@ -75,16 +74,14 @@
                                 <tr mat-row *matRowDef="let row; columns: ['key', 'english', 'rightLang', 'actions']"></tr>
                             </table>
                         </div>
-                        
+
                         <!-- Save button and message -->
                         <div class="mt-4 flex items-center gap-3">
                             <button mat-raised-button color="primary" (click)="saveTranslations()" [disabled]="isSaving || isLoading">
                                 <span *ngIf="!isSaving">Save to Firebase</span>
                                 <span *ngIf="isSaving">Saving...</span>
                             </button>
-                            <button mat-raised-button (click)="loadTranslationsFromFirebase()" [disabled]="isLoading">
-                                <mat-icon>refresh</mat-icon> Refresh
-                            </button>
+                            <button mat-raised-button (click)="loadTranslationsFromFirebase()" [disabled]="isLoading"><mat-icon>refresh</mat-icon> Refresh</button>
                             <span *ngIf="saveMessage" class="text-green-600">{{ saveMessage }}</span>
                         </div>
                     </div>

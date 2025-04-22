@@ -1,4 +1,5 @@
 export const environment = {
+    SERVICE_ACCOUNT_KEY_PATH: './hsztc-dashboard-firebase-adminsdk-du7sm-96a379c390.json',
     gemini: {
         apiKey: 'AIzaSyAGXZw0zVtmKI3DYAzB-JLoihEw07q2DY0',
     },

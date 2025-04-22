@@ -27,18 +27,26 @@
         <h2 class="text-lg font-semibold mb-4">{{ isEditing ? 'Edit Lesson' : 'Add New Lesson' }}</h2>
 
         <form [formGroup]="lessonForm" (ngSubmit)="saveLesson()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Lesson Name -->
-            <div class="form-group">
-                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Lesson Name <span class="text-red-500">*</span></label>
-                <input
-                    type="text"
-                    id="name"
-                    formControlName="name"
-                    placeholder="Enter lesson name"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    [ngClass]="{ 'border-red-500': lessonForm.get('name')?.invalid && lessonForm.get('name')?.touched }"
-                />
-                <div *ngIf="lessonForm.get('name')?.invalid && lessonForm.get('name')?.touched" class="text-red-500 text-sm mt-1">Lesson name is required</div>
+            <!-- Language-specific Lesson Names -->
+            <div class="form-group col-span-2">
+                <div class="border p-4 rounded-md bg-gray-50 mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Lesson Names <span class="text-red-500">*</span></label>
+                    
+                    <div formGroupName="names" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div *ngFor="let lang of languageCodes | keyvalue" class="form-group">
+                            <label [for]="'name-' + lang.value" class="block text-sm font-medium text-gray-700 mb-1">{{ lang.key }} <span class="text-red-500">*</span></label>
+                            <input
+                                type="text"
+                                [id]="'name-' + lang.value"
+                                [formControlName]="lang.value"
+                                [placeholder]="'Enter ' + lang.key + ' name'"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                [ngClass]="{ 'border-red-500': lessonForm.get('names')?.get(lang.value)?.invalid && lessonForm.get('names')?.get(lang.value)?.touched }"
+                            />
+                            <div *ngIf="lessonForm.get('names')?.get(lang.value)?.invalid && lessonForm.get('names')?.get(lang.value)?.touched" class="text-red-500 text-sm mt-1">{{ lang.key }} name is required</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Lesson Number -->
@@ -139,19 +147,27 @@
                 </div>
             </div>
 
-            <!-- Description -->
+            <!-- Language-specific Descriptions -->
             <div class="form-group col-span-2">
-                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description <span class="text-red-500">*</span></label>
-                <textarea
-                    id="description"
-                    formControlName="description"
-                    rows="3"
-                    placeholder="Enter lesson description"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    [ngClass]="{ 'border-red-500': lessonForm.get('description')?.invalid && lessonForm.get('description')?.touched }"
-                ></textarea>
-                <div *ngIf="lessonForm.get('description')?.invalid && lessonForm.get('description')?.touched" class="text-red-500 text-sm mt-1">Description is required</div>
+                <div class="border p-4 rounded-md bg-gray-50 mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Descriptions</label>
+                    
+                    <div formGroupName="descriptions" class="grid grid-cols-1 gap-4">
+                        <div *ngFor="let lang of languageCodes | keyvalue" class="form-group">
+                            <label [for]="'description-' + lang.value" class="block text-sm font-medium text-gray-700 mb-1">{{ lang.key }}</label>
+                            <textarea
+                                [id]="'description-' + lang.value"
+                                [formControlName]="lang.value"
+                                rows="3"
+                                [placeholder]="'Enter ' + lang.key + ' description'"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            ></textarea>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+
 
             <!-- Form Actions -->
             <div class="col-span-2 flex justify-end gap-2 mt-4">
@@ -221,7 +237,7 @@
                     <!-- Name Column -->
                     <ng-container matColumnDef="name">
                         <th mat-header-cell *matHeaderCellDef mat-sort-header class="py-3 px-6 text-left">Name</th>
-                        <td mat-cell *matCellDef="let lesson" class="py-3 px-6">{{ lesson.name }}</td>
+                        <td mat-cell *matCellDef="let lesson" class="py-3 px-6">{{ getLessonName(lesson) }}</td>
                     </ng-container>
 
                     <!-- Language Column -->
@@ -244,8 +260,8 @@
                     <!-- Description Column -->
                     <ng-container matColumnDef="description">
                         <th mat-header-cell *matHeaderCellDef class="py-3 px-6 text-left">Description</th>
-                        <td mat-cell *matCellDef="let lesson" class="py-3 px-6 truncate max-w-xs" [title]="lesson.description">
-                            {{ lesson.description }}
+                        <td mat-cell *matCellDef="let lesson" class="py-3 px-6 truncate max-w-xs" [title]="getLessonDescription(lesson)">
+                            {{ getLessonDescription(lesson) }}
                         </td>
                     </ng-container>
 
@@ -319,7 +335,7 @@
                     <!-- Name Column -->
                     <ng-container matColumnDef="name">
                         <th mat-header-cell *matHeaderCellDef mat-sort-header class="py-3 px-6 text-left">Name</th>
-                        <td mat-cell *matCellDef="let lesson" class="py-3 px-6">{{ lesson.name }}</td>
+                        <td mat-cell *matCellDef="let lesson" class="py-3 px-6">{{ getLessonName(lesson) }}</td>
                     </ng-container>
 
                     <!-- Language Column -->
@@ -342,8 +358,8 @@
                     <!-- Description Column -->
                     <ng-container matColumnDef="description">
                         <th mat-header-cell *matHeaderCellDef class="py-3 px-6 text-left">Description</th>
-                        <td mat-cell *matCellDef="let lesson" class="py-3 px-6 truncate max-w-xs" [title]="lesson.description">
-                            {{ lesson.description }}
+                        <td mat-cell *matCellDef="let lesson" class="py-3 px-6 truncate max-w-xs" [title]="getLessonDescription(lesson)">
+                            {{ getLessonDescription(lesson) }}
                         </td>
                     </ng-container>
 
@@ -416,7 +432,7 @@
 
                     <ng-container matColumnDef="name">
                         <th mat-header-cell *matHeaderCellDef mat-sort-header class="py-3 px-6 text-left">Name</th>
-                        <td mat-cell *matCellDef="let lesson" class="py-3 px-6">{{ lesson.name }}</td>
+                        <td mat-cell *matCellDef="let lesson" class="py-3 px-6">{{ getLessonName(lesson) }}</td>
                     </ng-container>
 
                     <ng-container matColumnDef="language">
@@ -436,8 +452,8 @@
 
                     <ng-container matColumnDef="description">
                         <th mat-header-cell *matHeaderCellDef class="py-3 px-6 text-left">Description</th>
-                        <td mat-cell *matCellDef="let lesson" class="py-3 px-6 truncate max-w-xs" [title]="lesson.description">
-                            {{ lesson.description }}
+                        <td mat-cell *matCellDef="let lesson" class="py-3 px-6 truncate max-w-xs" [title]="getLessonDescription(lesson)">
+                            {{ getLessonDescription(lesson) }}
                         </td>
                     </ng-container>
 
@@ -508,7 +524,7 @@
 
                     <ng-container matColumnDef="name">
                         <th mat-header-cell *matHeaderCellDef mat-sort-header class="py-3 px-6 text-left">Name</th>
-                        <td mat-cell *matCellDef="let lesson" class="py-3 px-6">{{ lesson.name }}</td>
+                        <td mat-cell *matCellDef="let lesson" class="py-3 px-6">{{ getLessonName(lesson) }}</td>
                     </ng-container>
 
                     <ng-container matColumnDef="language">
@@ -528,8 +544,8 @@
 
                     <ng-container matColumnDef="description">
                         <th mat-header-cell *matHeaderCellDef class="py-3 px-6 text-left">Description</th>
-                        <td mat-cell *matCellDef="let lesson" class="py-3 px-6 truncate max-w-xs" [title]="lesson.description">
-                            {{ lesson.description }}
+                        <td mat-cell *matCellDef="let lesson" class="py-3 px-6 truncate max-w-xs" [title]="getLessonDescription(lesson)">
+                            {{ getLessonDescription(lesson) }}
                         </td>
                     </ng-container>
 

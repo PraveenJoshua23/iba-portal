@@ -41,3 +41,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Firebase
+hsztc-dashboard-firebase-adminsdk-du7sm-96a379c390.json

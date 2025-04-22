@@ -88,6 +88,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
     uploadCompleted = signal(false);
     qualityMenuOpen: boolean = false;
     currentQuality: 'sd' | 'hd' | 'highest' = 'highest';
+    currentLanguage: string = 'en';
 
     // AI Summary related properties
     lessonSummary: string | null = null;
@@ -111,6 +112,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
+        this.currentLanguage = this.languageService.getCurrentLanguageValue();
         this.paramSubscription = this.ar.params.subscribe((params) => {
             this.lessonId = params['id'];
             this._category = params['category'];

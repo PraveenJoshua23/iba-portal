@@ -10,19 +10,20 @@ import { ProgressService } from 'src/app/shared/services/progress/progress.servi
 import { AuthService } from 'src/app/shared/services/auth/auth.service';
 import { LessonsService } from 'src/app/shared/services/lessons/lessons.service';
 import { seedUser } from 'src/app/shared/utils/init-data';
-import { IProgress, LessonsProgress } from 'src/app/shared/models/progress.interface';
+import { IProgress, LanguageProgress, LessonsProgress } from 'src/app/shared/models/progress.interface';
 import { SortPipe } from '../../shared/pipes/sort.pipe';
 import { Timestamp } from '@angular/fire/firestore';
 import { UserService } from 'src/app/shared/services/users/user.service';
 import { IUser } from 'src/app/shared/models/user.interface';
 import { User } from '@angular/fire/auth';
+import { LanguageService } from 'src/app/shared/services/language/language.service';
 
 @Component({
     selector: 'app-home',
     standalone: true,
     templateUrl: './home.component.html',
     styleUrls: ['./home.component.scss'],
-    imports: [CommonModule, AppShellComponent, RouterModule, SortPipe],
+    imports: [CommonModule, RouterModule, SortPipe],
 })
 export class HomeComponent implements OnInit {
     ds = inject(DataService);
@@ -30,6 +31,7 @@ export class HomeComponent implements OnInit {
     as = inject(AuthService);
     ls = inject(LessonsService);
     userService = inject(UserService);
+    languageService = inject(LanguageService);
     allBBLessons$: Observable<any> = this.ds.getAllLessonSubCollection('bb');
 
     bbLessons: any[] = [];
@@ -43,11 +45,9 @@ export class HomeComponent implements OnInit {
     loadingProgress: boolean = true;
     selectedCategory = signal('bb');
     categoryProgress: LessonsProgress[] = [];
+    currentLanguage: string = 'en'; // Default language
 
-    constructor(
-        private fb: FirebaseService,
-        private router: Router,
-    ) {
+    constructor(private router: Router) {
         this.email = localStorage.getItem('email') ?? '';
     }
 
@@ -55,6 +55,24 @@ export class HomeComponent implements OnInit {
         // this.ls.seedLessonsByCategory(this.selectedCategory(), bbLessonsInit).
         //   subscribe(v=> console.log(v));
         // this.userService.seedUsersToFirestore(seedUser)
+
+        // Console log allBBLessons$
+        this.allBBLessons$.subscribe((lessons) => {
+            console.log('allBBLessons$:', lessons);
+        });
+
+        // Get current language from language service
+        this.currentLanguage = this.languageService.getCurrentLanguageValue();
+        console.log('Initial currentLanguage:', this.currentLanguage);
+
+        this.languageService.getCurrentLanguage().subscribe((language) => {
+            this.currentLanguage = language;
+            console.log('Updated currentLanguage:', this.currentLanguage);
+            // Update category progress if progress is already loaded
+            if (this.progress) {
+                this.getCategoryProgress(this.selectedCategory(), this.progress);
+            }
+        });
 
         this.as.authState$.subscribe((user: User | null) => {
             if (user) {
@@ -118,20 +136,21 @@ export class HomeComponent implements OnInit {
 
     getCategoryProgress(category: string, progress: IProgress) {
         const categoryProg = progress.categoryProgress.filter((val) => val.categoryName.toLocaleLowerCase() === category.toLocaleLowerCase());
-        this.categoryProgress = categoryProg[0].lessons;
+        console.log('categoryProg:', categoryProg);
+        this.categoryProgress = categoryProg[0].languageProgress[this.currentLanguage].lessons;
     }
 
     updateLessonProgress(lessonId: string): void {
         if (!this.progress || this.progress?.categoryProgress.length === 0) return;
         localStorage.setItem('categoryProgress', JSON.stringify(this.progress.categoryProgress));
         for (const category of this.progress.categoryProgress) {
-            const lessonToUpdate = category.lessons.find((l: { id: string }) => l.id === lessonId);
+            const lessonToUpdate = category.languageProgress[this.currentLanguage].lessons.find((l: { id: string }) => l.id === lessonId);
 
             if (lessonToUpdate && lessonToUpdate.progress === '0' && lessonToUpdate.watchDuration === 0) {
                 const updatedLessonData: Partial<IProgress> = {
-                    categoryProgress: this.progress.categoryProgress.map((cat: { lessons: { id: string }[] }) => ({
+                    categoryProgress: this.progress.categoryProgress.map((cat: { languageProgress: { [language: string]: LanguageProgress } }) => ({
                         ...cat,
-                        lessons: cat.lessons.map((lesson: { id: string }) =>
+                        lessons: cat.languageProgress[this.currentLanguage].lessons.map((lesson: { id: string }) =>
                             lesson.id === lessonId
                                 ? {
                                       ...lesson,

@@ -11,6 +11,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ProgressDialogComponent } from '../progress-dialog/progress-dialog.component';
+import { ProgressService } from 'src/app/shared/services/progress/progress.service';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 
 @Component({
     selector: 'app-edit-user',
@@ -27,6 +29,7 @@ export class EditUserComponent implements OnInit {
 
     // Inject services
     userService = inject(UserService);
+    progressService = inject(ProgressService);
     snackBar = inject(MatSnackBar);
     dialog = inject(MatDialog);
 
@@ -137,5 +140,50 @@ export class EditUserComponent implements OnInit {
 
     editDetails() {
         this.editMode.update((value) => !value);
+    }
+
+    /**
+     * Opens a confirmation dialog and resets the user's progress if confirmed
+     */
+    confirmResetProgress() {
+        const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+            width: '350px',
+            data: {
+                title: 'Reset User Progress',
+                message: `Are you sure you want to reset all progress for ${this.prevUser.name}? This action cannot be undone.`,
+            },
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+            if (result) {
+                this.resetUserProgress();
+            }
+        });
+    }
+
+    /**
+     * Resets the user's progress to the initial state
+     */
+    private resetUserProgress() {
+        if (!this.prevUser.email) {
+            this.snackBar.open('Unable to reset progress: User email not found', 'Close', {
+                duration: 3000,
+            });
+            return;
+        }
+
+        this.progressService
+            .resetProgress(this.prevUser.email)
+            .then(() => {
+                this.snackBar.open(`Progress for ${this.prevUser.name} has been reset successfully`, 'Close', {
+                    duration: 3000,
+                });
+            })
+            .catch((error) => {
+                console.error('Error resetting progress:', error);
+                this.snackBar.open('Error resetting progress', 'Close', {
+                    duration: 3000,
+                });
+            });
     }
 }

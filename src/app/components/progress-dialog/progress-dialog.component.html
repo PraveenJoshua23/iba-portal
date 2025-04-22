@@ -35,51 +35,77 @@
                 </div>
             </div>
 
+            <!-- Language selection -->
+            <div class="mb-4 bg-blue-50 p-3 rounded-md">
+                <label for="language-select" class="block text-sm font-medium text-gray-700 mb-1">View Progress for Language:</label>
+                <select id="language-select" [(ngModel)]="selectedLanguage" class="w-full p-2 border rounded-md">
+                    <option *ngFor="let lang of availableLanguages" [value]="lang.code">{{ lang.name }}</option>
+                </select>
+            </div>
+
             <!-- Category progress -->
             <mat-accordion>
-                <mat-expansion-panel *ngFor="let category of progressData.categoryProgress" class="mb-3">
+                <mat-expansion-panel *ngFor="let category of progressData?.categoryProgress || []" class="mb-3">
                     <mat-expansion-panel-header>
                         <mat-panel-title class="flex items-center">
-                            {{ category.categoryName }}
+                            {{ category?.categoryName || 'Unknown Category' }}
                         </mat-panel-title>
                         <mat-panel-description class="flex items-center justify-end">
                             <div class="w-32 mr-2">
-                                <mat-progress-bar [value]="getCategoryProgress(category.progress)" [color]="getCategoryProgress(category.progress) === 100 ? 'accent' : 'primary'"> </mat-progress-bar>
+                                <mat-progress-bar [value]="getCategoryProgress(category?.progress)" [color]="getCategoryProgress(category?.progress) === 100 ? 'accent' : 'primary'"> </mat-progress-bar>
                             </div>
-                            {{ getCategoryProgress(category.progress) }}%
+                            {{ getCategoryProgress(category?.progress) }}%
 
                             <!-- Locked status badge -->
-                            <span *ngIf="category.locked" class="ml-2 px-2 py-1 bg-gray-200 rounded-full text-xs"> Locked </span>
-                            <span *ngIf="!category.locked" class="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs"> Unlocked </span>
+                            <span *ngIf="category?.locked" class="ml-2 px-2 py-1 bg-gray-200 rounded-full text-xs"> Locked </span>
+                            <span *ngIf="category && !category.locked" class="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs"> Unlocked </span>
                         </mat-panel-description>
                     </mat-expansion-panel-header>
 
                     <!-- Edit mode toggle for category -->
-                    <div *ngIf="editMode()" class="mb-4 bg-blue-50 p-3 rounded-md">
+                    <div *ngIf="editMode() && category" class="mb-4 bg-blue-50 p-3 rounded-md">
                         <div class="flex items-center">
                             <span class="mr-2">Category locked:</span>
                             <mat-slide-toggle [(ngModel)]="category.locked" color="primary"> </mat-slide-toggle>
                         </div>
                     </div>
 
+                    <!-- Language progress display -->
+                    <div *ngIf="category && languageExistsForCategory(category, selectedLanguage)" class="mb-4 bg-gray-50 p-3 rounded-md">
+                        <div class="flex items-center justify-between">
+                            <span class="font-medium"> Progress:</span>
+                            <div class="flex items-center">
+                                <div class="w-40 mr-2">
+                                    <mat-progress-bar [value]="getCategoryProgress(getLanguageProgress(category))" [color]="getCategoryProgress(getLanguageProgress(category)) === 100 ? 'accent' : 'primary'"> </mat-progress-bar>
+                                </div>
+                                {{ getCategoryProgress(getLanguageProgress(category)) }}%
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- No language data available message -->
+                    <div *ngIf="category && !languageExistsForCategory(category, selectedLanguage)" class="mb-4 bg-yellow-50 p-3 rounded-md text-center">
+                        <p>No progress data available for {{ getLanguageName(selectedLanguage) }}</p>
+                    </div>
+
                     <!-- Lessons list -->
                     <div class="divide-y">
-                        <div *ngFor="let lesson of category.lessons" class="py-3">
+                        <div *ngFor="let lesson of getLessonsForLanguage(category)" class="py-3">
                             <div class="flex justify-between items-center mb-2">
                                 <div class="flex-1">
-                                    <h4 class="font-medium">{{ lesson.lessonNo }}. {{ lesson.name }}</h4>
+                                    <h4 class="font-medium">{{ lesson?.lessonNo || '?' }}. {{ lesson?.name || 'Unnamed Lesson' }}</h4>
                                 </div>
                                 <div class="flex items-center">
                                     <!-- Progress indicator -->
                                     <div class="w-24 mr-2">
-                                        <mat-progress-bar [value]="getLessonProgress(lesson.progress)" [color]="lesson.completed ? 'accent' : 'primary'"> </mat-progress-bar>
+                                        <mat-progress-bar [value]="getLessonProgress(lesson?.progress)" [color]="lesson?.completed ? 'accent' : 'primary'"> </mat-progress-bar>
                                     </div>
-                                    <span>{{ getLessonProgress(lesson.progress) }}%</span>
+                                    <span>{{ getLessonProgress(lesson?.progress) }}%</span>
                                 </div>
                             </div>
 
                             <!-- Lesson details in grid layout -->
-                            <div class="grid grid-cols-2 gap-4 text-sm mt-2">
+                            <div *ngIf="lesson" class="grid grid-cols-2 gap-4 text-sm mt-2">
                                 <!-- Status -->
                                 <div>
                                     <span class="text-gray-600">Status:</span>
@@ -106,12 +132,18 @@
                                 <!-- Watch Duration -->
                                 <div>
                                     <span class="text-gray-600">Watch Duration:</span>
-                                    <p>{{ lesson.watchDuration }}%</p>
+                                    <p>{{ lesson.watchDuration || 0 }} seconds</p>
+                                </div>
+
+                                <!-- Quiz Answers (if available) -->
+                                <div *ngIf="lesson.quizAnswers" class="col-span-2">
+                                    <span class="text-gray-600">Quiz Answers:</span>
+                                    <p>{{ lesson.quizAnswers.join(', ') }}</p>
                                 </div>
                             </div>
 
                             <!-- Edit options in edit mode -->
-                            <div *ngIf="editMode()" class="mt-3 bg-gray-50 p-2 rounded flex items-center space-x-4">
+                            <div *ngIf="editMode() && lesson && category" class="mt-3 bg-gray-50 p-2 rounded flex items-center space-x-4">
                                 <div class="flex items-center">
                                     <span class="mr-2">Completed:</span>
                                     <mat-slide-toggle [checked]="lesson.completed" (change)="updateLessonCompletion(category, lesson, $event.checked)" color="primary"> </mat-slide-toggle>

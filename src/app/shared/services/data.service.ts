@@ -64,7 +64,9 @@ export class DataService {
         const lessonRef = doc(this.fs, 'lessons', category);
         const subcollectionRef = collection(lessonRef, 'lesson');
 
-        const q = query(subcollectionRef, orderBy('name'));
+        // Using lessonNo for ordering to ensure correct sequence
+        // Adding limit(100) to ensure we get all lessons (up to 100)
+        const q = query(subcollectionRef, orderBy('lessonNo', 'asc'));
 
         return collectionData(q, { idField: 'id' });
     }
@@ -107,8 +109,134 @@ export class DataService {
             const q = query(progressRef, where('email', '==', userEmail));
             const querySnapshot = await getDocs(q);
 
+            // Define supported languages
+            const supportedLanguages = ['en', 'ta', 'te', 'hi', 'or'];
+
+            // Create default lesson progress for a language
+            const createDefaultLessonsForLanguage = () => {
+                return [
+                    {
+                        id: 'bblesson01',
+                        name: 'Sealed Book and Revelation',
+                        lessonNo: '1',
+                        watchDuration: 0,
+                        progress: '0',
+                        completed: false,
+                        locked: false,
+                        startDate: null,
+                        completedDate: null,
+                        postQuizId: null,
+                        quizAnswers: null,
+                    },
+                    {
+                        id: 'bblesson02',
+                        name: 'Seed and Harvest (Sign of Second Coming)',
+                        lessonNo: '2',
+                        watchDuration: 0,
+                        progress: '0',
+                        completed: false,
+                        locked: true,
+                        startDate: null,
+                        completedDate: null,
+                        postQuizId: null,
+                        quizAnswers: null,
+                    },
+                    {
+                        id: 'bblesson03',
+                        name: 'How to read Prophecy (Prophecy and Secrets of the Kingdom of Heaven in Parable)',
+                        lessonNo: '3',
+                        watchDuration: 0,
+                        progress: '0',
+                        completed: false,
+                        locked: true,
+                        startDate: null,
+                        completedDate: null,
+                        postQuizId: null,
+                        quizAnswers: null,
+                    },
+                    {
+                        id: 'bblesson04',
+                        name: 'Introduction to Revelation',
+                        lessonNo: '4',
+                        watchDuration: 0,
+                        progress: '0',
+                        completed: false,
+                        locked: true,
+                        startDate: null,
+                        completedDate: null,
+                        postQuizId: null,
+                        quizAnswers: null,
+                    },
+                    {
+                        id: 'bblesson05',
+                        name: 'Moses’s Tabernacle & Copy and Shadow/Reality',
+                        lessonNo: '5',
+                        watchDuration: 0,
+                        progress: '0',
+                        completed: false,
+                        locked: true,
+                        startDate: null,
+                        completedDate: null,
+                        postQuizId: null,
+                        quizAnswers: null,
+                    },
+                    {
+                        id: 'bblesson06',
+                        name: 'Elementary teaching and teaching of righteousness for the mature',
+                        lessonNo: '6',
+                        watchDuration: 0,
+                        progress: '0',
+                        completed: false,
+                        locked: true,
+                        startDate: null,
+                        completedDate: null,
+                        postQuizId: null,
+                        quizAnswers: null,
+                    },
+                    {
+                        id: 'bblesson07',
+                        name: 'God’s covenants (OT and NT)',
+                        lessonNo: '7',
+                        watchDuration: 0,
+                        progress: '0',
+                        completed: false,
+                        locked: true,
+                        startDate: null,
+                        completedDate: null,
+                        postQuizId: null,
+                        quizAnswers: null,
+                    },
+                    {
+                        id: 'bblesson08',
+                        name: 'God’s will and purpose (6,000 years of God’s work and history)',
+                        lessonNo: '8',
+                        watchDuration: 0,
+                        progress: '0',
+                        completed: false,
+                        locked: true,
+                        startDate: null,
+                        completedDate: null,
+                        postQuizId: null,
+                        quizAnswers: null,
+                    },
+                ];
+            };
+
+            // Create language progress map
+            const createLanguageProgressMap = () => {
+                const languageProgress: { [language: string]: any } = {};
+
+                supportedLanguages.forEach((lang) => {
+                    languageProgress[lang] = {
+                        progress: '0',
+                        lessons: createDefaultLessonsForLanguage(),
+                    };
+                });
+
+                return languageProgress;
+            };
+
             // Initialize the default progress structure
-            // Inside resetProgressStructure method in data.service.ts
             const defaultProgress: IProgress = {
                 id: querySnapshot.empty ? '' : querySnapshot.docs[0].id,
                 email: userEmail,
@@ -119,130 +247,25 @@ export class DataService {
                         categoryName: 'BB',
                         locked: false,
                         progress: '0',
-                        lessons: [
-                            {
-                                id: 'bblesson01',
-                                name: 'Sealed Book and Revelation',
-                                lessonNo: '1',
-                                watchDuration: 0,
-                                progress: '0',
-                                completed: false,
-                                locked: false,
-                                startDate: null,
-                                completedDate: null,
-                                postQuizId: null,
-                                quizAnswers: null, // Added the new field with default value
-                            },
-                            {
-                                id: 'bblesson02',
-                                name: 'Seed and Harvest (Sign of Second Coming)',
-                                lessonNo: '2',
-                                watchDuration: 0,
-                                progress: '0',
-                                completed: false,
-                                locked: true,
-                                startDate: null,
-                                completedDate: null,
-                                postQuizId: null,
-                                quizAnswers: null, // Added the new field with default value
-                            },
-                            {
-                                id: 'bblesson03',
-                                name: 'How to read Prophecy (Prophecy and Secrets of the Kingdom of Heaven in Parable)',
-                                lessonNo: '3',
-                                watchDuration: 0,
-                                progress: '0',
-                                completed: false,
-                                locked: true,
-                                startDate: null,
-                                completedDate: null,
-                                postQuizId: null,
-                                quizAnswers: null, // Added the new field with default value
-                            },
-                            {
-                                id: 'bblesson04',
-                                name: 'Introduction to Revelation',
-                                lessonNo: '4',
-                                watchDuration: 0,
-                                progress: '0',
-                                completed: false,
-                                locked: true,
-                                startDate: null,
-                                completedDate: null,
-                                postQuizId: null,
-                                quizAnswers: null, // Added the new field with default value
-                            },
-                            {
-                                id: 'bblesson05',
-                                name: "Moses's Tabernacle & Copy and Shadow/Reality",
-                                lessonNo: '5',
-                                watchDuration: 0,
-                                progress: '0',
-                                completed: false,
-                                locked: true,
-                                startDate: null,
-                                completedDate: null,
-                                postQuizId: null,
-                                quizAnswers: null, // Added the new field with default value
-                            },
-                            {
-                                id: 'bblesson06',
-                                name: 'Elementary teaching and teaching of righteousness for the mature',
-                                lessonNo: '6',
-                                watchDuration: 0,
-                                progress: '0',
-                                completed: false,
-                                locked: true,
-                                startDate: null,
-                                completedDate: null,
-                                postQuizId: null,
-                                quizAnswers: null, // Added the new field with default value
-                            },
-                            {
-                                id: 'bblesson07',
-                                name: "God's covenants (OT and NT)",
-                                lessonNo: '7',
-                                watchDuration: 0,
-                                progress: '0',
-                                completed: false,
-                                locked: true,
-                                startDate: null,
-                                completedDate: null,
-                                postQuizId: null,
-                                quizAnswers: null, // Added the new field with default value
-                            },
-                            {
-                                id: 'bblesson08',
-                                name: "God's will and purpose (6,000 years of God's work and history)",
-                                lessonNo: '8',
-                                watchDuration: 0,
-                                progress: '0',
-                                completed: false,
-                                locked: true,
-                                startDate: null,
-                                completedDate: null,
-                                postQuizId: null,
-                                quizAnswers: null, // Added the new field with default value
-                            },
-                        ],
+                        languageProgress: createLanguageProgressMap(),
                     },
                     {
                         categoryName: 'Introductory',
-                        progress: '0',
                         locked: true,
-                        lessons: [],
+                        progress: '0',
+                        languageProgress: createLanguageProgressMap(),
                     },
                     {
                         categoryName: 'Intermediate',
-                        progress: '0',
                         locked: true,
-                        lessons: [],
+                        progress: '0',
+                        languageProgress: createLanguageProgressMap(),
                     },
                     {
                         categoryName: 'Advanced',
-                        progress: '0',
                         locked: true,
-                        lessons: [],
+                        progress: '0',
+                        languageProgress: createLanguageProgressMap(),
                     },
                 ],
             };
@@ -251,10 +274,11 @@ export class DataService {
             if (!querySnapshot.empty) {
                 const progressDocRef = doc(this.fs, 'progress', querySnapshot.docs[0].id);
                 await setDoc(progressDocRef, defaultProgress);
-                console.log('Progress structure reset for user:', userEmail);
+                console.log('Progress structure reset for existing user:', userEmail);
             } else {
-                const newDoc = await addDoc(progressRef, defaultProgress);
-                console.log('New progress structure created for user:', userEmail, 'with ID:', newDoc.id);
+                // Create a new progress document
+                const newProgressRef = await addDoc(this.progressRef, defaultProgress);
+                console.log('New progress structure created for user:', userEmail, 'with ID:', newProgressRef.id);
             }
         } catch (error) {
             console.error('Error resetting progress structure:', error);
@@ -262,7 +286,7 @@ export class DataService {
     }
 
     // Updated method to safely update lesson progress without losing data
-    async updateLessonProgress(userEmail: string, category: string, lessonId: string, progressRate: number): Promise<void> {
+    async updateLessonProgress(userEmail: string, category: string, lessonId: string, progressRate: number, language: string = 'en'): Promise<void> {
         if (!userEmail) {
             console.error('Cannot update progress: No user email provided');
             return;
@@ -293,16 +317,28 @@ export class DataService {
                 return;
             }
 
-            // Find the lesson within the category
-            const lessonIndex = progressData.categoryProgress[categoryIndex].lessons.findIndex((lesson) => lesson.id === lessonId);
+            // Check if the language exists in the languageProgress map
+            if (!progressData.categoryProgress[categoryIndex].languageProgress[language]) {
+                console.error(`Language ${language} not found in category progress. Using default language 'en'`);
+                language = 'en';
+
+                // If 'en' doesn't exist either, return an error
+                if (!progressData.categoryProgress[categoryIndex].languageProgress[language]) {
+                    console.error('Default language not found in category progress');
+                    return;
+                }
+            }
+
+            // Find the lesson within the language-specific category
+            const lessonIndex = progressData.categoryProgress[categoryIndex].languageProgress[language].lessons.findIndex((lesson) => lesson.id === lessonId);
 
             if (lessonIndex === -1) {
-                console.error('Lesson not found in category progress:', lessonId);
+                console.error(`Lesson ${lessonId} not found in ${language} language progress`);
                 return;
             }
 
             // Get the current lesson to preserve its fields
-            const currentLesson = progressData.categoryProgress[categoryIndex].lessons[lessonIndex];
+            const currentLesson = progressData.categoryProgress[categoryIndex].languageProgress[language].lessons[lessonIndex];
 
             // Create an updated lesson with all original fields preserved
             const updatedLesson = {
@@ -328,28 +364,52 @@ export class DataService {
                 };
             }
 
-            // Get the updated category progress
-            const updatedLessons = [...progressData.categoryProgress[categoryIndex].lessons];
+            // Get the updated lessons array for the specific language
+            const updatedLessons = [...progressData.categoryProgress[categoryIndex].languageProgress[language].lessons];
             updatedLessons[lessonIndex] = updatedLesson;
 
-            // Calculate the new average progress for the category
+            // Calculate the new average progress for the language
             let totalProgress = 0;
             updatedLessons.forEach((lesson) => {
                 totalProgress += parseFloat(lesson.progress || '0');
             });
 
-            const categoryProgress = Math.round(totalProgress / updatedLessons.length);
+            const languageProgress = Math.round(totalProgress / updatedLessons.length);
 
             // Unlock the next lesson if this one is completed
             if (progressRate >= 100 && lessonIndex < updatedLessons.length - 1) {
                 updatedLessons[lessonIndex + 1].locked = false;
             }
 
+            // Create an updated language progress with all fields preserved
+            const updatedLanguageProgress = {
+                ...progressData.categoryProgress[categoryIndex].languageProgress[language],
+                progress: languageProgress.toString(),
+                lessons: updatedLessons,
+            };
+
+            // Create updated languageProgress map
+            const updatedLanguageProgressMap = {
+                ...progressData.categoryProgress[categoryIndex].languageProgress,
+                [language]: updatedLanguageProgress,
+            };
+
+            // Calculate overall category progress based on all languages
+            let totalCategoryProgress = 0;
+            let languageCount = 0;
+
+            Object.values(updatedLanguageProgressMap).forEach((langProgress) => {
+                totalCategoryProgress += parseFloat(langProgress.progress || '0');
+                languageCount++;
+            });
+
+            const categoryProgress = languageCount > 0 ? Math.round(totalCategoryProgress / languageCount) : 0;
+
             // Create an updated category with all fields preserved
             const updatedCategory = {
                 ...progressData.categoryProgress[categoryIndex],
                 progress: categoryProgress.toString(),
-                lessons: updatedLessons,
+                languageProgress: updatedLanguageProgressMap,
             };
 
             // Create updated categoryProgress array
@@ -362,7 +422,7 @@ export class DataService {
                 categoryProgress: updatedCategoryProgress,
             });
 
-            console.log(`Progress updated for lesson ${lessonId}: ${progressRate}%`);
+            console.log(`Progress updated for lesson ${lessonId} in ${language} language: ${progressRate}%`);
         } catch (error) {
             console.error('Error updating lesson progress:', error);
         }

@@ -63,28 +63,6 @@ export class VimeoService {
     }
 
     /**
-     * Map Firebase Storage path to Vimeo video ID
-     * @param category - lesson category
-     * @param lang - language code
-     * @param path - original path used in Firebase
-     */
-    // mapPathToVimeoId(category: string, lang: string, path: string): Observable<string> {
-    //     // Use the mapping service to get the Vimeo ID from Firestore
-    //     return this.mappingService.getVimeoIdForPath(category, lang, path).pipe(
-    //         switchMap((vimeoId) => {
-    //             if (vimeoId) {
-    //                 console.log(`Found mapping in Firestore for ${category}/${lang}/${path}: ${vimeoId}`);
-    //                 return of(vimeoId);
-    //             }
-    //             // If not found in Firestore, return an error observable
-    //             const key = `${category}/${lang}/${path}`;
-    //             console.error(`No Vimeo ID found in Firestore for ${key}`);
-    //             return throwError(() => new Error(`No Vimeo ID mapping found for: ${key}`));
-    //         }),
-    //     );
-    // }
-
-    /**
      * Get video transcript by video ID
      * @param videoId - Vimeo video ID (numeric)
      * @returns Observable with transcript text

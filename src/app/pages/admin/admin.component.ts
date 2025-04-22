@@ -21,6 +21,7 @@ import { LanguageContentService } from 'src/app/shared/services/language/languag
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs/operators';
+import { LanguageManagementDialogComponent } from './language-management/language-management.component';
 
 @Component({
     selector: 'app-admin',
@@ -56,7 +57,7 @@ export class AdminComponent implements OnInit {
     isSaving: boolean = false;
     isLoading: boolean = true;
     saveMessage: string = '';
-    
+
     // Service injections
     private languageContentService = inject(LanguageContentService);
     private snackBar = inject(MatSnackBar);
@@ -74,11 +75,12 @@ export class AdminComponent implements OnInit {
     saveTranslations() {
         this.isSaving = true;
         this.saveMessage = '';
-        
+
         // Save to Firebase Firestore
-        this.languageContentService.updateAllTranslationsInFirestore(this.translations)
-            .pipe(finalize(() => this.isSaving = false))
-            .subscribe(success => {
+        this.languageContentService
+            .updateAllTranslationsInFirestore(this.translations)
+            .pipe(finalize(() => (this.isSaving = false)))
+            .subscribe((success) => {
                 if (success) {
                     this.saveMessage = 'Translations saved to Firebase successfully!';
                     this.snackBar.open('Translations saved successfully!', 'Close', {
@@ -86,26 +88,6 @@ export class AdminComponent implements OnInit {
                         horizontalPosition: 'center',
                         verticalPosition: 'bottom',
                     });
-                    
-                    // Also generate a downloadable backup file
-                    const fileContent = `export interface TranslationMap {
-    [key: string]: {
-        [language: string]: string;
-    };
-}
-
-export const translations: TranslationMap = ${JSON.stringify(this.translations, null, 4)};
-`;
-                    
-                    const blob = new Blob([fileContent], { type: 'text/plain' });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'translations_backup.ts';
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
                 } else {
                     this.saveMessage = 'Failed to save translations to Firebase';
                     this.snackBar.open('Failed to save translations', 'Close', {
@@ -139,46 +121,20 @@ export const translations: TranslationMap = ${JSON.stringify(this.translations, 
         // Load translations from Firebase
         this.loadTranslationsFromFirebase();
     }
-    
+
     /**
      * Load translations from Firebase
      */
     loadTranslationsFromFirebase(): void {
         this.isLoading = true;
-        this.languageContentService.refreshTranslations()
-            .pipe(finalize(() => this.isLoading = false))
-            .subscribe(translations => {
+        this.languageContentService
+            .refreshTranslations()
+            .pipe(finalize(() => (this.isLoading = false)))
+            .subscribe((translations) => {
                 this.translations = translations;
                 this.translationKeys = Object.keys(this.translations);
-                this.availableLanguages = Array.from(
-                    new Set(Object.values(this.translations).flatMap(obj => Object.keys(obj)))
-                );
-                console.log('Translations loaded from Firebase:', this.translations);
+                this.availableLanguages = Array.from(new Set(Object.values(this.translations).flatMap((obj) => Object.keys(obj))));
             });
-    }
-    
-    /**
-     * Seed initial translations to Firebase
-     */
-    seedTranslationsToFirebase(): void {
-        if (confirm('This will overwrite any existing translations in Firebase with the default translations. Continue?')) {
-            this.isLoading = true;
-            this.languageContentService.seedTranslationsToFirestore()
-                .pipe(finalize(() => this.isLoading = false))
-                .subscribe(success => {
-                    if (success) {
-                        this.snackBar.open('Translations seeded to Firebase successfully!', 'Close', {
-                            duration: 3000,
-                        });
-                        // Reload translations
-                        this.loadTranslationsFromFirebase();
-                    } else {
-                        this.snackBar.open('Failed to seed translations to Firebase', 'Close', {
-                            duration: 3000,
-                        });
-                    }
-                });
-        }
     }
 
     // Method to handle tab change events if needed
@@ -203,36 +159,36 @@ export const translations: TranslationMap = ${JSON.stringify(this.translations, 
                 this.translationKeys = Object.keys(this.translations);
 
                 // Save the new translation to Firebase
-                this.languageContentService.updateTranslationInFirestore(result.key, result.translations)
-                    .subscribe(success => {
-                        if (success) {
-                            this.snackBar.open('New translation added successfully!', 'Close', {
-                                duration: 3000,
-                            });
-                        } else {
-                            this.snackBar.open('Translation added locally but failed to save to Firebase', 'Close', {
-                                duration: 3000,
-                            });
-                        }
-                    });
+                this.languageContentService.updateTranslationInFirestore(result.key, result.translations).subscribe((success) => {
+                    if (success) {
+                        this.snackBar.open('New translation added successfully!', 'Close', {
+                            duration: 3000,
+                        });
+                    } else {
+                        this.snackBar.open('Translation added locally but failed to save to Firebase', 'Close', {
+                            duration: 3000,
+                        });
+                    }
+                });
             }
         });
     }
-    
+
     /**
      * Delete a translation by key
      */
     deleteTranslation(key: string): void {
         if (confirm(`Are you sure you want to delete the translation for "${key}"?`)) {
             this.isLoading = true;
-            this.languageContentService.deleteTranslationFromFirestore(key)
-                .pipe(finalize(() => this.isLoading = false))
-                .subscribe(success => {
+            this.languageContentService
+                .deleteTranslationFromFirestore(key)
+                .pipe(finalize(() => (this.isLoading = false)))
+                .subscribe((success) => {
                     if (success) {
                         // Remove from local array
                         delete this.translations[key];
                         this.translationKeys = Object.keys(this.translations);
-                        
+
                         this.snackBar.open(`Translation "${key}" deleted successfully!`, 'Close', {
                             duration: 3000,
                         });
@@ -245,52 +201,41 @@ export const translations: TranslationMap = ${JSON.stringify(this.translations, 
         }
     }
 
-    // openDialog(item:any) {
-    //   console.log(item)
-    //   const dialogRef = this.dialog.open(EditUserComponent,{
-    //     data: item
-    //   });
+    // Add a method to open the language management dialog
+    openLanguageManagementDialog(): void {
+        const dialogRef = this.dialog.open(LanguageManagementDialogComponent, {
+            width: '600px',
+            data: { existingLanguages: this.availableLanguages },
+        });
 
-    //   dialogRef.afterClosed().subscribe(result => {
-    //     console.log(`Dialog result: ${result}`);
-    //   });
-    // }
+        dialogRef.afterClosed().subscribe((result) => {
+            if (result) {
+                // Update languages
+                this.availableLanguages = result;
 
-    // // Function to update the number of visible rows
-    // updateVisibleRows(count: number) {
-    //   this.visibleRowCount = count;
-    // }
+                // Check if we need to change the selected language
+                if (!this.availableLanguages.includes(this.rightLanguage)) {
+                    this.rightLanguage = 'English';
+                }
 
-    // ngAfterViewInit() {
-    //   this.dataSource.paginator = this.paginator;
-    // }
+                // Update translations with new languages
+                this.updateTranslationsWithLanguages(result);
+            }
+        });
+    }
 
-    // getAllUsers(){
-    //   return this.ds.getAllUsersData().subscribe(users=>{
-    //     this.dataSource.data = users;
-    //     this.originalData = this.dataSource.data;
-    //     this.dataSource.sort = this.sort;
-    //   })
-    // }
+    // Add a method to update translations with new languages
+    updateTranslationsWithLanguages(languages: string[]): void {
+        // Add missing languages to all translations
+        for (const key of this.translationKeys) {
+            for (const lang of languages) {
+                if (!this.translations[key][lang]) {
+                    this.translations[key][lang] = '';
+                }
+            }
+        }
 
-    // applyFilter(event: Event) {
-    //   const filterValue = (event.target as HTMLInputElement).value;
-    //   this.searchTerm = filterValue.trim().toLowerCase();
-    //   console.log(filterValue)
-    //   this.dataSource.data = this.searchTerm ?
-    //     this.originalData.filter((user: { name: string; }) =>
-    //       user.name.toLowerCase().includes(this.searchTerm)
-    //       // ... add more filter conditions for other fields
-    //     ) : this.originalData;
-
-    //     console.log(this.dataSource.data)
-    // }
-
-    // announceSortChange(sortState: Sort) {
-    //   if (sortState.direction) {
-    //     this._liveAnnouncer.announce(`Sorted ${sortState.direction}ending`);
-    //   } else {
-    //     this._liveAnnouncer.announce('Sorting cleared');
-    //   }
-    //   }
+        // Save updated translations to Firestore
+        this.saveTranslations();
+    }
 }
