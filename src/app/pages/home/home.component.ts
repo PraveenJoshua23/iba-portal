@@ -183,7 +183,7 @@ export class HomeComponent implements OnInit {
                 next: (updatedProgress) => {
                     this.progress = updatedProgress;
                     this.ds.setLessonData(updatedProgress, lesson, this.email!);
-                    this.router.navigate([`/lesson/${this.selectedCategory().toLowerCase()}`, lessonName]);
+                    this.router.navigate([`/lesson/${this.selectedCategory().toLowerCase()}`, lesson.id]);
                 },
                 error: (error) => {
                     console.error('Error updating progress:', error);
@@ -192,7 +192,7 @@ export class HomeComponent implements OnInit {
         } else {
             // If lesson already started, just navigate to it
             this.ds.setLessonData(this.progress, lesson, this.email!);
-            this.router.navigate([`/lesson/${this.selectedCategory().toLowerCase()}`, lessonName]);
+            this.router.navigate([`/lesson/${this.selectedCategory().toLowerCase()}`, lesson.id]);
         }
     }
 }

@@ -89,7 +89,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
     qualityMenuOpen: boolean = false;
     currentQuality: 'sd' | 'hd' | 'highest' = 'highest';
     currentLanguage: string = 'en';
-
+    lang: string = 'en';
     // AI Summary related properties
     lessonSummary: string | null = null;
     isGeneratingSummary = false;
@@ -113,6 +113,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.currentLanguage = this.languageService.getCurrentLanguageValue();
+        this.lang = this.languageService.getLanguageCodeByName(this.currentLanguage);
         this.paramSubscription = this.ar.params.subscribe((params) => {
             this.lessonId = params['id'];
             this._category = params['category'];
@@ -176,20 +177,9 @@ export class LessonsComponent implements OnInit, OnDestroy {
             return null;
         }
 
-        let lang;
-        switch (lesson.language) {
-            case 'Tamil':
-                lang = 'ta';
-                break;
-            case 'English':
-            default:
-                lang = 'en';
-                break;
-        }
-
         try {
             // Use the data service without quality parameter
-            return await this.ds.getVideo(lesson.category, lang, lesson.path);
+            return await this.ds.getVideo(lesson.category, this.lang, lesson.path);
         } catch (error) {
             console.error('Failed to get video URL:', error);
             return null;
@@ -200,6 +190,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
     initLesson() {
         this.ls.getLessonById(this._lesson, this._category).subscribe({
             next: async (lesson) => {
+                console.log('lessons service', lesson);
                 this.currentLesson.set(lesson);
 
                 // Get the saved video position from Firestore
@@ -208,7 +199,6 @@ export class LessonsComponent implements OnInit, OnDestroy {
                 if (this._email && lesson?.id) {
                     try {
                         savedPosition = await this.ps.getVideoPosition(this._email, this._category, lesson.id);
-                        console.log(`Retrieved saved position from Firestore: ${savedPosition}`);
                     } catch (error) {
                         console.error('Failed to get saved position:', error);
                     }
@@ -284,26 +274,188 @@ export class LessonsComponent implements OnInit, OnDestroy {
         if (categoryProgress) {
             const parsedCategory = JSON.parse(categoryProgress!);
             const allprogress = parsedCategory.filter((category: any) => category.categoryName.toLocaleLowerCase() === this._category.toLocaleLowerCase());
-            const filterProgress = allprogress[0].lessons.filter((lesson: { id: any }) => lesson.id === this._lesson);
-            return filterProgress[0];
+            if (allprogress.length === 0) {
+                console.error('Cannot find category in progress data.');
+                return null;
+            }
+
+            // Get the current language
+            const language = this.lang || 'en';
+
+            // Check if the language exists in the languageProgress map
+            if (!allprogress[0].languageProgress || !allprogress[0].languageProgress[language]) {
+                console.warn(`Language ${language} not found in progress data. Using default language 'en'`);
+                const defaultLanguage = 'en';
+
+                // If 'en' doesn't exist either, return null
+                if (!allprogress[0].languageProgress || !allprogress[0].languageProgress[defaultLanguage]) {
+                    console.error('Default language not found in progress data');
+                    return null;
+                }
+
+                // Use default language lessons
+                const filterProgress = allprogress[0].languageProgress[defaultLanguage].lessons.filter((lesson: { id: any }) => lesson.id === this._lesson);
+                return filterProgress.length > 0 ? filterProgress[0] : null;
+            }
+
+            // Use language-specific lessons
+            const filterProgress = allprogress[0].languageProgress[language].lessons.filter((lesson: { id: any }) => lesson.id === this._lesson);
+            return filterProgress.length > 0 ? filterProgress[0] : null;
         } else {
-            console.log('Cannot find progress from localStorage.');
+            console.error('Cannot find progress from localStorage.');
         }
         return null;
     }
 
-    async initializeLesson(email: string) {
-        // this.firebase.getLessonbyCategory(this.category,this.lessonId).subscribe(lesson=> {
-        //   this.currentLesson = lesson;
-        //   if (!this.videoSrc) this.getVideoFromFirebase(this.currentLesson).then(url => this.videoSrc = url);
-        //   this.initializeQuiz(this.currentLesson);
-        // })
-        this.getFileList();
+    // Add this helper method to the LessonsComponent class
+    private updateLocalStorageProgress(lessonId: string, completed: boolean) {
+        const categoryProgress = localStorage.getItem('categoryProgress');
+        if (categoryProgress) {
+            const parsedCategory = JSON.parse(categoryProgress);
+            const language = this.lang || 'en';
+
+            // Find the category matching the current category
+            const updatedCategories = parsedCategory.map((category: any) => {
+                if (category.categoryName.toLowerCase() === this._category.toLowerCase()) {
+                    // Make sure languageProgress exists
+                    if (!category.languageProgress) {
+                        category.languageProgress = {};
+                    }
+
+                    // Make sure the current language exists
+                    if (!category.languageProgress[language]) {
+                        category.languageProgress[language] = {
+                            progress: '0',
+                            lessons: [],
+                        };
+                    }
+
+                    // Update the specific lesson within this language
+                    const updatedLessons = category.languageProgress[language].lessons.map((lesson: any) => {
+                        if (lesson.id === lessonId) {
+                            return {
+                                ...lesson,
+                                completed: completed,
+                                progress: '100',
+                                completedDate: completed ? new Date() : null,
+                            };
+                        }
+                        return lesson;
+                    });
+
+                    // Create a copy of the languageProgress map
+                    const updatedLanguageProgress = {
+                        ...category.languageProgress,
+                        [language]: {
+                            ...category.languageProgress[language],
+                            lessons: updatedLessons,
+                        },
+                    };
+
+                    // Calculate the new progress for this language
+                    let totalProgress = 0;
+                    updatedLessons.forEach((lesson: any) => {
+                        totalProgress += parseFloat(lesson.progress || '0');
+                    });
+                    const languageProgress = Math.round(totalProgress / updatedLessons.length);
+                    updatedLanguageProgress[language].progress = languageProgress.toString();
+
+                    // Calculate overall category progress based on all languages
+                    let totalCategoryProgress = 0;
+                    let languageCount = 0;
+
+                    Object.values(updatedLanguageProgress).forEach((langProgress: any) => {
+                        totalCategoryProgress += parseFloat(langProgress.progress || '0');
+                        languageCount++;
+                    });
+
+                    const categoryProgress = languageCount > 0 ? Math.round(totalCategoryProgress / languageCount) : 0;
+
+                    return {
+                        ...category,
+                        progress: categoryProgress.toString(),
+                        languageProgress: updatedLanguageProgress,
+                    };
+                }
+                return category;
+            });
+
+            // Update localStorage with the modified data
+            localStorage.setItem('categoryProgress', JSON.stringify(updatedCategories));
+
+            // Also update the local reference
+            if (this._progress) {
+                this._progress.completed = completed;
+                this._progress.progress = '100';
+                this._progress.completedDate = completed
+                    ? {
+                          seconds: Math.floor(Date.now() / 1000),
+                          nanoseconds: 0,
+                      }
+                    : null;
+            }
+        }
     }
 
-    initializeQuiz(lesson: Lesson[]) {
-        this.questions = lesson[0].quiz;
-        this.userAnswers = new Array(this.questions.length).fill(-1);
+    // New method to update quiz answers in localStorage
+    private updateLocalStorageQuizAnswers(lessonId: string, quizAnswers: number[]) {
+        const categoryProgress = localStorage.getItem('categoryProgress');
+        if (categoryProgress) {
+            const parsedCategory = JSON.parse(categoryProgress);
+            const language = this.lang || 'en';
+
+            // Find the category matching the current category
+            const updatedCategories = parsedCategory.map((category: any) => {
+                if (category.categoryName.toLowerCase() === this._category.toLowerCase()) {
+                    // Make sure languageProgress exists
+                    if (!category.languageProgress) {
+                        category.languageProgress = {};
+                    }
+
+                    // Make sure the current language exists
+                    if (!category.languageProgress[language]) {
+                        category.languageProgress[language] = {
+                            progress: '0',
+                            lessons: [],
+                        };
+                    }
+
+                    // Update the specific lesson within this language
+                    const updatedLessons = category.languageProgress[language].lessons.map((lesson: any) => {
+                        if (lesson.id === lessonId) {
+                            return {
+                                ...lesson,
+                                quizAnswers: quizAnswers,
+                            };
+                        }
+                        return lesson;
+                    });
+
+                    // Create an updated languageProgress with the modified lessons
+                    const updatedLanguageProgress = {
+                        ...category.languageProgress,
+                        [language]: {
+                            ...category.languageProgress[language],
+                            lessons: updatedLessons,
+                        },
+                    };
+
+                    return {
+                        ...category,
+                        languageProgress: updatedLanguageProgress,
+                    };
+                }
+                return category;
+            });
+
+            // Update localStorage with the modified data
+            localStorage.setItem('categoryProgress', JSON.stringify(updatedCategories));
+
+            // Also update the local reference
+            if (this._progress) {
+                this._progress.quizAnswers = quizAnswers;
+            }
+        }
     }
 
     nextQuestion() {
@@ -487,51 +639,162 @@ export class LessonsComponent implements OnInit, OnDestroy {
     }
 
     // Add this helper method to the LessonsComponent class
-    private updateLocalStorageProgress(lessonId: string, completed: boolean) {
-        const categoryProgress = localStorage.getItem('categoryProgress');
-        if (categoryProgress) {
-            const parsedCategory = JSON.parse(categoryProgress);
+    // private updateLocalStorageProgress(lessonId: string, completed: boolean) {
+    //     const categoryProgress = localStorage.getItem('categoryProgress');
+    //     if (categoryProgress) {
+    //         const parsedCategory = JSON.parse(categoryProgress);
+    //         const language = this.lang || 'en';
 
-            // Find the category matching the current category
-            const updatedCategories = parsedCategory.map((category: any) => {
-                if (category.categoryName.toLowerCase() === this._category.toLowerCase()) {
-                    // Update the specific lesson within this category
-                    const updatedLessons = category.lessons.map((lesson: any) => {
-                        if (lesson.id === lessonId) {
-                            return {
-                                ...lesson,
-                                completed: completed,
-                                progress: '100',
-                                completedDate: completed ? new Date() : null,
-                            };
-                        }
-                        return lesson;
-                    });
+    //         // Find the category matching the current category
+    //         const updatedCategories = parsedCategory.map((category: any) => {
+    //             if (category.categoryName.toLowerCase() === this._category.toLowerCase()) {
+    //                 // Make sure languageProgress exists
+    //                 if (!category.languageProgress) {
+    //                     category.languageProgress = {};
+    //                 }
 
-                    return { ...category, lessons: updatedLessons };
-                }
-                return category;
-            });
+    //                 // Make sure the current language exists
+    //                 if (!category.languageProgress[language]) {
+    //                     category.languageProgress[language] = {
+    //                         progress: '0',
+    //                         lessons: [],
+    //                     };
+    //                 }
 
-            // Update localStorage with the modified data
-            localStorage.setItem('categoryProgress', JSON.stringify(updatedCategories));
+    //                 // Update the specific lesson within this language
+    //                 const updatedLessons = category.languageProgress[language].lessons.map((lesson: any) => {
+    //                     if (lesson.id === lessonId) {
+    //                         return {
+    //                             ...lesson,
+    //                             completed: completed,
+    //                             progress: '100',
+    //                             completedDate: completed ? new Date() : null,
+    //                         };
+    //                     }
+    //                     return lesson;
+    //                 });
 
-            // Also update the local reference
-            if (this._progress) {
-                this._progress.completed = completed;
-                this._progress.progress = '100';
-                this._progress.completedDate = completed
-                    ? {
-                          seconds: Math.floor(Date.now() / 1000),
-                          nanoseconds: 0,
-                      }
-                    : null;
-            }
-        }
-    }
+    //                 // Create a copy of the languageProgress map
+    //                 const updatedLanguageProgress = {
+    //                     ...category.languageProgress,
+    //                     [language]: {
+    //                         ...category.languageProgress[language],
+    //                         lessons: updatedLessons,
+    //                     },
+    //                 };
+
+    //                 // Calculate the new progress for this language
+    //                 let totalProgress = 0;
+    //                 updatedLessons.forEach((lesson: any) => {
+    //                     totalProgress += parseFloat(lesson.progress || '0');
+    //                 });
+    //                 const languageProgress = Math.round(totalProgress / updatedLessons.length);
+    //                 updatedLanguageProgress[language].progress = languageProgress.toString();
+
+    //                 // Calculate overall category progress based on all languages
+    //                 let totalCategoryProgress = 0;
+    //                 let languageCount = 0;
+
+    //                 Object.values(updatedLanguageProgress).forEach((langProgress: any) => {
+    //                     totalCategoryProgress += parseFloat(langProgress.progress || '0');
+    //                     languageCount++;
+    //                 });
+
+    //                 const categoryProgress = languageCount > 0 ? Math.round(totalCategoryProgress / languageCount) : 0;
+
+    //                 return {
+    //                     ...category,
+    //                     progress: categoryProgress.toString(),
+    //                     languageProgress: updatedLanguageProgress,
+    //                 };
+    //             }
+    //             return category;
+    //         });
+
+    //         // Update localStorage with the modified data
+    //         localStorage.setItem('categoryProgress', JSON.stringify(updatedCategories));
+
+    //         // Also update the local reference
+    //         if (this._progress) {
+    //             this._progress.completed = completed;
+    //             this._progress.progress = '100';
+    //             this._progress.completedDate = completed
+    //                 ? {
+    //                       seconds: Math.floor(Date.now() / 1000),
+    //                       nanoseconds: 0,
+    //                   }
+    //                 : null;
+    //         }
+    //     }
+    // }
+
+    // New method to update quiz answers in localStorage
+    // private updateLocalStorageQuizAnswers(lessonId: string, quizAnswers: number[]) {
+    //     const categoryProgress = localStorage.getItem('categoryProgress');
+    //     if (categoryProgress) {
+    //         const parsedCategory = JSON.parse(categoryProgress);
+    //         const language = this.lang || 'en';
+
+    //         // Find the category matching the current category
+    //         const updatedCategories = parsedCategory.map((category: any) => {
+    //             if (category.categoryName.toLowerCase() === this._category.toLowerCase()) {
+    //                 // Make sure languageProgress exists
+    //                 if (!category.languageProgress) {
+    //                     category.languageProgress = {};
+    //                 }
+
+    //                 // Make sure the current language exists
+    //                 if (!category.languageProgress[language]) {
+    //                     category.languageProgress[language] = {
+    //                         progress: '0',
+    //                         lessons: [],
+    //                     };
+    //                 }
+
+    //                 // Update the specific lesson within this language
+    //                 const updatedLessons = category.languageProgress[language].lessons.map((lesson: any) => {
+    //                     if (lesson.id === lessonId) {
+    //                         return {
+    //                             ...lesson,
+    //                             quizAnswers: quizAnswers,
+    //                         };
+    //                     }
+    //                     return lesson;
+    //                 });
+
+    //                 // Create an updated languageProgress with the modified lessons
+    //                 const updatedLanguageProgress = {
+    //                     ...category.languageProgress,
+    //                     [language]: {
+    //                         ...category.languageProgress[language],
+    //                         lessons: updatedLessons,
+    //                     },
+    //                 };
+
+    //                 return {
+    //                     ...category,
+    //                     languageProgress: updatedLanguageProgress,
+    //                 };
+    //             }
+    //             return category;
+    //         });
+
+    //         // Update localStorage with the modified data
+    //         localStorage.setItem('categoryProgress', JSON.stringify(updatedCategories));
+
+    //         // Also update the local reference
+    //         if (this._progress) {
+    //             this._progress.quizAnswers = quizAnswers;
+    //         }
+    //     }
+    // }
 
     isChoiceSelected(): boolean {
         return this.userAnswers[this.currentQuizIndex] === -1;
+    }
+
+    setActiveTab(index: number): void {
+        this.activeTabIndex = index;
     }
 
     storeQuiz() {
@@ -597,43 +860,18 @@ export class LessonsComponent implements OnInit, OnDestroy {
             .catch((err) => console.error('Error saving position to Firestore:', err));
     }
 
-    // New method to update quiz answers in localStorage
-    private updateLocalStorageQuizAnswers(lessonId: string, quizAnswers: number[]) {
-        const categoryProgress = localStorage.getItem('categoryProgress');
-        if (categoryProgress) {
-            const parsedCategory = JSON.parse(categoryProgress);
-
-            // Find the category matching the current category
-            const updatedCategories = parsedCategory.map((category: any) => {
-                if (category.categoryName.toLowerCase() === this._category.toLowerCase()) {
-                    // Update the specific lesson within this category
-                    const updatedLessons = category.lessons.map((lesson: any) => {
-                        if (lesson.id === lessonId) {
-                            return {
-                                ...lesson,
-                                quizAnswers: quizAnswers,
-                            };
-                        }
-                        return lesson;
-                    });
-
-                    return { ...category, lessons: updatedLessons };
-                }
-                return category;
-            });
-
-            // Update localStorage with the modified data
-            localStorage.setItem('categoryProgress', JSON.stringify(updatedCategories));
-
-            // Also update the local reference
-            if (this._progress) {
-                this._progress.quizAnswers = quizAnswers;
-            }
-        }
+    async initializeLesson(email: string) {
+        // this.firebase.getLessonbyCategory(this.category,this.lessonId).subscribe(lesson=> {
+        //   this.currentLesson = lesson;
+        //   if (!this.videoSrc) this.getVideoFromFirebase(this.currentLesson).then(url => this.videoSrc = url);
+        //   this.initializeQuiz(this.currentLesson);
+        // })
+        this.getFileList();
     }
 
-    setActiveTab(index: number): void {
-        this.activeTabIndex = index;
+    initializeQuiz(lesson: Lesson[]) {
+        this.questions = lesson[0].quiz;
+        this.userAnswers = new Array(this.questions.length).fill(-1);
     }
 
     getFileList() {
