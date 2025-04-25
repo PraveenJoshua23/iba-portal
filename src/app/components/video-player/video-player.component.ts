@@ -53,27 +53,26 @@ export class VideoPlayerComponent implements OnDestroy, AfterViewInit, OnChanges
         // Reset position restored flag when source changes
         if (changes['src'] && !changes['src'].firstChange) {
             this.positionRestored = false;
-            console.log('Video source changed, will restore position when ready');
+            // console.log('Video source changed, will restore position when ready');
         }
     }
-    @Output() positionUpdate = new EventEmitter<{ lessonId: string, position: number }>();
+    @Output() positionUpdate = new EventEmitter<{ lessonId: string; position: number }>();
     @Input() resumeFrom?: number; // Allow parent to provide a resume position
-
 
     onPlayerReady(api: VgApiService) {
         this.api = api;
 
-        console.log(`Video player initialized for lesson: ${this.lessonId}`);
-        console.log(`Current video source: ${this.src}`);
+        // console.log(`Video player initialized for lesson: ${this.lessonId}`);
+        // console.log(`Current video source: ${this.src}`);
 
         const media = this.api.getDefaultMedia();
 
-        // Log the media 
-        console.log('Media element:', media);
+        // Log the media
+        // console.log('Media element:', media);
 
         // Wait for video to be properly loaded before attempting to set position
         const canPlay$ = media.subscriptions.canPlay.subscribe(() => {
-            console.log('Video can play event triggered');
+            // console.log('Video can play event triggered');
             // Only restore position once per video load
             if (!this.positionRestored) {
                 this.restorePlaybackPosition();
@@ -82,12 +81,12 @@ export class VideoPlayerComponent implements OnDestroy, AfterViewInit, OnChanges
 
         // Metadata loaded - first opportunity to get duration
         const metadata$ = media.subscriptions.loadedMetadata.subscribe(() => {
-            console.log('Video metadata loaded. Duration:', this.api.duration);
+            // console.log('Video metadata loaded. Duration:', this.api.duration);
             this.duration = this.api.duration;
 
             // If we have a resume position passed from parent, use it
             if (this.resumeFrom !== undefined && !this.positionRestored) {
-                console.log(`Attempting to resume from parent-provided position: ${this.resumeFrom}`);
+                // console.log(`Attempting to resume from parent-provided position: ${this.resumeFrom}`);
                 setTimeout(() => {
                     if (this.resumeFrom !== undefined && this.api.duration && this.resumeFrom < this.api.duration - 2) {
                         this.api.currentTime = this.resumeFrom;
@@ -99,7 +98,7 @@ export class VideoPlayerComponent implements OnDestroy, AfterViewInit, OnChanges
 
         // Handle video end
         const end$ = media.subscriptions.ended.subscribe(() => {
-            console.log('Video ended naturally');
+            // console.log('Video ended naturally');
             this.clearSavedPosition();
             this.videoEnded.emit();
         });
@@ -116,24 +115,24 @@ export class VideoPlayerComponent implements OnDestroy, AfterViewInit, OnChanges
             if (Math.floor(this.currentTime) % 5 === 0 && this.currentTime > 0) {
                 this.positionUpdate.emit({
                     lessonId: this.lessonId,
-                    position: this.currentTime
+                    position: this.currentTime,
                 });
             }
         });
 
         // Handle play state changes
         const play$ = media.subscriptions.play.subscribe(() => {
-            console.log('Video playback started');
+            // console.log('Video playback started');
             document.addEventListener('visibilitychange', this.handleVisibilityChange);
         });
 
         const pause$ = media.subscriptions.pause.subscribe(() => {
-            console.log('Video playback paused at:', media.currentTime);
+            // console.log('Video playback paused at:', media.currentTime);
             this.savePlaybackPosition();
             // Also emit position update on pause
             this.positionUpdate.emit({
                 lessonId: this.lessonId,
-                position: media.currentTime
+                position: media.currentTime,
             });
         });
 
@@ -149,55 +148,54 @@ export class VideoPlayerComponent implements OnDestroy, AfterViewInit, OnChanges
 
     private savePlaybackPosition(): void {
         if (!this.lessonId || !this.api) return;
-        
+
         const currentTime = this.api.currentTime;
         if (!currentTime) return;
-        
+
         // Don't save if we're at the end of the video
         if (this.duration && currentTime >= this.duration - 2) {
             this.clearSavedPosition();
             return;
         }
-        
+
         // Save to localStorage as backup
         localStorage.setItem(this.getStorageKey(), currentTime.toString());
-        console.log(`Saved position ${currentTime.toFixed(2)} for lesson ${this.lessonId}`);
-        
+        // console.log(`Saved position ${currentTime.toFixed(2)} for lesson ${this.lessonId}`);
+
         // Emit to parent
         this.positionUpdate.emit({
             lessonId: this.lessonId,
-            position: currentTime
+            position: currentTime,
         });
     }
-    
 
     private restorePlaybackPosition(): void {
         if (!this.lessonId || !this.api || this.positionRestored) return;
 
         const savedPosition = localStorage.getItem(this.getStorageKey());
-        console.log(`Attempting to restore position. Saved value: ${savedPosition}`);
+        // console.log(`Attempting to restore position. Saved value: ${savedPosition}`);
 
         if (savedPosition) {
             const position = parseFloat(savedPosition);
 
             // Check if position is valid
             if (!isNaN(position) && position > 0) {
-                console.log(`Restoring to position: ${position.toFixed(2)}`);
+                // console.log(`Restoring to position: ${position.toFixed(2)}`);
 
                 // Set position with a slight delay to ensure video is ready
                 setTimeout(() => {
                     // Double-check if duration is available and position is valid
                     if (this.api.duration && position < this.api.duration - 2) {
-                        console.log(`Setting currentTime to ${position.toFixed(2)}`);
+                        // console.log(`Setting currentTime to ${position.toFixed(2)}`);
                         this.api.currentTime = position;
                         this.positionRestored = true;
                     } else {
-                        console.log(`Cannot restore position: duration=${this.api.duration}, position=${position}`);
+                        console.error(`Cannot restore position: duration=${this.api.duration}, position=${position}`);
                     }
                 }, 300);
             }
         } else {
-            console.log('No saved position found');
+            // console.log('No saved position found');
             this.positionRestored = true; // Mark as restored even if no position was found
         }
     }
@@ -205,7 +203,7 @@ export class VideoPlayerComponent implements OnDestroy, AfterViewInit, OnChanges
     private clearSavedPosition(): void {
         if (this.lessonId) {
             localStorage.removeItem(this.getStorageKey());
-            console.log(`Cleared saved position for lesson ${this.lessonId}`);
+            // console.log(`Cleared saved position for lesson ${this.lessonId}`);
         }
     }
 
@@ -213,11 +211,7 @@ export class VideoPlayerComponent implements OnDestroy, AfterViewInit, OnChanges
         const newProgressRate = Math.round((this.currentTime / this.duration) * 100);
 
         // Only emit progress updates when it changes significantly
-        if (!isNaN(newProgressRate) &&
-            newProgressRate !== this.progressRate &&
-            newProgressRate % 2 === 0 &&
-            newProgressRate > 0) {
-
+        if (!isNaN(newProgressRate) && newProgressRate !== this.progressRate && newProgressRate % 2 === 0 && newProgressRate > 0) {
             this.progressRate = newProgressRate;
             this.videoProgress.emit(this.progressRate);
 
@@ -231,7 +225,7 @@ export class VideoPlayerComponent implements OnDestroy, AfterViewInit, OnChanges
     private handleVisibilityChange(): void {
         if (document.visibilityState === 'hidden') {
             // Page is being hidden (switched tabs, minimized) - save position
-            console.log('Page visibility changed to hidden - saving position');
+            // console.log('Page visibility changed to hidden - saving position');
             this.savePlaybackPosition();
         }
     }
@@ -245,13 +239,13 @@ export class VideoPlayerComponent implements OnDestroy, AfterViewInit, OnChanges
         window.removeEventListener('beforeunload', this.savePlaybackPosition);
 
         // Unsubscribe from all subscriptions
-        this.subscriptions.forEach(sub => {
+        this.subscriptions.forEach((sub) => {
             if (sub && typeof sub.unsubscribe === 'function') {
                 sub.unsubscribe();
             }
         });
 
-        console.log('Video player component destroyed');
+        // console.log('Video player component destroyed');
     }
 
     ngAfterViewInit(): void {
@@ -268,11 +262,11 @@ export class VideoPlayerComponent implements OnDestroy, AfterViewInit, OnChanges
                 if (!this.allowScrubbing) {
                     scrubBar.classList.add('scrubbing-disabled');
                     const elements = scrubBar.querySelectorAll('.scrub-bar, .scrub-bar-current-time');
-                    elements.forEach(el => (el as HTMLElement).style.pointerEvents = 'none');
+                    elements.forEach((el) => ((el as HTMLElement).style.pointerEvents = 'none'));
                 } else {
                     scrubBar.classList.remove('scrubbing-disabled');
                     const elements = scrubBar.querySelectorAll('.scrub-bar, .scrub-bar-current-time');
-                    elements.forEach(el => (el as HTMLElement).style.pointerEvents = 'auto');
+                    elements.forEach((el) => ((el as HTMLElement).style.pointerEvents = 'auto'));
                 }
             });
         }, 0);
