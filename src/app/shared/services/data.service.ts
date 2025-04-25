@@ -76,7 +76,7 @@ export class DataService {
 
         try {
             const querySnapshot = await getDocs(q);
-            console.log('querysnapshot:', querySnapshot);
+
             if (!querySnapshot.empty) {
                 const userDoc = querySnapshot.docs[0];
                 return { id: userDoc.id, ...userDoc.data() } as IUser;
@@ -511,7 +511,6 @@ export class DataService {
                     // Or use the first available language
                     const firstLang = Object.keys(lessonData['vimeoIds'])[0];
                     if (firstLang) {
-                        console.log(`Using ${firstLang} vimeoId as fallback: ${lessonData['vimeoIds'][firstLang]}`);
                         return await this.getVideoDirectlyFromVimeo(lessonData['vimeoIds'][firstLang]);
                     }
                 }
@@ -523,8 +522,6 @@ export class DataService {
             //     return vimeoUrl;
             // }
 
-            // No fallback to Firebase Storage anymore
-            console.log('No video found on Vimeo');
             return null;
         } catch (error) {
             console.error('Error getting video URL from Vimeo:', error);

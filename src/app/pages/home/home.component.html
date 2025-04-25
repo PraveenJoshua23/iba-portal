@@ -12,17 +12,17 @@
 
                 <!-- Debug: Current language: {{ currentLanguage }} -->
                 @for (lessons of allBBLessons$ | async; track lessons.id; let last = $last; let i = $index) {
-                    <div class="flex items-center justify-between px-4 py-3 rounded-sm" (click)="selectLesson(categoryProgress[i].id)">
+                    <div class="flex items-center justify-between px-4 py-3 rounded-sm" (click)="selectLesson(lessons.names?.[currentLanguage] || lessons.names?.en || lessons.name)">
                         <!--  [ngClass]="{ 'border-b': !last, 'pointer-events-none opacity-60': categoryProgress[i].locked!, 'cursor-pointer': !categoryProgress[i].locked! }" -->
                         <div class="flex items-center gap-x-2">
                             <span>{{ lessons.lessonNo }}.</span>
+                            {{ lessons | json }}
                             <!-- Try different approaches to get the name -->
                             <span>{{ lessons.names?.[currentLanguage] || lessons.names?.en || lessons.name }}</span>
                         </div>
-
-                        @if (i < categoryProgress.length && !categoryProgress[i]['locked']) {
+                        @if (progress?.categoryProgress && i < progress.categoryProgress.length && !progress.categoryProgress[i].locked) {
                             <div class="flex items-center space-x-3">
-                                <span class="bg-gray-300 px-4 py-1 rounded-md">{{ 'Progress: ' + categoryProgress[i].progress + '%' }}</span>
+                                <span class="bg-gray-300 px-4 py-1 rounded-md">{{ 'Progress: ' + progress.categoryProgress[i].progress + '%' }}</span>
                             </div>
                         }
                     </div>

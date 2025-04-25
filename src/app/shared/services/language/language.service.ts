@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { BehaviorSubject, Observable, from, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { collection, getDocs, getFirestore, query } from '@angular/fire/firestore';
@@ -34,11 +34,10 @@ export class LanguageService {
      */
     private loadAvailableLanguages(): void {
         const cachedLanguages = localStorage.getItem(this.LANGUAGES_STORAGE_KEY);
-        
+
         if (cachedLanguages) {
             try {
                 this.availableLanguages = JSON.parse(cachedLanguages);
-                console.log('Languages loaded from localStorage:', this.availableLanguages);
             } catch (error) {
                 console.error('Error parsing cached languages:', error);
                 this.fetchLanguagesFromFirestore();
@@ -53,39 +52,44 @@ export class LanguageService {
      */
     private fetchLanguagesFromFirestore(): void {
         const languagesCollection = collection(this.firestore, 'languages');
-        
+
         getDocs(query(languagesCollection))
             .then((querySnapshot) => {
                 const languages: Language[] = [];
-                
+
                 querySnapshot.forEach((doc) => {
                     const data = doc.data() as Language;
                     languages.push({
                         name: data.name,
-                        code: data.code
+                        code: data.code,
                     });
                 });
-                
+
                 if (languages.length === 0) {
                     // Fallback to default languages if none found in Firestore
                     this.availableLanguages = [
-                        { name: 'English', code: 'English' },
-                        { name: 'Tamil', code: 'Tamil' }
+                        { name: 'English', code: 'en' },
+                        { name: 'Tamil', code: 'ta' },
+                        { name: 'Telugu', code: 'te' },
+                        { name: 'Hindi', code: 'hi' },
+                        { name: 'Odia', code: 'or' },
                     ];
                 } else {
                     this.availableLanguages = languages;
                 }
-                
+
                 // Cache languages in localStorage
                 localStorage.setItem(this.LANGUAGES_STORAGE_KEY, JSON.stringify(this.availableLanguages));
-                console.log('Languages fetched from Firestore and cached:', this.availableLanguages);
             })
             .catch((error) => {
                 console.error('Error fetching languages from Firestore:', error);
                 // Fallback to default languages on error
                 this.availableLanguages = [
-                    { name: 'English', code: 'English' },
-                    { name: 'Tamil', code: 'Tamil' }
+                    { name: 'English', code: 'en' },
+                    { name: 'Tamil', code: 'ta' },
+                    { name: 'Telugu', code: 'te' },
+                    { name: 'Hindi', code: 'hi' },
+                    { name: 'Odia', code: 'or' },
                 ];
             });
     }
@@ -95,28 +99,28 @@ export class LanguageService {
      */
     refreshLanguages(): Observable<Language[]> {
         return from(getDocs(query(collection(this.firestore, 'languages')))).pipe(
-            map(querySnapshot => {
+            map((querySnapshot) => {
                 const languages: Language[] = [];
-                
+
                 querySnapshot.forEach((doc) => {
                     const data = doc.data() as Language;
                     languages.push({
                         name: data.name,
-                        code: data.code
+                        code: data.code,
                     });
                 });
-                
+
                 if (languages.length > 0) {
                     this.availableLanguages = languages;
                     localStorage.setItem(this.LANGUAGES_STORAGE_KEY, JSON.stringify(this.availableLanguages));
                 }
-                
+
                 return this.availableLanguages;
             }),
-            catchError(error => {
+            catchError((error) => {
                 console.error('Error refreshing languages:', error);
                 return of(this.availableLanguages);
-            })
+            }),
         );
     }
 
@@ -143,5 +147,15 @@ export class LanguageService {
     getLanguageNameByCode(code: string): string {
         const language = this.availableLanguages.find((lang) => lang.code === code);
         return language ? language.name : 'English';
+    }
+
+    /**
+     * Returns the language code for a given language name
+     * @param name The language name to convert to code
+     * @returns The corresponding language code, or the name itself if not found
+     */
+    getLanguageCodeByName(name: string): string {
+        const language = this.availableLanguages.find((lang) => lang.name === name);
+        return language ? language.code : name;
     }
 }
