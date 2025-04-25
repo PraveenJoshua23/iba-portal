@@ -16,7 +16,7 @@
                         <!--  [ngClass]="{ 'border-b': !last, 'pointer-events-none opacity-60': categoryProgress[i].locked!, 'cursor-pointer': !categoryProgress[i].locked! }" -->
                         <div class="flex items-center gap-x-2">
                             <span>{{ lessons.lessonNo }}.</span>
-                            {{ lessons | json }}
+
                             <!-- Try different approaches to get the name -->
                             <span>{{ lessons.names?.[currentLanguage] || lessons.names?.en || lessons.name }}</span>
                         </div>
