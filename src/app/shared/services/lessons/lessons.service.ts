@@ -13,7 +13,7 @@ export class LessonsService {
     constructor() {}
 
     getLessonById(id: string, category: string, language: string = 'en'): Observable<ILesson | null> {
-        console.log('id', id, category, language);
+        console.log('[LessonsService] getLessonById:', id, category, language);
         const lessonsCollectionRef = collection(this.firestore, `lessons/${category}/lesson`);
         const q = query(lessonsCollectionRef, where('id', '==', id));
         return from(getDocs(q)).pipe(

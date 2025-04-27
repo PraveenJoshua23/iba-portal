@@ -71,7 +71,7 @@ export class EditLessonComponent implements OnInit {
         Hindi: 'hi',
         Odia: 'or',
     };
-    
+
     // Map to store form controls for language-specific content
     languageSpecificControls: { [lang: string]: FormGroup } = {};
 
@@ -95,6 +95,7 @@ export class EditLessonComponent implements OnInit {
     vimeoService = inject(VimeoService);
     languageService = inject(LanguageService);
     currentLanguage: string = 'en';
+    langCode: string = 'en';
 
     constructor(public dialog: MatDialog) {
         this.lessonForm = this.fb.group({
@@ -105,10 +106,10 @@ export class EditLessonComponent implements OnInit {
             path: [''],
             vimeoEntries: this.fb.array([]), // Form array for language-specific Vimeo IDs
             instructor: [''],
-            names: this.fb.group({}),       // Will be populated dynamically
-            descriptions: this.fb.group({}) // Will be populated dynamically
+            names: this.fb.group({}), // Will be populated dynamically
+            descriptions: this.fb.group({}), // Will be populated dynamically
         });
-        
+
         // Initialize language-specific form controls
         this.initializeLanguageControls();
     }
@@ -116,6 +117,7 @@ export class EditLessonComponent implements OnInit {
     ngOnInit(): void {
         this.loadLessons();
         this.currentLanguage = this.languageService.getCurrentLanguageValue();
+        this.langCode = this.languageService.getLanguageCodeByName(this.currentLanguage);
     }
 
     ngAfterViewInit() {
@@ -329,15 +331,15 @@ export class EditLessonComponent implements OnInit {
 
     resetForm(): void {
         this.lessonForm.reset();
-        
+
         // Clear the vimeo entries array
         while (this.vimeoEntries.length) {
             this.vimeoEntries.removeAt(0);
         }
-        
+
         // Reset language-specific form controls
         this.initializeLanguageControls();
-        
+
         this.selectedFile = null;
         this.uploadProgress = 0;
         this.isEditing = false;
@@ -415,17 +417,17 @@ export class EditLessonComponent implements OnInit {
             // Replace the vimeoEntries array with the vimeoIds object
             delete lessonData.vimeoEntries;
             lessonData.vimeoIds = vimeoIds;
-            
+
             // Ensure names and descriptions are properly formatted
             // If any language is missing from names/descriptions, add it with empty value
             const mainLanguage = lessonData.language;
             const mainLangCode = this.languageCodes[mainLanguage as keyof typeof this.languageCodes] || mainLanguage.toLowerCase();
-            
+
             // Ensure the main language has an entry in names and descriptions
             if (!lessonData.names[mainLangCode]) {
                 lessonData.names[mainLangCode] = '';
             }
-            
+
             if (!lessonData.descriptions[mainLangCode]) {
                 lessonData.descriptions[mainLangCode] = '';
             }
@@ -569,12 +571,12 @@ export class EditLessonComponent implements OnInit {
     // Helper method to get a lesson's name in the current language or fallback to another available language
     getLessonName(lesson: ILesson): string {
         if (!lesson.names) return '';
-        
+
         // Try to get the name in the current language
-        if (lesson.names[this.currentLanguage]) {
-            return lesson.names[this.currentLanguage];
+        if (lesson.names[this.langCode]) {
+            return lesson.names[this.langCode];
         }
-        
+
         // Fallback to any available language
         const firstAvailableName = Object.values(lesson.names)[0];
         return firstAvailableName || '';
@@ -583,12 +585,12 @@ export class EditLessonComponent implements OnInit {
     // Helper method to get a lesson's description in the current language or fallback
     getLessonDescription(lesson: ILesson): string {
         if (!lesson.descriptions) return '';
-        
+
         // Try to get the description in the current language
         if (lesson.descriptions[this.currentLanguage]) {
             return lesson.descriptions[this.currentLanguage];
         }
-        
+
         // Fallback to any available language
         const firstAvailableDesc = Object.values(lesson.descriptions)[0];
         return firstAvailableDesc || '';
@@ -598,13 +600,13 @@ export class EditLessonComponent implements OnInit {
     initializeLanguageControls(): void {
         const namesControl = this.fb.group({});
         const descriptionsControl = this.fb.group({});
-        
+
         // Add form controls for each supported language
         Object.entries(this.languageCodes).forEach(([langName, langCode]) => {
             namesControl.addControl(langCode, this.fb.control('', Validators.required));
             descriptionsControl.addControl(langCode, this.fb.control(''));
         });
-        
+
         // Update the form with these controls
         this.lessonForm.setControl('names', namesControl);
         this.lessonForm.setControl('descriptions', descriptionsControl);

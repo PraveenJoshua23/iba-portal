@@ -49,12 +49,13 @@ interface fileMetadata {
     selector: 'app-lessons',
     standalone: true,
     imports: [CommonModule, VideoPlayerComponent, RouterLink],
+    providers: [LanguageService, ProgressService],
     templateUrl: './lessons.component.html',
     styleUrls: ['./lessons.component.scss'],
 })
 export class LessonsComponent implements OnInit, OnDestroy {
-    _progress: LessonsProgress | null = null;
-    _lesson: any = null;
+    _progress = signal<LessonsProgress | null>(null);
+    _lesson = signal<any>(null);
     _email: string | null = null;
     _category!: string;
 
@@ -93,6 +94,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
     // AI Summary related properties
     lessonSummary: string | null = null;
     isGeneratingSummary = false;
+    isLoading = true;
 
     private lastSavedProgress = 0;
     private PROGRESS_THRESHOLD = 10; // Only save when progress changes by 10%
@@ -105,41 +107,68 @@ export class LessonsComponent implements OnInit, OnDestroy {
         private ar: ActivatedRoute,
         private storage: AngularFireStorage,
     ) {
+        console.log('[LessonsComponent] Constructor called');
+        this.currentLanguage = this.languageService.getCurrentLanguageValue();
+        this.lang = this.languageService.getLanguageCodeByName(this.currentLanguage);
+        console.log('[LessonsComponent] Current language:', this.currentLanguage, 'Code:', this.lang);
+
+        this._progress.set(this.getProgress());
+        console.log('[LessonsComponent] Initial progress from getProgress():', this._progress());
+
         this.ar.params.subscribe((params) => {
+            console.log('[LessonsComponent] Route params received:', params);
             this.lessonId = params['id'];
             this._category = params['category'];
+            console.log('[LessonsComponent] Lesson ID:', this.lessonId, 'Category:', this._category);
+            // Extract lesson number from lessonId (e.g., "bblesson01" -> 1)
+            this.lessonNo = parseInt(this.lessonId.replace(/[^0-9]/g, ''));
+            console.log('[LessonsComponent] Parsed lesson number:', this.lessonNo);
         });
     }
 
     ngOnInit(): void {
-        this.currentLanguage = this.languageService.getCurrentLanguageValue();
-        this.lang = this.languageService.getLanguageCodeByName(this.currentLanguage);
-        this.paramSubscription = this.ar.params.subscribe((params) => {
-            this.lessonId = params['id'];
-            this._category = params['category'];
+        // Get data from resolver
+        this.ar.data.subscribe((data) => {
+            const resolvedData = data['lessonData'];
 
-            // Reset component state for new lesson
-            this._lesson = this.ds.getSelectedLesson() ?? this.lessonId;
-            this._email = this.ds.getUserEmail() ?? localStorage.getItem('email');
-            this._progress = this.getProgress();
+            if (resolvedData && resolvedData.lesson) {
+                // Set component properties from resolved data
+                this.ar.params.subscribe((params) => {
+                    this.lessonId = params['id'];
+                    this._category = params['category'];
 
-            this.languageSubscription = this.languageService.getCurrentLanguage().subscribe((lang) => {
-                this.reloadLessonVideoForLanguage(lang);
-            });
+                    // Set email
+                    this._email = this.ds.getUserEmail() ?? localStorage.getItem('email');
 
-            // Check if lesson is already completed and set progressRate accordingly
-            this.checkAndSetProgress();
+                    // Set lesson data
+                    this.currentLesson.set(resolvedData.lesson);
+                    this._lesson.set(resolvedData.lesson.id);
 
-            this.isQuizOpen = false;
-            this.showCorrectAnswer = false;
-            this.videoSrc = null;
+                    // Set video source
+                    this.videoSrc = resolvedData.videoUrl;
 
-            // Load the new lesson data
-            this.initLesson();
+                    // Initialize progress data
+                    this.initializeProgressData(resolvedData.progress);
+
+                    // Setup quiz if available
+                    if (resolvedData.lesson.quiz) {
+                        this.questions = resolvedData.lesson.quiz;
+                        this.userAnswers = new Array(this.questions.length).fill(-1);
+                    }
+
+                    // Subscribe to language changes
+                    this.languageSubscription = this.languageService.getCurrentLanguage().subscribe((lang) => {
+                        this.reloadLessonVideoForLanguage(lang);
+                    });
+
+                    this.isLoading = false;
+                });
+            } else {
+                // Handle error - no lesson data
+                console.error('Failed to load lesson data');
+                this.isLoading = false;
+            }
         });
-
-        const encoded = this.route.url.split('/')[3];
-        this.title = decodeURIComponent(encoded);
     }
 
     ngOnDestroy(): void {
@@ -152,21 +181,138 @@ export class LessonsComponent implements OnInit, OnDestroy {
         }
     }
 
+    // New method to initialize progress data
+    private initializeProgressData(progressData: any): void {
+        if (!progressData) return;
+
+        // Find the category progress
+        const category = this._category.toLowerCase();
+        const categoryProgress = progressData.categoryProgress.find((cat: any) => cat.categoryName.toLowerCase() === this.mapCategoryName(category).toLowerCase());
+
+        if (!categoryProgress) return;
+
+        // Find the lesson in the language progress
+        if (!categoryProgress.languageProgress[this.lang]) return;
+
+        const lessonProgress = categoryProgress.languageProgress[this.lang].lessons.find((lesson: any) => lesson.id === this.lessonId);
+
+        if (!lessonProgress) return;
+
+        // Set progress data
+        this._progress.set(lessonProgress);
+
+        // Set progress rate and video completion status
+        const progressRate = parseInt(lessonProgress.progress || '0');
+        this.progressRate.set(progressRate);
+        this.isVideoCompleted = progressRate === 100 || lessonProgress.completed;
+
+        // Get saved video position
+        if (this._email) {
+            this.ps
+                .getVideoPosition(this._email, this._category, this.lessonId)
+                .then((position) => {
+                    if (position !== undefined) {
+                        this.savedVideoPosition = position;
+                    }
+                })
+                .catch((error) => console.error('Error getting saved video position:', error));
+        }
+    }
+
+    // Helper method to map category abbreviations to full names
+    private mapCategoryName(category: string): string {
+        const categoryMap: { [key: string]: string } = {
+            bb: 'BB',
+            intro: 'Introductory',
+            intermediate: 'Intermediate',
+            advanced: 'Advanced',
+        };
+
+        return categoryMap[category.toLowerCase()] || category;
+    }
+
     // New method to check and set progress
     checkAndSetProgress(): void {
-        if (this._progress) {
-            // Check if progress is already 100%
-            if (this._progress.progress === '100' || this._progress.completed) {
+        console.log('[LessonsComponent] checkAndSetProgress called');
+
+        // First try to get progress from DataService (this would be set during navigation from home)
+        const progressFromService = this.ds.getProgressData();
+        const selectedLesson = this.ds.getSelectedLesson();
+        const userEmail = this.ds.getUserEmail() || localStorage.getItem('email');
+
+        console.log('[LessonsComponent] Data from DataService:');
+        console.log('[LessonsComponent] - Progress:', progressFromService);
+        console.log('[LessonsComponent] - Selected lesson:', selectedLesson);
+        console.log('[LessonsComponent] - User email:', userEmail);
+
+        if (progressFromService && selectedLesson && userEmail) {
+            // If we have all the data from the service, use it
+            console.log('[LessonsComponent] Using data from DataService');
+            this._progress.set(selectedLesson);
+            console.log('[LessonsComponent] Progress data loaded from DataService:', this._progress());
+
+            // Update progress rate and video completion status
+            if (this._progress()?.progress === '100' || this._progress()?.completed) {
+                console.log('[LessonsComponent] Lesson is already completed');
                 this.progressRate.set(100);
                 this.isVideoCompleted = true;
             } else {
-                // If progress exists but is not 100%
-                const currentProgress = parseInt(this._progress.progress || '0');
+                const currentProgress = parseInt(this._progress()?.progress || '0');
+                console.log('[LessonsComponent] Current progress rate:', currentProgress);
                 this.progressRate.set(currentProgress);
                 this.isVideoCompleted = currentProgress === 100;
             }
         } else {
-            console.error('No progress data found');
+            // If data is not available in the service, initialize it from scratch
+            console.log('[LessonsComponent] Data not found in DataService, initializing from scratch');
+            if (userEmail) {
+                console.log('[LessonsComponent] Initializing progress for email:', userEmail);
+                this.ps.initializeProgressOnLoad(userEmail).subscribe({
+                    next: (progress) => {
+                        console.log('[LessonsComponent] Progress loaded from database:', progress);
+                        // Find the lesson in the progress data
+                        const category = this._category.toLowerCase();
+                        console.log('[LessonsComponent] Looking for category:', category);
+
+                        const categoryProgress = progress.categoryProgress.find((cat) => cat.categoryName.toLowerCase() === category);
+                        console.log('[LessonsComponent] Found category progress:', categoryProgress);
+
+                        if (categoryProgress && categoryProgress.languageProgress[this.lang]) {
+                            console.log('[LessonsComponent] Found language progress for:', this.lang);
+
+                            const lessonProgress = categoryProgress.languageProgress[this.lang].lessons.find((lesson) => lesson.id === this.lessonId);
+                            console.log('[LessonsComponent] Looking for lesson with ID:', this.lessonId);
+                            console.log('[LessonsComponent] Found lesson progress:', lessonProgress);
+
+                            if (lessonProgress) {
+                                this._progress.set(lessonProgress);
+                                console.log('[LessonsComponent] Progress data initialized from database:', this._progress());
+
+                                // Update progress rate and video completion status
+                                if (this._progress()?.progress === '100' || this._progress()?.completed) {
+                                    console.log('[LessonsComponent] Lesson is already completed');
+                                    this.progressRate.set(100);
+                                    this.isVideoCompleted = true;
+                                } else {
+                                    const currentProgress = parseInt(this._progress()?.progress || '0');
+                                    console.log('[LessonsComponent] Current progress rate:', currentProgress);
+                                    this.progressRate.set(currentProgress);
+                                    this.isVideoCompleted = currentProgress === 100;
+                                }
+                            } else {
+                                console.error('[LessonsComponent] Lesson not found in progress data');
+                            }
+                        } else {
+                            console.error('[LessonsComponent] Language progress not found for:', this.lang);
+                        }
+                    },
+                    error: (err) => {
+                        console.error('[LessonsComponent] Error loading progress data:', err);
+                    },
+                });
+            } else {
+                console.error('[LessonsComponent] No user email found, cannot initialize progress');
+            }
         }
     }
 
@@ -188,7 +334,8 @@ export class LessonsComponent implements OnInit, OnDestroy {
 
     // The initLesson method updated to use async/await with error handling
     initLesson() {
-        this.ls.getLessonById(this._lesson, this._category).subscribe({
+        console.log('initLesson', this._lesson(), this._category);
+        this.ls.getLessonById(this._lesson(), this._category).subscribe({
             next: async (lesson) => {
                 console.log('lessons service', lesson);
                 this.currentLesson.set(lesson);
@@ -270,10 +417,80 @@ export class LessonsComponent implements OnInit, OnDestroy {
     }
 
     getProgress() {
+        console.log('[LessonsComponent] getProgress called');
+
+        // First try to get data from DataService
+        const progressFromService = this.ds.getProgressData();
+        const selectedLesson = this.ds.getSelectedLesson();
+        const userEmail = this.ds.getUserEmail();
+
+        console.log('[LessonsComponent] Data from DataService in getProgress:');
+        console.log('[LessonsComponent] - Progress:', progressFromService);
+        console.log('[LessonsComponent] - Selected lesson:', selectedLesson);
+        console.log('[LessonsComponent] - User email:', userEmail);
+
+        // If we have the selected lesson from DataService, return it directly
+        if (selectedLesson && progressFromService && userEmail) {
+            console.log('[LessonsComponent] Returning selected lesson from DataService');
+            return selectedLesson;
+        }
+
+        // If DataService doesn't have the data, try to get it from localStorage
+        const email = localStorage.getItem('email');
+        const lessonId = this.lessonId;
+        const category = this._category;
+
+        if (!email || !lessonId || !category) {
+            console.log('[LessonsComponent] Missing required data for getProgress:', { email, lessonId, category });
+            return null;
+        }
+
+        // Get language code
+        const language = this.lang || 'en';
+        console.log('[LessonsComponent] Using language:', language);
+
+        // Try to get progress from localStorage
+        try {
+            const allprogress = JSON.parse(localStorage.getItem('progress') || '[]');
+            console.log('[LessonsComponent] Parsed Category:', allprogress);
+
+            if (!allprogress || allprogress.length === 0) {
+                console.error('[LessonsComponent] No progress data found in localStorage');
+                return null;
+            }
+
+            // Check if the language exists in the languageProgress map
+            if (!allprogress[0].languageProgress || !allprogress[0].languageProgress[language]) {
+                console.warn(`[LessonsComponent] Language ${language} not found in progress data. Using default language 'en'`);
+                const defaultLanguage = 'en';
+
+                // If 'en' doesn't exist either, return null
+                if (!allprogress[0].languageProgress[defaultLanguage]) {
+                    console.error('[LessonsComponent] Default language not found in progress data');
+                    return null;
+                }
+
+                // Use default language
+                return allprogress[0].languageProgress[defaultLanguage].lessons.find((lesson: any) => lesson.id === lessonId);
+            }
+
+            // Return the lesson for the specified language
+            const lesson = allprogress[0].languageProgress[language].lessons.find((lesson: any) => lesson.id === lessonId);
+            console.log('[LessonsComponent] Found lesson in localStorage:', lesson);
+            return lesson;
+        } catch (error) {
+            console.error('[LessonsComponent] Error parsing progress data:', error);
+            return null;
+        }
+    }
+
+    // Add this helper method to the LessonsComponent class
+    private updateLocalStorageProgress(lessonId: string, completed: boolean) {
         const categoryProgress = localStorage.getItem('categoryProgress');
         if (categoryProgress) {
             const parsedCategory = JSON.parse(categoryProgress!);
-            const allprogress = parsedCategory.filter((category: any) => category.categoryName.toLocaleLowerCase() === this._category.toLocaleLowerCase());
+            console.log('Parsed Category:', parsedCategory);
+            const allprogress = parsedCategory.filter((category: any) => category.categoryName?.toLowerCase() === this._category?.toLowerCase());
             if (allprogress.length === 0) {
                 console.error('Cannot find category in progress data.');
                 return null;
@@ -294,107 +511,17 @@ export class LessonsComponent implements OnInit, OnDestroy {
                 }
 
                 // Use default language lessons
-                const filterProgress = allprogress[0].languageProgress[defaultLanguage].lessons.filter((lesson: { id: any }) => lesson.id === this._lesson);
+                const filterProgress = allprogress[0].languageProgress[defaultLanguage].lessons.filter((lesson: { id: any }) => lesson.id === this._lesson());
                 return filterProgress.length > 0 ? filterProgress[0] : null;
             }
 
             // Use language-specific lessons
-            const filterProgress = allprogress[0].languageProgress[language].lessons.filter((lesson: { id: any }) => lesson.id === this._lesson);
+            const filterProgress = allprogress[0].languageProgress[language].lessons.filter((lesson: { id: any }) => lesson.id === this._lesson());
             return filterProgress.length > 0 ? filterProgress[0] : null;
         } else {
             console.error('Cannot find progress from localStorage.');
         }
         return null;
-    }
-
-    // Add this helper method to the LessonsComponent class
-    private updateLocalStorageProgress(lessonId: string, completed: boolean) {
-        const categoryProgress = localStorage.getItem('categoryProgress');
-        if (categoryProgress) {
-            const parsedCategory = JSON.parse(categoryProgress);
-            const language = this.lang || 'en';
-
-            // Find the category matching the current category
-            const updatedCategories = parsedCategory.map((category: any) => {
-                if (category.categoryName.toLowerCase() === this._category.toLowerCase()) {
-                    // Make sure languageProgress exists
-                    if (!category.languageProgress) {
-                        category.languageProgress = {};
-                    }
-
-                    // Make sure the current language exists
-                    if (!category.languageProgress[language]) {
-                        category.languageProgress[language] = {
-                            progress: '0',
-                            lessons: [],
-                        };
-                    }
-
-                    // Update the specific lesson within this language
-                    const updatedLessons = category.languageProgress[language].lessons.map((lesson: any) => {
-                        if (lesson.id === lessonId) {
-                            return {
-                                ...lesson,
-                                completed: completed,
-                                progress: '100',
-                                completedDate: completed ? new Date() : null,
-                            };
-                        }
-                        return lesson;
-                    });
-
-                    // Create a copy of the languageProgress map
-                    const updatedLanguageProgress = {
-                        ...category.languageProgress,
-                        [language]: {
-                            ...category.languageProgress[language],
-                            lessons: updatedLessons,
-                        },
-                    };
-
-                    // Calculate the new progress for this language
-                    let totalProgress = 0;
-                    updatedLessons.forEach((lesson: any) => {
-                        totalProgress += parseFloat(lesson.progress || '0');
-                    });
-                    const languageProgress = Math.round(totalProgress / updatedLessons.length);
-                    updatedLanguageProgress[language].progress = languageProgress.toString();
-
-                    // Calculate overall category progress based on all languages
-                    let totalCategoryProgress = 0;
-                    let languageCount = 0;
-
-                    Object.values(updatedLanguageProgress).forEach((langProgress: any) => {
-                        totalCategoryProgress += parseFloat(langProgress.progress || '0');
-                        languageCount++;
-                    });
-
-                    const categoryProgress = languageCount > 0 ? Math.round(totalCategoryProgress / languageCount) : 0;
-
-                    return {
-                        ...category,
-                        progress: categoryProgress.toString(),
-                        languageProgress: updatedLanguageProgress,
-                    };
-                }
-                return category;
-            });
-
-            // Update localStorage with the modified data
-            localStorage.setItem('categoryProgress', JSON.stringify(updatedCategories));
-
-            // Also update the local reference
-            if (this._progress) {
-                this._progress.completed = completed;
-                this._progress.progress = '100';
-                this._progress.completedDate = completed
-                    ? {
-                          seconds: Math.floor(Date.now() / 1000),
-                          nanoseconds: 0,
-                      }
-                    : null;
-            }
-        }
     }
 
     // New method to update quiz answers in localStorage
@@ -452,8 +579,8 @@ export class LessonsComponent implements OnInit, OnDestroy {
             localStorage.setItem('categoryProgress', JSON.stringify(updatedCategories));
 
             // Also update the local reference
-            if (this._progress) {
-                this._progress.quizAnswers = quizAnswers;
+            if (this._progress()) {
+                this._progress.update((value) => ({ ...value, quizAnswers: quizAnswers }) as LessonsProgress);
             }
         }
     }
@@ -493,8 +620,8 @@ export class LessonsComponent implements OnInit, OnDestroy {
         if (score >= 70) {
             // Assuming 70% is passing
             // Update progress to mark lesson as completed
-            if (this._progress) {
-                this._progress.completed = true;
+            if (this._progress()) {
+                this._progress.update((value) => ({ ...value, completed: true }) as LessonsProgress);
 
                 // Update in database
                 const currentLesson = this.currentLesson();
@@ -604,9 +731,8 @@ export class LessonsComponent implements OnInit, OnDestroy {
             this.firebase.vidEndNxtLessonUpdate(lessonNo, this._category, this.progressRate());
 
             // Update local progress object
-            if (this._progress) {
-                this._progress.progress = '100';
-                this._progress.watchDuration = 100;
+            if (this._progress()) {
+                this._progress.update((value) => ({ ...value, progress: '100', watchDuration: 100, completed: true }) as LessonsProgress);
                 // Note: completed status will be set to true after quiz completion
             }
         } else {
@@ -642,7 +768,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
     // private updateLocalStorageProgress(lessonId: string, completed: boolean) {
     //     const categoryProgress = localStorage.getItem('categoryProgress');
     //     if (categoryProgress) {
-    //         const parsedCategory = JSON.parse(categoryProgress);
+    //         const parsedCategory = JSON.parse(categoryProgress!);
     //         const language = this.lang || 'en';
 
     //         // Find the category matching the current category

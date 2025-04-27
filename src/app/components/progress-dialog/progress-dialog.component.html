@@ -51,10 +51,10 @@
                             {{ category?.categoryName || 'Unknown Category' }}
                         </mat-panel-title>
                         <mat-panel-description class="flex items-center justify-end">
-                            <div class="w-32 mr-2">
+                            <!-- <div class="w-32 mr-2">
                                 <mat-progress-bar [value]="getCategoryProgress(category?.progress)" [color]="getCategoryProgress(category?.progress) === 100 ? 'accent' : 'primary'"> </mat-progress-bar>
                             </div>
-                            {{ getCategoryProgress(category?.progress) }}%
+                            {{ getCategoryProgress(category?.progress) }}% -->
 
                             <!-- Locked status badge -->
                             <span *ngIf="category?.locked" class="ml-2 px-2 py-1 bg-gray-200 rounded-full text-xs"> Locked </span>

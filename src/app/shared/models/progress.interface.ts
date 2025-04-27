@@ -8,7 +8,7 @@ export interface IProgress {
 
 export interface CategoryProgress {
     categoryName: 'BB' | 'Introductory' | 'Intermediate' | 'Advanced';
-    progress: string;
+    progress: string | number;
     locked: boolean;
     languageProgress: {
         [language: string]: LanguageProgress; // e.g., 'en', 'ta', 'te', 'hi', 'or'

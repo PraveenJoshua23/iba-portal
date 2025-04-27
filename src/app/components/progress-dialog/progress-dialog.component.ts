@@ -74,9 +74,29 @@ export class ProgressDialogComponent implements OnInit {
         this.editMode.update((value) => !value);
     }
 
-    getCategoryProgress(progress: string | undefined): number {
+    getCategoryProgress(progress: CategoryProgress | string | number | undefined): number {
         if (!progress) return 0;
-        return parseFloat(progress) || 0;
+
+        // If progress is a CategoryProgress object
+        if (typeof progress === 'object' && progress.languageProgress) {
+            let totalProgress = 0;
+            let languageCount = 0;
+
+            Object.values(progress.languageProgress).forEach((langProgress) => {
+                if (langProgress && langProgress.progress) {
+                    totalProgress += parseFloat(langProgress.progress.toString());
+                    languageCount++;
+                }
+            });
+
+            const avgProgress = languageCount > 0 ? Math.round(totalProgress / languageCount) : 0;
+            // Update the category progress value
+            progress.progress = avgProgress;
+            return avgProgress;
+        }
+
+        // If progress is a string or number
+        return typeof progress === 'string' ? parseFloat(progress) || 0 : Number(progress) || 0;
     }
 
     getLessonProgress(progress: string | undefined): number {
@@ -119,19 +139,19 @@ export class ProgressDialogComponent implements OnInit {
     }
 
     // Get language-specific progress for a category
-    getLanguageProgress(category: CategoryProgress): string {
+    getLanguageProgress(category: CategoryProgress): number | string {
         if (!category || !category.languageProgress) {
-            return '0';
+            return 0;
         }
 
         if (!this.languageExistsForCategory(category, this.selectedLanguage)) {
             // Fall back to English if the selected language doesn't exist
             if (this.languageExistsForCategory(category, 'en')) {
-                return category.languageProgress['en'].progress || '0';
+                return category.languageProgress['en'].progress || 0;
             }
-            return '0';
+            return 0;
         }
-        return category.languageProgress[this.selectedLanguage].progress || '0';
+        return category.languageProgress[this.selectedLanguage].progress || 0;
     }
 
     // Methods for editing progress

@@ -35,18 +35,28 @@ export class DataService {
     }
 
     setLessonData(progress: IProgress, lesson: any, email: string) {
+        console.log('[DataService] setLessonData called with:');
+        console.log('[DataService] - Progress:', progress);
+        console.log('[DataService] - Lesson:', lesson);
+        console.log('[DataService] - Email:', email);
+
         this.progressData = progress;
         this.selectedLesson = lesson;
         this.userEmail = email;
+
+        console.log('[DataService] Data stored successfully');
     }
 
     getProgressData(): IProgress | null {
+        console.log('[DataService] getProgressData called, returning:', this.progressData);
         return this.progressData;
     }
     getSelectedLesson(): any {
+        console.log('[DataService] getSelectedLesson called, returning:', this.selectedLesson);
         return this.selectedLesson;
     }
     getUserEmail(): string | null {
+        console.log('[DataService] getUserEmail called, returning:', this.userEmail);
         return this.userEmail;
     }
 
@@ -311,7 +321,7 @@ export class DataService {
 
             // Find the category in the user's progress
             const categoryIndex = progressData.categoryProgress.findIndex((cp) => cp.categoryName.toLowerCase() === this.getCategoryName(category).toLowerCase());
-
+            console.log('Progress Category index:', categoryIndex);
             if (categoryIndex === -1) {
                 console.error('Category not found in user progress:', category);
                 return;

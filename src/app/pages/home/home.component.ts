@@ -109,8 +109,9 @@ export class HomeComponent implements OnInit {
         }
     }
 
-    selectLesson(id: string) {
-        this.updateLessonProgress(id);
+    selectLesson(id: string, lessonNo: number) {
+        // const lessonId = this.selectedCategory().toLowerCase() + 'lesson' + `${Number(lessonNo) < 10 ? `0${lessonNo}` : lessonNo}`;
+        this.updateLessonProgress(id, lessonNo);
     }
 
     startLesson(id: string) {
@@ -148,18 +149,25 @@ export class HomeComponent implements OnInit {
         this.categoryProgress = languageProgress?.lessons || [];
     }
 
-    updateLessonProgress(lessonName: string): void {
+    updateLessonProgress(lessonName: string, lessonNo: number): void {
         if (!this.progress || this.progress?.categoryProgress.length === 0 || !this.categoryProgress) return;
-
+        const lessonId = this.selectedCategory().toLowerCase() + 'lesson' + `${Number(lessonNo) < 10 ? `0${lessonNo}` : lessonNo}`;
         // Find the lesson in the current category progress by title
-        const lessonIndex = this.categoryProgress.findIndex((lesson) => lesson.name === lessonName);
+        const lessonIndex = this.categoryProgress.findIndex((lesson) => lesson.id === lessonId);
+
+        console.log('[HomeComponent] Updating lesson progress for:', lessonId);
+        console.log('[HomeComponent] Current category:', this.selectedCategory());
+        console.log('[HomeComponent] Current language:', this.currentLanguage, 'Code:', this.langCode);
+
+        const lesson = this.categoryProgress[lessonIndex];
 
         if (lessonIndex === -1) {
-            console.error(`Lesson with title ${lessonName} not found in category ${this.selectedCategory()}`);
+            console.error(`Lesson with title ${lessonId} not found in category ${this.selectedCategory()}`);
             return;
         }
 
-        const lesson = this.categoryProgress[lessonIndex];
+        console.log('[HomeComponent] Found lesson:', lesson);
+        console.log('[HomeComponent] Lesson progress status:', lesson.progress, 'Watch duration:', lesson.watchDuration);
 
         // Only update if the lesson hasn't been started yet
         if (lesson.progress === '0' && lesson.watchDuration === 0) {
@@ -178,21 +186,32 @@ export class HomeComponent implements OnInit {
             updatedProgress.categoryProgress[categoryIndex].languageProgress[this.langCode].lessons[lessonIndex].progress = '1';
             updatedProgress.categoryProgress[categoryIndex].languageProgress[this.langCode].lessons[lessonIndex].startDate = Timestamp.now();
 
+            console.log('[HomeComponent] Updating progress in database...');
             // Update in database
             this.ps.updateProgress(this.email!, updatedProgress).subscribe({
                 next: (updatedProgress) => {
                     this.progress = updatedProgress;
+                    // Make sure to set the lesson data in DataService before navigation
+                    console.log('[HomeComponent] Progress updated successfully. Setting data in DataService...');
+                    console.log('[HomeComponent] Email being stored:', this.email!);
+                    console.log('[HomeComponent] Lesson being stored:', lesson);
                     this.ds.setLessonData(updatedProgress, lesson, this.email!);
-                    this.router.navigate([`/lesson/${this.selectedCategory().toLowerCase()}`, lesson.id]);
+                    console.log('[HomeComponent] Navigating to lesson page...');
+                    this.router.navigate([`/lesson/${this.selectedCategory().toLowerCase()}`, lessonId]);
                 },
                 error: (error) => {
-                    console.error('Error updating progress:', error);
+                    console.error('[HomeComponent] Error updating progress:', error);
                 },
             });
         } else {
             // If lesson already started, just navigate to it
+            // Make sure to set the lesson data in DataService before navigation
+            console.log('[HomeComponent] Lesson already started. Setting data in DataService...');
+            console.log('[HomeComponent] Email being stored:', this.email!);
+            console.log('[HomeComponent] Lesson being stored:', lesson);
             this.ds.setLessonData(this.progress, lesson, this.email!);
-            this.router.navigate([`/lesson/${this.selectedCategory().toLowerCase()}`, lesson.id]);
+            console.log('[HomeComponent] Navigating to lesson page...');
+            this.router.navigate([`/lesson/${this.selectedCategory().toLowerCase()}`, lessonId]);
         }
     }
 }
