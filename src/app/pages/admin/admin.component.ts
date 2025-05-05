@@ -15,12 +15,12 @@ import { EditLessonComponent } from '../edit-lesson/edit-lesson.component';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
-import { translations as initialTranslations, TranslationMap } from 'src/app/shared/services/language/translations';
+import { TranslationMap } from 'src/app/shared/services/language/translations';
 import { AddTranslationDialogComponent } from './add-translation-dialog/add-translation-dialog.component';
-import { LanguageContentService } from 'src/app/shared/services/language/language-content.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs/operators';
+import { TranslationService } from 'src/app/shared/services/language/language.service';
 import { LanguageManagementDialogComponent } from './language-management/language-management.component';
 
 @Component({
@@ -48,7 +48,6 @@ import { LanguageManagementDialogComponent } from './language-management/languag
     ],
 })
 export class AdminComponent implements OnInit {
-    // --- Translations Management ---
     translations: TranslationMap = {};
     translationKeys: string[] = [];
     availableLanguages: string[] = [];
@@ -57,10 +56,34 @@ export class AdminComponent implements OnInit {
     isSaving: boolean = false;
     isLoading: boolean = true;
     saveMessage: string = '';
+    displayedColumns: string[] = ['id', 'name', 'language', 'networker', 'instructor', 'class', 'progress', 'action'];
+    dataSource = new MatTableDataSource<any>([]);
+    visibleRowCount = 5; // Default number of visible rows
+    searchTerm: string = '';
+    originalData: any = [];
+    appearance: MatFormFieldAppearance = 'fill';
+    selectedTabIndex = 0;
 
     // Service injections
-    private languageContentService = inject(LanguageContentService);
+    private translationService = inject(TranslationService);
     private snackBar = inject(MatSnackBar);
+    private ds = inject(DataService);
+
+    @ViewChild(MatPaginator) paginator!: MatPaginator;
+    @ViewChild(MatSort) sort!: MatSort;
+
+    constructor(
+        public dialog: MatDialog,
+        private _liveAnnouncer: LiveAnnouncer,
+    ) {}
+
+    ngOnInit(): void {
+        // Load available languages from service
+        this.availableLanguages = this.translationService.getAvailableLanguages().map((lang) => lang.name);
+
+        // Load translations from Firebase
+        this.loadTranslationsFromFirebase();
+    }
 
     onLanguageChange(lang: string) {
         this.rightLanguage = lang;
@@ -76,65 +99,75 @@ export class AdminComponent implements OnInit {
         this.isSaving = true;
         this.saveMessage = '';
 
-        // Save to Firebase Firestore
-        this.languageContentService
-            .updateAllTranslationsInFirestore(this.translations)
-            .pipe(finalize(() => (this.isSaving = false)))
-            .subscribe((success) => {
-                if (success) {
-                    this.saveMessage = 'Translations saved to Firebase successfully!';
-                    this.snackBar.open('Translations saved successfully!', 'Close', {
-                        duration: 3000,
-                        horizontalPosition: 'center',
-                        verticalPosition: 'bottom',
-                    });
-                } else {
-                    this.saveMessage = 'Failed to save translations to Firebase';
-                    this.snackBar.open('Failed to save translations', 'Close', {
-                        duration: 3000,
-                        horizontalPosition: 'center',
-                        verticalPosition: 'bottom',
-                    });
-                }
+        // Convert translations object to key-by-key format for the service
+        const savePromises = [];
+        for (const key of this.translationKeys) {
+            const translations = this.translations[key];
+            savePromises.push(this.translationService.updateTranslation(key, translations));
+        }
+
+        // Use Promise.all to wait for all updates
+        Promise.all(savePromises)
+            .then(() => {
+                this.saveMessage = 'Translations saved to Firebase successfully!';
+                this.snackBar.open('Translations saved successfully!', 'Close', {
+                    duration: 3000,
+                    horizontalPosition: 'center',
+                    verticalPosition: 'bottom',
+                });
+            })
+            .catch((error) => {
+                console.error('Error saving translations:', error);
+                this.saveMessage = 'Failed to save translations to Firebase';
+                this.snackBar.open('Failed to save translations', 'Close', {
+                    duration: 3000,
+                    horizontalPosition: 'center',
+                    verticalPosition: 'bottom',
+                });
+            })
+            .finally(() => {
+                this.isSaving = false;
             });
     }
-    // --- End Translations Management ---
-    displayedColumns: string[] = ['id', 'name', 'language', 'networker', 'instructor', 'class', 'progress', 'action'];
-    dataSource = new MatTableDataSource<any>([]);
-    visibleRowCount = 5; // Default number of visible rows
-    searchTerm: string = '';
-    originalData: any = [];
-    appearance: MatFormFieldAppearance = 'fill';
-    selectedTabIndex = 0;
 
-    ds = inject(DataService);
-
-    @ViewChild(MatPaginator) paginator!: MatPaginator;
-    @ViewChild(MatSort) sort!: MatSort;
-
-    constructor(
-        public dialog: MatDialog,
-        private _liveAnnouncer: LiveAnnouncer,
-    ) {}
-
-    ngOnInit(): void {
-        // Load translations from Firebase
-        this.loadTranslationsFromFirebase();
-    }
-
-    /**
-     * Load translations from Firebase
-     */
     loadTranslationsFromFirebase(): void {
         this.isLoading = true;
-        this.languageContentService
-            .refreshTranslations()
-            .pipe(finalize(() => (this.isLoading = false)))
-            .subscribe((translations) => {
-                this.translations = translations;
-                this.translationKeys = Object.keys(this.translations);
-                this.availableLanguages = Array.from(new Set(Object.values(this.translations).flatMap((obj) => Object.keys(obj))));
-            });
+        this.translationService.refreshTranslations().subscribe({
+            next: () => {
+                // Get all translations
+                this.translations = {};
+                this.translationKeys = [];
+
+                this.availableLanguages.forEach((langName) => {
+                    // Get language code
+                    const langCode = this.translationService.getLanguageCodeByName(langName);
+
+                    // Get translations for this language
+                    const langTranslations = this.getAllTranslationsForLanguage(langName);
+
+                    // Add to our translations object
+                    for (const key in langTranslations) {
+                        if (!this.translations[key]) {
+                            this.translations[key] = {};
+                            this.translationKeys.push(key);
+                        }
+                        this.translations[key][langName] = langTranslations[key];
+                    }
+                });
+
+                this.isLoading = false;
+            },
+            error: (error) => {
+                console.error('Error loading translations:', error);
+                this.isLoading = false;
+            },
+        });
+    }
+
+    // Helper method to get all translations for a language
+    getAllTranslationsForLanguage(language: string): { [key: string]: string } {
+        const langCode = this.translationService.getLanguageCodeByName(language);
+        return this.translationService.translate?.store?.translations[langCode] || {};
     }
 
     // Method to handle tab change events if needed
@@ -159,17 +192,7 @@ export class AdminComponent implements OnInit {
                 this.translationKeys = Object.keys(this.translations);
 
                 // Save the new translation to Firebase
-                this.languageContentService.updateTranslationInFirestore(result.key, result.translations).subscribe((success) => {
-                    if (success) {
-                        this.snackBar.open('New translation added successfully!', 'Close', {
-                            duration: 3000,
-                        });
-                    } else {
-                        this.snackBar.open('Translation added locally but failed to save to Firebase', 'Close', {
-                            duration: 3000,
-                        });
-                    }
-                });
+                this.translationService.updateTranslation(result.key, result.translations);
             }
         });
     }
@@ -180,25 +203,32 @@ export class AdminComponent implements OnInit {
     deleteTranslation(key: string): void {
         if (confirm(`Are you sure you want to delete the translation for "${key}"?`)) {
             this.isLoading = true;
-            this.languageContentService
-                .deleteTranslationFromFirestore(key)
-                .pipe(finalize(() => (this.isLoading = false)))
-                .subscribe((success) => {
-                    if (success) {
-                        // Remove from local array
-                        delete this.translations[key];
-                        this.translationKeys = Object.keys(this.translations);
 
-                        this.snackBar.open(`Translation "${key}" deleted successfully!`, 'Close', {
-                            duration: 3000,
-                        });
-                    } else {
-                        this.snackBar.open(`Failed to delete translation "${key}"`, 'Close', {
-                            duration: 3000,
-                        });
-                    }
-                });
+            // Remove translation from all languages
+            this.deleteTranslationFromFirestore(key).then((success) => {
+                this.isLoading = false;
+                if (success) {
+                    // Remove from local array
+                    delete this.translations[key];
+                    this.translationKeys = this.translationKeys.filter((k) => k !== key);
+
+                    this.snackBar.open(`Translation "${key}" deleted successfully!`, 'Close', {
+                        duration: 3000,
+                    });
+                } else {
+                    this.snackBar.open(`Failed to delete translation "${key}"`, 'Close', {
+                        duration: 3000,
+                    });
+                }
+            });
         }
+    }
+
+    // Helper method to delete a translation from Firestore
+    // This is a temporary solution until you add this method to your TranslationService
+    private deleteTranslationFromFirestore(key: string): Promise<boolean> {
+        // You should implement this method in your TranslationService
+        return Promise.resolve(false);
     }
 
     // Add a method to open the language management dialog

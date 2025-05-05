@@ -110,4 +110,22 @@ export class VimeoService {
             Authorization: `Bearer ${this.accessToken}`,
         });
     }
+
+    getVideoThumbnail(videoId: string): Observable<any> {
+        const headers = this.getAuthHeaders();
+        return this.http.get(`${this.apiUrl}/videos/${videoId}/pictures`, { headers }).pipe(
+            map((response: any) => {
+                console.log('Vimeo API response for thumbnails:', response);
+                // Return the first thumbnail data object which contains sizes
+                if (response.data && response.data.length > 0) {
+                    return response.data[0];
+                }
+                throw new Error('No thumbnails available for this video');
+            }),
+            catchError((error) => {
+                console.error(`Error fetching thumbnail for video ID ${videoId}:`, error);
+                return throwError(() => new Error(`Failed to fetch thumbnail: ${error.message || 'Unknown error'}`));
+            }),
+        );
+    }
 }

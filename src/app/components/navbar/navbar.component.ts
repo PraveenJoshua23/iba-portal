@@ -1,14 +1,14 @@
+// src/app/components/navbar/navbar.component.ts
 import { Component, OnInit, inject, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from 'src/app/shared/services/auth/auth.service';
-import { TranslatePipe } from 'src/app/shared/pipes/language.pipe';
+import { TranslatePipe } from 'src/app/shared/pipes/translation.pipe';
 import { UserService } from 'src/app/shared/services/users/user.service';
 import { DataService } from 'src/app/shared/services/data.service';
 import { IUser } from 'src/app/shared/models/user.interface';
 import { ClickOutsideDirective } from '../../shared/directives/click-outside.directive';
-import { LanguageService, Language } from 'src/app/shared/services/language/language.service';
-import { LanguageContentService } from 'src/app/shared/services/language/language-content.service';
+import { TranslationService, Language } from 'src/app/shared/services/language/language.service';
 import { NotificationService } from '../notification/notification.service';
 import { Subscription } from 'rxjs';
 
@@ -23,13 +23,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
     auth = inject(AuthService);
     userService = inject(UserService);
     dataService = inject(DataService);
-    languageService = inject(LanguageService);
-    languageContent = inject(LanguageContentService);
+    translationService = inject(TranslationService);
     notificationService = inject(NotificationService);
 
     errMsg: string | null = null;
     currentUser: IUser | null = null;
-    currentLanguage: string = 'English'; // Default language
+    currentLanguage: string = 'English';
     isLanguageDropdownOpen: boolean = false;
 
     availableLanguages: Language[] = [];
@@ -38,10 +37,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
     constructor(private router: Router) {}
 
     ngOnInit(): void {
-        this.availableLanguages = this.languageService.getAvailableLanguages();
+        this.availableLanguages = this.translationService.getAvailableLanguages();
 
         // Subscribe to language changes
-        this.languageSubscription = this.languageService.getCurrentLanguage().subscribe((language) => {
+        this.languageSubscription = this.translationService.getCurrentLanguage().subscribe((language) => {
             this.currentLanguage = language;
         });
 
@@ -49,7 +48,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        // Clean up the subscription when the component is destroyed
         if (this.languageSubscription) {
             this.languageSubscription.unsubscribe();
         }
@@ -66,7 +64,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
                     // Set the language from user preferences
                     const userLanguage = user.language || 'English';
-                    this.languageService.setLanguage(userLanguage);
+                    this.translationService.setLanguage(userLanguage);
                 }
             } catch (error) {
                 console.error('Error loading user data:', error);
@@ -79,7 +77,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
 
     getCurrentLanguageName(): string {
-        return this.languageService.getLanguageNameByCode(this.currentLanguage);
+        return this.translationService.getLanguageNameByCode(this.currentLanguage);
     }
 
     async selectLanguage(languageCode: string): Promise<void> {
@@ -99,13 +97,13 @@ export class NavbarComponent implements OnInit, OnDestroy {
             await this.userService.updateUser(updatedUser);
 
             // Update the language service
-            this.languageService.setLanguage(languageCode);
+            this.translationService.setLanguage(languageCode);
 
             // Update local state
             this.currentUser.language = languageCode;
             this.isLanguageDropdownOpen = false;
 
-            // Show a confirmation notification instead of reloading the page
+            // Show a confirmation notification
             this.showLanguageChangeNotification(languageCode);
         } catch (error) {
             console.error('Error updating language preference:', error);
@@ -114,7 +112,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     private showLanguageChangeNotification(language: string): void {
         // Get the translated notification message
-        const message = this.languageContent.translate('languageChanged');
+        const message = this.translationService.instant('languageChanged');
 
         // Show a success notification
         this.notificationService.show(message, 'success', 3000);
@@ -133,7 +131,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
         localStorage.clear();
     }
 
-    // Close the dropdown when clicking outside
     closeDropdown(): void {
         this.isLanguageDropdownOpen = false;
     }

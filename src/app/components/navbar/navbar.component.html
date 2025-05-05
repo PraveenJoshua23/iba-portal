@@ -3,7 +3,7 @@
     <div class="flex items-center">
         <div class="relative" clickOutside (clickOutside)="closeDropdown()">
             <button (click)="toggleLanguageDropdown()" class="flex items-center space-x-2 bg-white rounded-md px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors">
-                <span>{{ getCurrentLanguageName() }}</span>
+                <span>{{ this.currentLanguage }}</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
@@ -21,7 +21,7 @@
     <!-- Sign Out Button -->
     <div class="flex items-center h-full">
         <a class="font-medium text-sm cursor-pointer" (click)="signOut()">
-            {{ 'signOut' | translate }}
+            {{ translationService.instant('signOut') }}
         </a>
     </div>
 </div>

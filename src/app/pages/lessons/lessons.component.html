@@ -10,7 +10,7 @@
             <div class="flex items-center justify-center border-black border w-7 h-7 rounded-full">
                 <img src="../../../assets/icons/next.svg" class="rotate-180 -translate-x-[1px]" alt="Previous Lesson" />
             </div>
-            <span class="text-sm">Back to Home</span>
+            <span class="text-sm">{{ translationService.instant('backToHome') }}</span>
         </div>
         <!-- <button class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors" (click)="resetUserProgress()">Reset Progress</button> -->
         <section class="flex flex-col w-full h-full py-10 mt-4 px-4 lg:px-10 space-y-5">
@@ -29,14 +29,14 @@
                         (click)="_progress()?.completed && navigateToPreviousLesson()"
                     >
                         <img src="../../../assets/icons/next.svg" class="rotate-180" alt="Previous Lesson" />
-                        <span class="text-sm" [ngClass]="{ 'text-gray-500': !_progress()?.completed, 'text-black': _progress()?.completed }">Previous</span>
+                        <span class="text-sm" [ngClass]="{ 'text-gray-500': !_progress()?.completed, 'text-black': _progress()?.completed }">{{ translationService.instant('previous') }}</span>
                     </div>
                     <div
                         class="flex items-center gap-x-3 hover:bg-gray-200 rounded-full px-4 py-2"
                         [ngClass]="{ 'cursor-pointer': _progress()?.completed, 'cursor-not-allowed': !_progress()?.completed }"
                         (click)="_progress()?.completed && goToNextLesson()"
                     >
-                        <span class="text-sm" [ngClass]="{ 'text-gray-500': !_progress()?.completed, 'text-black': _progress()?.completed }">Next</span>
+                        <span class="text-sm" [ngClass]="{ 'text-gray-500': !_progress()?.completed, 'text-black': _progress()?.completed }">{{ translationService.instant('next') }}</span>
                         <img src="../../../assets/icons/next.svg" alt="Next Lesson" />
                     </div>
                 </div>
@@ -189,7 +189,7 @@
                                         aria-selected="false"
                                         (click)="setActiveTab(i)"
                                     >
-                                        {{ tab }}
+                                        {{ translationService.instant(tab) }}
                                     </button>
                                     <!-- [ngClass]="
                     i === activeTabIndex && (isVideoCompleted || lessonProgress.progress === 100)

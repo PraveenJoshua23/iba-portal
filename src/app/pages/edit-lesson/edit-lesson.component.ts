@@ -14,7 +14,7 @@ import { Storage, deleteObject, getDownloadURL, ref, uploadBytesResumable } from
 import { Firestore, addDoc, collection, deleteDoc, doc, updateDoc } from '@angular/fire/firestore';
 import { VimeoService } from 'src/app/shared/services/vimeo/vimeo.service';
 import { firstValueFrom } from 'rxjs';
-import { LanguageService } from 'src/app/shared/services/language/language.service';
+import { TranslationService } from 'src/app/shared/services/language/language.service';
 
 @Component({
     selector: 'app-edit-lesson',
@@ -93,7 +93,7 @@ export class EditLessonComponent implements OnInit {
     firestore = inject(Firestore);
     fb = inject(FormBuilder);
     vimeoService = inject(VimeoService);
-    languageService = inject(LanguageService);
+    translationService = inject(TranslationService);
     currentLanguage: string = 'en';
     langCode: string = 'en';
 
@@ -116,8 +116,8 @@ export class EditLessonComponent implements OnInit {
 
     ngOnInit(): void {
         this.loadLessons();
-        this.currentLanguage = this.languageService.getCurrentLanguageValue();
-        this.langCode = this.languageService.getLanguageCodeByName(this.currentLanguage);
+        this.currentLanguage = this.translationService.getCurrentLanguageValue();
+        this.langCode = this.translationService.getLanguageCodeByName(this.currentLanguage);
     }
 
     ngAfterViewInit() {

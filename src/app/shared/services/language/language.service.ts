@@ -1,7 +1,10 @@
-import { Injectable, inject, signal } from '@angular/core';
+// src/app/shared/services/language/translation.service.ts
+import { Injectable, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { BehaviorSubject, Observable, from, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
-import { collection, getDocs, getFirestore, query } from '@angular/fire/firestore';
+import { collection, doc, Firestore, getDocs, getFirestore, query, setDoc } from '@angular/fire/firestore';
+import { FirestoreTranslateLoader } from './firebase-translation-loader';
 
 export interface Language {
     name: string;
@@ -11,151 +14,229 @@ export interface Language {
 @Injectable({
     providedIn: 'root',
 })
-export class LanguageService {
-    private availableLanguages: Language[] = [];
-    private firestore = getFirestore();
-    private readonly LANGUAGES_STORAGE_KEY = 'availableLanguages';
+export class TranslationService {
+    private firestore = inject(Firestore);
+    translate = inject(TranslateService);
+    private firestoreLoader = inject(FirestoreTranslateLoader);
 
+    // Keep these variables for compatibility with existing services
     private currentLanguageSubject = new BehaviorSubject<string>('English');
 
+    // Available languages
+    private availableLanguages: Language[] = [
+        { name: 'English', code: 'en' },
+        { name: 'Tamil', code: 'ta' },
+        { name: 'Telugu', code: 'te' },
+        { name: 'Hindi', code: 'hi' },
+        { name: 'Odia', code: 'or' },
+    ];
+
     constructor() {
-        // Load initial language preference from localStorage if available
+        // Initialize the translation service
+        this.initTranslation();
+    }
+
+    /**
+     * Initialize the translation service
+     */
+    private initTranslation(): void {
+        // Add available languages to ngx-translate
+        const langCodes = this.availableLanguages.map((lang) => lang.code);
+        this.translate.addLangs(langCodes);
+
+        // Set default language
+        this.translate.setDefaultLang('en');
+
+        // Get saved language preference
         const savedLanguage = localStorage.getItem('preferredLanguage');
+
+        // Use saved language or detect browser language
+        let langToUse = 'English';
         if (savedLanguage) {
-            this.currentLanguageSubject.next(savedLanguage);
-        }
-
-        // Load available languages
-        this.loadAvailableLanguages();
-    }
-
-    /**
-     * Loads available languages from localStorage if present, otherwise fetches from Firestore
-     */
-    private loadAvailableLanguages(): void {
-        const cachedLanguages = localStorage.getItem(this.LANGUAGES_STORAGE_KEY);
-
-        if (cachedLanguages) {
-            try {
-                this.availableLanguages = JSON.parse(cachedLanguages);
-            } catch (error) {
-                console.error('Error parsing cached languages:', error);
-                this.fetchLanguagesFromFirestore();
-            }
+            langToUse = savedLanguage;
         } else {
-            this.fetchLanguagesFromFirestore();
+            // Try to detect browser language
+            const browserLang = this.translate.getBrowserLang();
+
+            // Check if browser language is supported
+            if (browserLang && langCodes.includes(browserLang)) {
+                langToUse = this.getLanguageNameByCode(browserLang);
+            }
         }
+
+        this.setLanguage(langToUse);
+
+        // Pre-load all translations
+        this.refreshTranslations().subscribe({
+            next: (success) => {
+                console.log('TranslationService: Initial translations loaded', success);
+            },
+            error: (error) => {
+                console.error('TranslationService: Error loading initial translations', error);
+            },
+        });
     }
 
     /**
-     * Fetches available languages from Firestore and caches them in localStorage
+     * Set the current language
      */
-    private fetchLanguagesFromFirestore(): void {
-        const languagesCollection = collection(this.firestore, 'languages');
+    setLanguage(language: string): void {
+        // Check if it's a code or name
+        let langCode: string;
+        let langName: string;
 
-        getDocs(query(languagesCollection))
-            .then((querySnapshot) => {
-                const languages: Language[] = [];
+        if (language.length === 2) {
+            // It's a code
+            langCode = language;
+            langName = this.getLanguageNameByCode(langCode);
+        } else {
+            // It's a name
+            langName = language;
+            langCode = this.getLanguageCodeByName(langName);
+        }
 
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data() as Language;
-                    languages.push({
-                        name: data.name,
-                        code: data.code,
-                    });
-                });
+        // Use the language code for ngx-translate
+        this.translate.use(langCode);
 
-                if (languages.length === 0) {
-                    // Fallback to default languages if none found in Firestore
-                    this.availableLanguages = [
-                        { name: 'English', code: 'en' },
-                        { name: 'Tamil', code: 'ta' },
-                        { name: 'Telugu', code: 'te' },
-                        { name: 'Hindi', code: 'hi' },
-                        { name: 'Odia', code: 'or' },
-                    ];
-                } else {
-                    this.availableLanguages = languages;
-                }
+        // Update the behavior subject with the language name
+        this.currentLanguageSubject.next(langName);
 
-                // Cache languages in localStorage
-                localStorage.setItem(this.LANGUAGES_STORAGE_KEY, JSON.stringify(this.availableLanguages));
-            })
-            .catch((error) => {
-                console.error('Error fetching languages from Firestore:', error);
-                // Fallback to default languages on error
-                this.availableLanguages = [
-                    { name: 'English', code: 'en' },
-                    { name: 'Tamil', code: 'ta' },
-                    { name: 'Telugu', code: 'te' },
-                    { name: 'Hindi', code: 'hi' },
-                    { name: 'Odia', code: 'or' },
-                ];
-            });
+        // Save to localStorage
+        localStorage.setItem('preferredLanguage', langName);
     }
 
     /**
-     * Refreshes the languages list from Firestore, ignoring cache
+     * Refresh translations from Firestore
      */
-    refreshLanguages(): Observable<Language[]> {
-        return from(getDocs(query(collection(this.firestore, 'languages')))).pipe(
-            map((querySnapshot) => {
-                const languages: Language[] = [];
-
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data() as Language;
-                    languages.push({
-                        name: data.name,
-                        code: data.code,
-                    });
-                });
-
-                if (languages.length > 0) {
-                    this.availableLanguages = languages;
-                    localStorage.setItem(this.LANGUAGES_STORAGE_KEY, JSON.stringify(this.availableLanguages));
-                }
-
-                return this.availableLanguages;
-            }),
-            catchError((error) => {
-                console.error('Error refreshing languages:', error);
-                return of(this.availableLanguages);
+    refreshTranslations(): Observable<any> {
+        const langCode = this.getLanguageCodeByName(this.currentLanguageSubject.value);
+        return this.firestoreLoader.getTranslation(langCode).pipe(
+            tap((translations) => {
+                // Update ngx-translate with the refreshed translations
+                this.translate.setTranslation(langCode, translations, true);
             }),
         );
     }
 
-    getAvailableLanguages(): Language[] {
-        return this.availableLanguages;
+    /**
+     * Add or update a translation in Firestore
+     */
+    updateTranslation(key: string, translations: { [language: string]: string }): Observable<boolean> {
+        const translationRef = doc(collection(this.firestore, 'translations'), key);
+
+        return from(setDoc(translationRef, translations)).pipe(
+            map(() => {
+                // Update ngx-translate translations
+                Object.keys(translations).forEach((langName) => {
+                    const langCode = this.getLanguageCodeByName(langName);
+                    const update: { [key: string]: string } = {};
+                    update[key] = translations[langName];
+                    this.translate.setTranslation(langCode, update, true);
+                });
+
+                return true;
+            }),
+            catchError((error) => {
+                console.error(`Error updating translation '${key}' in Firestore:`, error);
+                return of(false);
+            }),
+        );
     }
 
+    /**
+     * Get current language observable
+     */
     getCurrentLanguage(): Observable<string> {
         return this.currentLanguageSubject.asObservable();
     }
 
+    /**
+     * Get current language value
+     */
     getCurrentLanguageValue(): string {
         return this.currentLanguageSubject.value;
     }
 
-    setLanguage(languageCode: string): void {
-        // Save to localStorage for persistence
-        localStorage.setItem('preferredLanguage', languageCode);
-
-        // Update the BehaviorSubject
-        this.currentLanguageSubject.next(languageCode);
+    /**
+     * Get language code by name
+     */
+    getLanguageCodeByName(name: string): string {
+        const language = this.availableLanguages.find((lang) => lang.name === name);
+        return language ? language.code : 'en';
     }
 
+    /**
+     * Get language name by code
+     */
     getLanguageNameByCode(code: string): string {
         const language = this.availableLanguages.find((lang) => lang.code === code);
         return language ? language.name : 'English';
     }
 
     /**
-     * Returns the language code for a given language name
-     * @param name The language name to convert to code
-     * @returns The corresponding language code, or the name itself if not found
+     * Get available languages
      */
-    getLanguageCodeByName(name: string): string {
-        const language = this.availableLanguages.find((lang) => lang.name === name);
-        return language ? language.code : name;
+    getAvailableLanguages(): Language[] {
+        return this.availableLanguages;
+    }
+
+    /**
+     * Get a translation using ngx-translate
+     */
+    instant(key: string, params?: any): string {
+        return this.translate.instant(key, params);
+    }
+
+    /**
+     * Get a translation observable
+     */
+    get(key: string, params?: any): Observable<string> {
+        return this.translate.get(key, params);
+    }
+
+    // Add to TranslationService
+    detectBrowserLanguage(): string {
+        // Check navigator language
+        const browserLang = navigator.language;
+
+        // Extract the language code (e.g., 'en-US' -> 'en')
+        const langCode = browserLang.split('-')[0];
+
+        // Check if this language is supported
+        const isSupported = this.availableLanguages.some((lang) => lang.code === langCode);
+
+        // Return the language code if supported, otherwise return default
+        return isSupported ? langCode : 'en';
+    }
+
+    /**
+     * Preload all translations for all languages
+     * This is useful to call at app startup
+     */
+    preloadAllTranslations(): Observable<boolean> {
+        console.log('TranslationService: Preloading all translations');
+
+        const langCodes = this.availableLanguages.map((lang) => lang.code);
+        const observables: Observable<any>[] = [];
+
+        // Request translations for each language
+        langCodes.forEach((langCode) => {
+            observables.push(
+                // Use the built-in translate service to load which uses our FirestoreTranslateLoader
+                from(this.translate.getTranslation(langCode)),
+            );
+        });
+
+        // Wait for all translations to load
+        return from(Promise.all(observables)).pipe(
+            map(() => {
+                console.log('TranslationService: All translations loaded');
+                return true;
+            }),
+            catchError((error) => {
+                console.error('TranslationService: Error preloading translations', error);
+                return of(false);
+            }),
+        );
     }
 }

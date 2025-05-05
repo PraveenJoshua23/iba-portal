@@ -41,14 +41,20 @@ export interface LanguageManagementData {
 
                 <div>
                     <h3 class="font-medium mb-2">Current Languages</h3>
-                    <mat-list role="list">
-                        <mat-list-item role="listitem" *ngFor="let lang of languages" class="flex justify-between">
-                            <div class="flex-grow">{{ lang }}</div>
-                            <button mat-icon-button color="warn" (click)="removeLanguage(lang)" *ngIf="lang !== 'English'" [disabled]="lang === 'English'">
-                                <mat-icon>delete</mat-icon>
-                            </button>
-                        </mat-list-item>
-                    </mat-list>
+                    <div class="language-list">
+                        @for (lang of languages; track lang) {
+                            <div class="language-item">
+                                <span class="language-name">{{ lang }}</span>
+                                <button mat-icon-button color="warn" (click)="removeLanguage(lang)" [disabled]="lang === 'English'" *ngIf="lang !== 'English'">
+                                    <mat-icon>delete</mat-icon>
+                                    <span class="sr-only">Remove {{ lang }}</span>
+                                    @if (lang === 'English') {
+                                        <span class="sr-only">English cannot be removed</span>
+                                    }
+                                </button>
+                            </div>
+                        }
+                    </div>
                 </div>
             </div>
         </div>
@@ -57,6 +63,27 @@ export interface LanguageManagementData {
             <button mat-raised-button color="primary" (click)="onSave()">Save Changes</button>
         </div>
     `,
+    styles: [
+        `
+            .language-list {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            .language-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 16px;
+                background-color: #f5f5f5;
+                border-radius: 4px;
+                min-height: 48px;
+            }
+            .language-name {
+                font-size: 16px;
+            }
+        `,
+    ],
 })
 export class LanguageManagementDialogComponent implements OnInit {
     languages: string[] = [];

@@ -6,14 +6,14 @@ import { FirebaseService } from 'src/app/shared/services/firebase.service';
 import { Lesson } from 'src/app/shared/models/lesson.model';
 import { Subscription } from 'rxjs';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { IProgress, LessonsProgress } from 'src/app/shared/models/progress.interface';
+import { LessonsProgress } from 'src/app/shared/models/progress.interface';
 import { DataService } from 'src/app/shared/services/data.service';
 import { LessonsService } from 'src/app/shared/services/lessons/lessons.service';
 import { ProgressService } from 'src/app/shared/services/progress/progress.service';
 import { ILesson } from 'src/app/shared/models/lessons.interface';
 import { VimeoService } from 'src/app/shared/services/vimeo/vimeo.service';
-import { firstValueFrom, switchMap, of } from 'rxjs';
-import { LanguageService } from 'src/app/shared/services/language/language.service';
+import { switchMap } from 'rxjs';
+import { TranslationService } from 'src/app/shared/services/language/language.service';
 import { GeminiService } from 'src/app/shared/services/gemini/gemini.service';
 
 interface Progress {
@@ -49,7 +49,7 @@ interface fileMetadata {
     selector: 'app-lessons',
     standalone: true,
     imports: [CommonModule, VideoPlayerComponent, RouterLink],
-    providers: [LanguageService, ProgressService],
+    providers: [ProgressService, TranslationService],
     templateUrl: './lessons.component.html',
     styleUrls: ['./lessons.component.scss'],
 })
@@ -63,7 +63,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
     ls = inject(LessonsService);
     ps = inject(ProgressService);
     vimeoService = inject(VimeoService);
-    languageService = inject(LanguageService);
+    translationService = inject(TranslationService);
     geminiService = inject(GeminiService);
 
     title!: string;
@@ -79,7 +79,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
     lessonId!: string;
     lessonNo!: number;
     category!: string;
-    tabs = ['Notes', 'Quiz']; //Removed Materials and QnA tabs
+    tabs = ['notes', 'quiz']; //Removed Materials and QnA tabs
     activeTabIndex = 0;
     progress$!: Subscription;
     fileList: { name: string; videolink: any }[] = [];
@@ -108,8 +108,8 @@ export class LessonsComponent implements OnInit, OnDestroy {
         private storage: AngularFireStorage,
     ) {
         console.log('[LessonsComponent] Constructor called');
-        this.currentLanguage = this.languageService.getCurrentLanguageValue();
-        this.lang = this.languageService.getLanguageCodeByName(this.currentLanguage);
+        this.currentLanguage = this.translationService.getCurrentLanguageValue();
+        this.lang = this.translationService.getLanguageCodeByName(this.currentLanguage);
         console.log('[LessonsComponent] Current language:', this.currentLanguage, 'Code:', this.lang);
 
         this._progress.set(this.getProgress());
@@ -157,7 +157,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
                     }
 
                     // Subscribe to language changes
-                    this.languageSubscription = this.languageService.getCurrentLanguage().subscribe((lang) => {
+                    this.languageSubscription = this.translationService.getCurrentLanguage().subscribe((lang) => {
                         this.reloadLessonVideoForLanguage(lang);
                     });
 

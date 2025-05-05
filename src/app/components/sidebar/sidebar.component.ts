@@ -4,7 +4,8 @@ import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { DataService } from '../../shared/services/data.service';
-import { IUser } from '../../shared/models/user.interface';
+import { TranslationService } from 'src/app/shared/services/language/language.service';
+import { TranslatePipe } from 'src/app/shared/pipes/translation.pipe';
 
 interface MenuItem {
     label: string;
@@ -24,14 +25,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
     usrEmail: string | null = '';
     userRole: string | null = null;
 
+    translationService = inject(TranslationService);
+    currentLanguage: string = 'English'; // Default language
+
     menuItems: MenuItem[] = [
         {
-            label: 'Lessons',
+            label: 'lessons',
             route: '/home',
             icon: '../../../assets/icons/book.svg',
         },
         {
-            label: 'My Profile',
+            label: 'myProfile',
             route: '/profile',
             icon: '../../../assets/icons/profile.svg',
         },
@@ -49,6 +53,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     constructor(private auth: AngularFireAuth) {}
 
     ngOnInit(): void {
+        this.currentLanguage = this.translationService.getCurrentLanguageValue();
         const authSub = this.auth.authState.subscribe((user) => {
             if (user) {
                 this.usrEmail = user.email;
@@ -56,7 +61,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
                 this.getUserDetails(user.email);
             }
         });
-
+        this.translationService.getCurrentLanguage().subscribe((language) => {
+            this.currentLanguage = language;
+        });
         this.subscriptions.push(authSub);
     }
 

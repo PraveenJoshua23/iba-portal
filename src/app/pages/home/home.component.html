@@ -1,13 +1,15 @@
 <main class="bg-gray-100 flex">
     <section class="flex flex-col w-full py-8 px-[10%] space-y-5">
         <div class="px-5 border-b">
-            <h1>Lessons</h1>
+            <h1>{{ translationService.instant('lessons') }}</h1>
+            <!-- Debug translation: -->
+            <!-- <div *ngIf="true">Current language: {{ currentLanguage }}, Key: lessons, Value: {{ translationService.instant('lessons') }}</div> -->
         </div>
         <div class="flex flex-col space-y-2 px-3 py-5 w-full">
             @if (progress) {
                 <div class="flex justify-between items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600">
-                    <span>BB Lessons</span>
-                    <button class="px-5 py-2 rounded-lg cursor-pointer border text-sm font-medium" (click)="startLesson('bb')" *ngIf="selectedCategory() !== 'bb'">Start</button>
+                    <span>BB {{ translationService.instant('lessons') }}</span>
+                    <button class="px-5 py-2 rounded-lg cursor-pointer border text-sm font-medium" (click)="startLesson('bb')" *ngIf="selectedCategory() !== 'bb'">{{ translationService.instant('start') }}</button>
                 </div>
 
                 <!-- Debug: Current language: {{ currentLanguage }} -->
@@ -17,23 +19,42 @@
                         (click)="selectLesson(lessons.id, lessons.lessonNo)"
                         [ngClass]="{ 'border-b': !last, 'pointer-events-none opacity-60': categoryProgress[i].locked, 'cursor-pointer': !categoryProgress[i].locked }"
                     >
-                        <!--  [ngClass]="{ 'border-b': !last, 'pointer-events-none opacity-60': categoryProgress[i].locked!, 'cursor-pointer': !categoryProgress[i].locked! }" -->
-                        <div class="flex items-center gap-x-2">
-                            <span>{{ lessons.lessonNo }}.</span>
+                        <div class="flex items-center gap-x-3">
+                            <!-- Thumbnail area -->
 
-                            <span>{{ lessons.names?.[currentLanguage] || lessons.names?.en || lessons.name }}</span>
+                            <div class="thumbnail-container h-28 w-40 rounded-md overflow-hidden flex-shrink-0 bg-gray-100">
+                                @if (lessons.vimeoIds) {
+                                    <img [src]="lessonThumbnails[lessons.vimeoIds[0]] || 'assets/images/video-placeholder.png'" [alt]="lessons.names?.[langCode] || lessons.names?.en || lessons.name" class="h-full w-full object-cover" />
+                                } @else {
+                                    <div class="h-full w-full flex items-center justify-center bg-gray-200">
+                                        <mat-icon class="text-gray-400">videocam_off</mat-icon>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="flex flex-col">
+                                <div class="flex items-center gap-x-2">
+                                    <span class="font-medium text-xl">{{ lessons.lessonNo }}.</span>
+                                    <span class="font-medium text-xl">{{ lessons.names?.[langCode] || lessons.names?.en || lessons.name }}</span>
+                                </div>
+                                @if (lessons.descriptions?.[langCode] || lessons.descriptions?.en || lessons.description) {
+                                    <p class="text-sm text-gray-600 line-clamp-1">
+                                        {{ lessons.descriptions?.[langCode] || lessons.descriptions?.en || lessons.description }}
+                                    </p>
+                                }
+                            </div>
                         </div>
                         @if (categoryProgress && i < categoryProgress.length && !categoryProgress[i].locked) {
                             <div class="flex items-center space-x-3">
-                                <span class="bg-gray-300 px-4 py-1 rounded-md">{{ 'Progress: ' + categoryProgress[i].progress + '%' }}</span>
+                                <span class="bg-gray-300 px-4 py-1 rounded-md">{{ translationService.instant('progress') }}: {{ categoryProgress[i].progress + '%' }}</span>
                             </div>
                         }
                     </div>
                 }
 
-                <div class="flex items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600 opacity-50">Introductory Lessons</div>
-                <div class="flex items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600 opacity-50">Intermediate Lessons</div>
-                <div class="flex items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600 opacity-50">Advanced Lessons</div>
+                <div class="flex items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600 opacity-50">{{ 'introductoryLessons' | translate }}</div>
+                <div class="flex items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600 opacity-50">{{ 'intermediateLessons' | translate }}</div>
+                <div class="flex items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600 opacity-50">{{ 'advancedLessons' | translate }}</div>
             }
         </div>
     </section>

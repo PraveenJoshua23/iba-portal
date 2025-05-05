@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { TranslationService } from './shared/services/language/language.service';
 
 @Component({
     selector: 'app-root',
@@ -11,4 +12,9 @@ import { RouterModule } from '@angular/router';
 })
 export class AppComponent {
     title = 'iba-portal';
+    private translationService = inject(TranslationService);
+    ngOnInit() {
+        // Preload all translations
+        this.translationService.preloadAllTranslations().subscribe();
+    }
 }
