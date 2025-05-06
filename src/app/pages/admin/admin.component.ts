@@ -19,7 +19,7 @@ import { TranslationMap } from 'src/app/shared/services/language/translations';
 import { AddTranslationDialogComponent } from './add-translation-dialog/add-translation-dialog.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { finalize } from 'rxjs/operators';
+
 import { TranslationService } from 'src/app/shared/services/language/language.service';
 import { LanguageManagementDialogComponent } from './language-management/language-management.component';
 
