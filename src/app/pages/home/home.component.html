@@ -7,6 +7,7 @@
         </div>
         <div class="flex flex-col space-y-2 px-3 py-5 w-full">
             @if (progress) {
+                <!-- BB lessons -->
                 <div class="flex justify-between items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600">
                     <span>BB {{ translationService.instant('lessons') }}</span>
                     <button class="px-5 py-2 rounded-lg cursor-pointer border text-sm font-medium" (click)="startLesson('bb')" *ngIf="selectedCategory() !== 'bb'">{{ translationService.instant('start') }}</button>
@@ -52,9 +53,152 @@
                     </div>
                 }
 
-                <div class="flex items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600 opacity-50">{{ 'introductoryLessons' | translate }}</div>
-                <div class="flex items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600 opacity-50">{{ 'intermediateLessons' | translate }}</div>
-                <div class="flex items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600 opacity-50">{{ 'advancedLessons' | translate }}</div>
+                <!-- Introductory lessons section -->
+                <div class="flex justify-between items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600" [class.opacity-50]="selectedCategory() !== 'intro'">
+                    <span>{{ 'introductoryLessons' | translate }}</span>
+                    <button class="px-5 py-2 rounded-lg cursor-pointer border text-sm font-medium" (click)="startLesson('intro')" *ngIf="selectedCategory() !== 'intro'">
+                        {{ 'start' | translate }}
+                    </button>
+                </div>
+
+                <!-- Display intro lessons if that's the selected category -->
+                @if (selectedCategory() === 'intro') {
+                    @for (lessons of allIntroLessons$ | async; track lessons.id; let last = $last; let i = $index) {
+                        <div
+                            class="flex items-center justify-between px-4 py-3 rounded-sm"
+                            (click)="selectLesson(lessons.id, lessons.lessonNo)"
+                            [ngClass]="{ 'border-b': !last, 'pointer-events-none opacity-60': categoryProgress[i].locked, 'cursor-pointer': !categoryProgress[i]?.locked }"
+                        >
+                            <!-- Same content as your BB lessons section -->
+                            <div class="flex items-center gap-x-3">
+                                <div class="thumbnail-container h-28 w-40 rounded-md overflow-hidden flex-shrink-0 bg-gray-100">
+                                    @if (lessons.vimeoIds) {
+                                        <img [src]="lessonThumbnails[lessons.vimeoIds[0]] || 'assets/images/video-placeholder.png'" [alt]="lessons.names?.[langCode] || lessons.names?.en || lessons.name" class="h-full w-full object-cover" />
+                                    } @else {
+                                        <div class="h-full w-full flex items-center justify-center bg-gray-200">
+                                            <mat-icon class="text-gray-400">videocam_off</mat-icon>
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="flex flex-col">
+                                    <div class="flex items-center gap-x-2">
+                                        <span class="font-medium text-xl">{{ lessons.lessonNo }}.</span>
+                                        <span class="font-medium text-xl">{{ lessons.names?.[langCode] || lessons.names?.en || lessons.name }}</span>
+                                    </div>
+                                    @if (lessons.descriptions?.[langCode] || lessons.descriptions?.en || lessons.description) {
+                                        <p class="text-sm text-gray-600 line-clamp-1">
+                                            {{ lessons.descriptions?.[langCode] || lessons.descriptions?.en || lessons.description }}
+                                        </p>
+                                    }
+                                </div>
+                            </div>
+                            @if (categoryProgress && i < categoryProgress.length && !categoryProgress[i].locked) {
+                                <div class="flex items-center space-x-3">
+                                    <span class="bg-gray-300 px-4 py-1 rounded-md">{{ translationService.instant('progress') }}: {{ categoryProgress[i].progress + '%' }}</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+                <!-- Intermediate lessons section -->
+                <div class="flex justify-between items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600" [class.opacity-50]="selectedCategory() !== 'intermediate'">
+                    <span>{{ 'intermediateLessons' | translate }}</span>
+                    <button class="px-5 py-2 rounded-lg cursor-pointer border text-sm font-medium" (click)="startLesson('intermediate')" *ngIf="selectedCategory() !== 'intermediate'">
+                        {{ 'start' | translate }}
+                    </button>
+                </div>
+
+                <!-- Display intermediate lessons if selected -->
+                @if (selectedCategory() === 'intermediate') {
+                    @for (lessons of allIntermediateLessons$ | async; track lessons.id; let last = $last; let i = $index) {
+                        <!-- Same content structure as above -->
+                        <div
+                            class="flex items-center justify-between px-4 py-3 rounded-sm"
+                            (click)="selectLesson(lessons.id, lessons.lessonNo)"
+                            [ngClass]="{ 'border-b': !last, 'pointer-events-none opacity-60': categoryProgress[i].locked, 'cursor-pointer': !categoryProgress[i].locked }"
+                        >
+                            <div class="flex items-center gap-x-3">
+                                <div class="thumbnail-container h-28 w-40 rounded-md overflow-hidden flex-shrink-0 bg-gray-100">
+                                    @if (lessons.vimeoIds) {
+                                        <img [src]="lessonThumbnails[lessons.vimeoIds[0]] || 'assets/images/video-placeholder.png'" [alt]="lessons.names?.[langCode] || lessons.names?.en || lessons.name" class="h-full w-full object-cover" />
+                                    } @else {
+                                        <div class="h-full w-full flex items-center justify-center bg-gray-200">
+                                            <mat-icon class="text-gray-400">videocam_off</mat-icon>
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="flex flex-col">
+                                    <div class="flex items-center gap-x-2">
+                                        <span class="font-medium text-xl">{{ lessons.lessonNo }}.</span>
+                                        <span class="font-medium text-xl">{{ lessons.names?.[langCode] || lessons.names?.en || lessons.name }}</span>
+                                    </div>
+                                    @if (lessons.descriptions?.[langCode] || lessons.descriptions?.en || lessons.description) {
+                                        <p class="text-sm text-gray-600 line-clamp-1">
+                                            {{ lessons.descriptions?.[langCode] || lessons.descriptions?.en || lessons.description }}
+                                        </p>
+                                    }
+                                </div>
+                            </div>
+                            @if (categoryProgress && i < categoryProgress.length && !categoryProgress[i].locked) {
+                                <div class="flex items-center space-x-3">
+                                    <span class="bg-gray-300 px-4 py-1 rounded-md">{{ translationService.instant('progress') }}: {{ categoryProgress[i].progress + '%' }}</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+
+                <!-- Advanced lessons section -->
+                <div class="flex justify-between items-center text-2xl text-white font-medium px-8 py-3 w-full rounded-md bg-golden-600" [class.opacity-50]="selectedCategory() !== 'advanced'">
+                    <span>{{ 'advancedLessons' | translate }}</span>
+                    <button class="px-5 py-2 rounded-lg cursor-pointer border text-sm font-medium" (click)="startLesson('advanced')" *ngIf="selectedCategory() !== 'advanced'">
+                        {{ 'start' | translate }}
+                    </button>
+                </div>
+
+                <!-- Display advanced lessons if selected -->
+                @if (selectedCategory() === 'advanced') {
+                    @for (lessons of allAdvancedLessons$ | async; track lessons.id; let last = $last; let i = $index) {
+                        <!-- Same content structure as above -->
+                        <div
+                            class="flex items-center justify-between px-4 py-3 rounded-sm"
+                            (click)="selectLesson(lessons.id, lessons.lessonNo)"
+                            [ngClass]="{ 'border-b': !last, 'pointer-events-none opacity-60': categoryProgress[i].locked, 'cursor-pointer': !categoryProgress[i].locked }"
+                        >
+                            <!-- Same content as your BB lessons section -->
+                            <div class="flex items-center gap-x-3">
+                                <div class="thumbnail-container h-28 w-40 rounded-md overflow-hidden flex-shrink-0 bg-gray-100">
+                                    @if (lessons.vimeoIds) {
+                                        <img [src]="lessonThumbnails[lessons.vimeoIds[0]] || 'assets/images/video-placeholder.png'" [alt]="lessons.names?.[langCode] || lessons.names?.en || lessons.name" class="h-full w-full object-cover" />
+                                    } @else {
+                                        <div class="h-full w-full flex items-center justify-center bg-gray-200">
+                                            <mat-icon class="text-gray-400">videocam_off</mat-icon>
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="flex flex-col">
+                                    <div class="flex items-center gap-x-2">
+                                        <span class="font-medium text-xl">{{ lessons.lessonNo }}.</span>
+                                        <span class="font-medium text-xl">{{ lessons.names?.[langCode] || lessons.names?.en || lessons.name }}</span>
+                                    </div>
+                                    @if (lessons.descriptions?.[langCode] || lessons.descriptions?.en || lessons.description) {
+                                        <p class="text-sm text-gray-600 line-clamp-1">
+                                            {{ lessons.descriptions?.[langCode] || lessons.descriptions?.en || lessons.description }}
+                                        </p>
+                                    }
+                                </div>
+                            </div>
+                            @if (categoryProgress && i < categoryProgress.length && !categoryProgress[i].locked) {
+                                <div class="flex items-center space-x-3">
+                                    <span class="bg-gray-300 px-4 py-1 rounded-md">{{ translationService.instant('progress') }}: {{ categoryProgress[i].progress + '%' }}</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
             }
         </div>
     </section>

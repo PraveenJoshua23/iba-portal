@@ -37,8 +37,14 @@ export class HomeComponent implements OnInit, OnDestroy {
     userService = inject(UserService);
     translationService = inject(TranslationService);
     allBBLessons$: Observable<any> = this.ds.getAllLessonSubCollection('bb');
+    allIntroLessons$: Observable<any> = this.ds.getAllLessonSubCollection('intro');
+    allIntermediateLessons$: Observable<any> = this.ds.getAllLessonSubCollection('intermediate');
+    allAdvancedLessons$: Observable<any> = this.ds.getAllLessonSubCollection('advanced');
 
     bbLessons: any[] = [];
+    introLessons: any[] = [];
+    intermediateLessons: any[] = [];
+    advancedLessons: any[] = [];
     initialLesson: Lesson[] = [];
     currentLesson: Lesson[] = [];
     // usersList: any = []
@@ -108,28 +114,32 @@ export class HomeComponent implements OnInit, OnDestroy {
         });
 
         // Subscribe to lessons and load thumbnails
-        this.allBBLessons$
-            .pipe(
-                take(3),
-                tap((lessons) => {
-                    // Load thumbnails for lessons with videoId
-                    lessons.forEach((lesson: any) => {
-                        if (lesson.vimeoIds && !lesson.thumbnailUrl) {
-                            const result = this.loadThumbnail(lesson.vimeoIds?.[this.langCode]);
-                            if (typeof result === 'string') {
-                                // If it's a direct string (default image), use it directly
-                                this.lessonThumbnails[lesson.vimeoIds[0]] = result;
-                            } else {
-                                // If it's an Observable, subscribe to it
-                                result.subscribe((url) => {
-                                    this.lessonThumbnails[lesson.vimeoIds[0]] = url;
-                                });
-                            }
-                        }
-                    });
-                }),
-            )
-            .subscribe();
+        // this.allBBLessons$
+        //     .pipe(
+        //         take(3),
+        //         tap((lessons) => {
+        //             // Load thumbnails for lessons with videoId
+        //             lessons.forEach((lesson: any) => {
+        //                 if (lesson.vimeoIds && !lesson.thumbnailUrl) {
+        //                     const result = this.loadThumbnail(lesson.vimeoIds?.[this.langCode]);
+        //                     if (typeof result === 'string') {
+        //                         // If it's a direct string (default image), use it directly
+        //                         this.lessonThumbnails[lesson.vimeoIds[0]] = result;
+        //                     } else {
+        //                         // If it's an Observable, subscribe to it
+        //                         result.subscribe((url) => {
+        //                             this.lessonThumbnails[lesson.vimeoIds[0]] = url;
+        //                         });
+        //                     }
+        //                 }
+        //             });
+        //         }),
+        //     )
+        //     .subscribe();
+        this.handleLessonSubscription(this.allBBLessons$, 'bb');
+        this.handleLessonSubscription(this.allIntroLessons$, 'intro');
+        this.handleLessonSubscription(this.allIntermediateLessons$, 'intermediate');
+        this.handleLessonSubscription(this.allAdvancedLessons$, 'advanced');
     }
 
     ngOnDestroy(): void {
@@ -261,5 +271,30 @@ export class HomeComponent implements OnInit, OnDestroy {
                 return of('assets/images/video-placeholder.png');
             }),
         );
+    }
+
+    private handleLessonSubscription(lessonsObservable: Observable<any>, category: string): void {
+        lessonsObservable
+            .pipe(
+                take(3),
+                tap((lessons) => {
+                    // Load thumbnails for lessons with videoId
+                    lessons.forEach((lesson: any) => {
+                        if (lesson.vimeoIds && !lesson.thumbnailUrl) {
+                            const result = this.loadThumbnail(lesson.vimeoIds?.[this.langCode]);
+                            if (typeof result === 'string') {
+                                // If it's a direct string (default image), use it directly
+                                this.lessonThumbnails[lesson.vimeoIds[0]] = result;
+                            } else {
+                                // If it's an Observable, subscribe to it
+                                result.subscribe((url) => {
+                                    this.lessonThumbnails[lesson.vimeoIds[0]] = url;
+                                });
+                            }
+                        }
+                    });
+                }),
+            )
+            .subscribe();
     }
 }
