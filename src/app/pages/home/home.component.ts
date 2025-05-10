@@ -407,7 +407,21 @@ export class HomeComponent implements OnInit, OnDestroy {
                     this.updateLoadingState();
 
                     // Load thumbnails for lessons with videoId
-                    // Existing thumbnail code...
+
+                    lessons.forEach((lesson: any) => {
+                        if (lesson.vimeoIds && !lesson.thumbnailUrl) {
+                            const result = this.loadThumbnail(lesson.vimeoIds?.[this.langCode]);
+                            if (typeof result === 'string') {
+                                // If it's a direct string (default image), use it directly
+                                this.lessonThumbnails[lesson.vimeoIds[0]] = result;
+                            } else {
+                                // If it's an Observable, subscribe to it
+                                result.subscribe((url) => {
+                                    this.lessonThumbnails[lesson.vimeoIds[0]] = url;
+                                });
+                            }
+                        }
+                    });
                 }),
             )
             .subscribe();
