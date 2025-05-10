@@ -10,7 +10,7 @@
         </div>
         <vg-controls>
             <vg-play-pause></vg-play-pause>
-            <vg-playback-button></vg-playback-button>
+            <vg-playback-button *ngIf="allowScrubbing"></vg-playback-button>
             <vg-time-display vgProperty="current" vgFormat="mm:ss"></vg-time-display>
 
             <!-- Custom scrub bar wrapper for more control -->
