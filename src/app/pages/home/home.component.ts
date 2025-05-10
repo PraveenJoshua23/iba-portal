@@ -20,6 +20,7 @@ import { TranslationService } from 'src/app/shared/services/language/language.se
 import { TranslatePipe } from '../../shared/pipes/translation.pipe';
 import { VimeoService } from 'src/app/shared/services/vimeo/vimeo.service';
 import { MatIcon } from '@angular/material/icon';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
     selector: 'app-home',
@@ -59,8 +60,18 @@ export class HomeComponent implements OnInit, OnDestroy {
     langCode: string = 'en';
     languageSubscription!: Subscription;
     lessonThumbnails: { [key: string]: string } = {};
+    loading = signal(true);
+    categoryCompletion = signal<{ [key: string]: boolean }>({
+        bb: false,
+        intro: false,
+        intermediate: false,
+        advanced: false,
+    });
 
-    constructor(private router: Router) {
+    constructor(
+        private router: Router,
+        private cdRef: ChangeDetectorRef,
+    ) {
         this.email = localStorage.getItem('email') ?? '';
     }
 
@@ -95,6 +106,29 @@ export class HomeComponent implements OnInit, OnDestroy {
                 console.error('User is not logged in!');
             }
         });
+
+        // Set loading to true initially
+        this.loading.set(true);
+
+        // Combine loading states
+        const loadLessonsAndProgress = () => {
+            this.ps.initializeProgressOnLoad(this.email!).subscribe({
+                next: (progress) => {
+                    this.progress = progress;
+                    this.getCategoryProgress(this.selectedCategory(), this.progress);
+                    this.checkAllCategoriesCompletion(progress);
+                    this.loadingProgress = false;
+                    this.updateLoadingState();
+                },
+                error: (error) => {
+                    console.error(error);
+                    this.loadingProgress = false;
+                    this.updateLoadingState();
+                },
+            });
+        };
+
+        loadLessonsAndProgress();
 
         this.email = localStorage.getItem('email') ?? '';
         if (this.email === '') {
@@ -273,28 +307,122 @@ export class HomeComponent implements OnInit, OnDestroy {
         );
     }
 
+    // private handleLessonSubscription(lessonsObservable: Observable<any>, category: string): void {
+    //     lessonsObservable
+    //         .pipe(
+    //             take(3),
+    //             tap((lessons) => {
+    //                 // Load thumbnails for lessons with videoId
+    //                 lessons.forEach((lesson: any) => {
+    //                     if (lesson.vimeoIds && !lesson.thumbnailUrl) {
+    //                         const result = this.loadThumbnail(lesson.vimeoIds?.[this.langCode]);
+    //                         if (typeof result === 'string') {
+    //                             // If it's a direct string (default image), use it directly
+    //                             this.lessonThumbnails[lesson.vimeoIds[0]] = result;
+    //                         } else {
+    //                             // If it's an Observable, subscribe to it
+    //                             result.subscribe((url) => {
+    //                                 this.lessonThumbnails[lesson.vimeoIds[0]] = url;
+    //                             });
+    //                         }
+    //                     }
+    //                 });
+    //             }),
+    //         )
+    //         .subscribe();
+    // }
+
+    // Add this method to check completion of all categories
+    checkAllCategoriesCompletion(progress: IProgress): void {
+        if (!progress || !progress.categoryProgress) return;
+
+        const categories = ['BB', 'Introductory', 'Intermediate', 'Advanced'];
+        const completionState: { [key: string]: boolean } = {
+            bb: false,
+            intro: false,
+            intermediate: false,
+            advanced: false,
+        };
+
+        for (const category of progress.categoryProgress) {
+            const categoryName = category.categoryName.toLowerCase();
+            let isComplete = true;
+
+            // Check all languages
+            for (const langKey in category.languageProgress) {
+                const languageProg = category.languageProgress[langKey];
+
+                // Check if at least one language is 100% complete
+                const langProgress = parseInt(languageProg.progress || '0');
+                if (langProgress >= 100) {
+                    isComplete = true;
+                    break;
+                } else {
+                    // Check individual lessons
+                    isComplete = languageProg.lessons.every((lesson) => lesson.completed || parseInt(lesson.progress || '0') >= 100);
+                    if (isComplete) break;
+                }
+            }
+
+            // Map the category name to our keys
+            if (categoryName === 'bb') completionState['bb'] = isComplete;
+            else if (categoryName === 'introductory') completionState['intro'] = isComplete;
+            else if (categoryName === 'intermediate') completionState['intermediate'] = isComplete;
+            else if (categoryName === 'advanced') completionState['advanced'] = isComplete;
+        }
+
+        this.categoryCompletion.set(completionState);
+    }
+
+    // Add this method to update the loading state
+    updateLoadingState(): void {
+        // If both progress and lessons for the current category are loaded
+        const lessonsLoaded =
+            this.selectedCategory() === 'bb'
+                ? this.bbLessons.length > 0
+                : this.selectedCategory() === 'intro'
+                  ? this.introLessons.length > 0
+                  : this.selectedCategory() === 'intermediate'
+                    ? this.intermediateLessons.length > 0
+                    : this.advancedLessons.length > 0;
+
+        if (!this.loadingProgress && lessonsLoaded) {
+            this.loading.set(false);
+        }
+    }
+
+    // Modify your handleLessonSubscription to update loading state
     private handleLessonSubscription(lessonsObservable: Observable<any>, category: string): void {
         lessonsObservable
             .pipe(
                 take(3),
                 tap((lessons) => {
+                    // Store lessons in appropriate array
+                    if (category === 'bb') this.bbLessons = lessons;
+                    else if (category === 'intro') this.introLessons = lessons;
+                    else if (category === 'intermediate') this.intermediateLessons = lessons;
+                    else if (category === 'advanced') this.advancedLessons = lessons;
+
+                    // Update loading state
+                    this.updateLoadingState();
+
                     // Load thumbnails for lessons with videoId
-                    lessons.forEach((lesson: any) => {
-                        if (lesson.vimeoIds && !lesson.thumbnailUrl) {
-                            const result = this.loadThumbnail(lesson.vimeoIds?.[this.langCode]);
-                            if (typeof result === 'string') {
-                                // If it's a direct string (default image), use it directly
-                                this.lessonThumbnails[lesson.vimeoIds[0]] = result;
-                            } else {
-                                // If it's an Observable, subscribe to it
-                                result.subscribe((url) => {
-                                    this.lessonThumbnails[lesson.vimeoIds[0]] = url;
-                                });
-                            }
-                        }
-                    });
+                    // Existing thumbnail code...
                 }),
             )
             .subscribe();
+    }
+
+    // Add this method to check if a category can be started
+    canStartCategory(category: string): boolean {
+        // BB is always accessible
+        if (category === 'bb') return true;
+
+        // For other categories, check prerequisite completion
+        if (category === 'intro') return this.categoryCompletion()['bb'];
+        if (category === 'intermediate') return this.categoryCompletion()['intro'];
+        if (category === 'advanced') return this.categoryCompletion()['intermediate'];
+
+        return false;
     }
 }
