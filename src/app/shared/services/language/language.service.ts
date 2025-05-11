@@ -29,6 +29,7 @@ export class TranslationService {
         { name: 'Telugu', code: 'te' },
         { name: 'Hindi', code: 'hi' },
         { name: 'Odia', code: 'or' },
+        { name: 'Kannada', code: 'ka' },
     ];
 
     constructor() {

@@ -15,7 +15,7 @@ import { Subscription } from 'rxjs';
 @Component({
     selector: 'app-navbar',
     standalone: true,
-    imports: [CommonModule, ClickOutsideDirective, TranslatePipe],
+    imports: [CommonModule, ClickOutsideDirective],
     templateUrl: './navbar.component.html',
     styleUrls: ['./navbar.component.scss'],
 })
