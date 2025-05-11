@@ -1,17 +1,13 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AppShellComponent } from 'src/app/components/app-shell/app-shell.component';
 import { Router, RouterModule } from '@angular/router';
-import { FirebaseService } from 'src/app/shared/services/firebase.service';
 import { catchError, map, Observable, of, Subscription, take, tap } from 'rxjs';
 import { DataService } from 'src/app/shared/services/data.service';
 import { Lesson } from 'src/app/shared/models/lesson.model';
 import { ProgressService } from 'src/app/shared/services/progress/progress.service';
 import { AuthService } from 'src/app/shared/services/auth/auth.service';
 import { LessonsService } from 'src/app/shared/services/lessons/lessons.service';
-import { seedUser } from 'src/app/shared/utils/init-data';
-import { IProgress, LanguageProgress, LessonsProgress } from 'src/app/shared/models/progress.interface';
-import { SortPipe } from '../../shared/pipes/sort.pipe';
+import { IProgress, LessonsProgress } from 'src/app/shared/models/progress.interface';
 import { Timestamp } from '@angular/fire/firestore';
 import { UserService } from 'src/app/shared/services/users/user.service';
 import { IUser } from 'src/app/shared/models/user.interface';
