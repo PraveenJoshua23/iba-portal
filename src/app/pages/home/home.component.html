@@ -10,6 +10,11 @@
             <h1>{{ translationService.instant('lessons') }}</h1>
             <!-- Debug translation: -->
             <!-- <div *ngIf="true">Current language: {{ currentLanguage }}, Key: lessons, Value: {{ translationService.instant('lessons') }}</div> -->
+
+            <!-- Debug button - only visible in development -->
+            <!-- @if (true) {
+                <button (click)="debugProgressGeneration()" class="mt-2 mb-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md text-sm">Debug: Test Progress Generation</button>
+            } -->
         </div>
         <div class="flex flex-col space-y-2 px-3 py-5 w-full">
             @if (progress) {

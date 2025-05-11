@@ -10,7 +10,8 @@ import { TermsDialogComponent } from 'src/app/components/terms-dialog/terms-dial
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { UserService } from 'src/app/shared/services/users/user.service';
 import { ProfileService } from 'src/app/shared/services/profile/profile.service';
-import { Subscription, finalize, switchMap } from 'rxjs';
+import { Subscription, finalize, switchMap, tap, map, of } from 'rxjs';
+import { ProgressService } from 'src/app/shared/services/progress/progress.service';
 
 @Component({
     selector: 'app-sign-up',
@@ -25,6 +26,7 @@ export class SignUpComponent implements OnDestroy {
     auth$!: Subscription;
     userService = inject(UserService);
     profileService = inject(ProfileService);
+    progressService = inject(ProgressService);
     errorMsg: string | null = null;
     readonly defaultRole: 'student' | 'instructor' | 'admin' = 'student';
     isSubmitting = false;
@@ -115,6 +117,18 @@ export class SignUpComponent implements OnDestroy {
                         .pipe(
                             // Initialize profile after successful registration
                             switchMap(() => this.profileService.initializeUserProfile(formData.email)),
+                            // Initialize progress data for the user
+                            switchMap((profileResult) => {
+                                if (profileResult.success) {
+                                    // Initialize progress for the new user
+                                    return this.progressService.initializeProgressOnLoad(formData.email).pipe(
+                                        tap((progress) => console.log('User progress initialized successfully')),
+                                        // Return the profile result to maintain the chain
+                                        map(() => profileResult),
+                                    );
+                                }
+                                return of(profileResult);
+                            }),
                             finalize(() => (this.isSubmitting = false)),
                         )
                         .subscribe({

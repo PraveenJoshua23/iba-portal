@@ -1,14 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { CollectionReference, Firestore, addDoc, getDocs, collection, collectionData, doc, docSnapshots, limit, orderBy, query, updateDoc, where } from '@angular/fire/firestore';
-import { Observable, first, firstValueFrom, from, map, switchMap, tap } from 'rxjs';
-import { IProgress } from '../../models/progress.interface';
-import { progressData } from '../../utils/init-data';
+import { Observable, combineLatest, first, firstValueFrom, from, map, switchMap, tap } from 'rxjs';
+import { CategoryProgress, IProgress, LanguageProgress, LessonsProgress } from '../../models/progress.interface';
+import { LessonsService } from '../lessons/lessons.service';
 
 @Injectable({
     providedIn: 'root',
 })
 export class ProgressService {
     fs = inject(Firestore);
+    lessonsService = inject(LessonsService);
 
     progressRef!: CollectionReference;
 
@@ -24,10 +25,14 @@ export class ProgressService {
                     const progressDoc = progressDocs[0];
                     return docSnapshots(doc(this.progressRef, `${progressDoc.id}`)).pipe(map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }) as IProgress));
                 } else {
-                    const initialProgress: IProgress = { ...progressData, email: userEmail };
-                    return from(addDoc(this.progressRef, initialProgress)).pipe(
-                        tap((docRef) => console.log('Progress seeded successfully with ID:', docRef.id)),
-                        switchMap((docRef) => docSnapshots(docRef).pipe(map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }) as IProgress))),
+                    // Generate progress data dynamically based on lessons
+                    return this.generateInitialProgressData(userEmail).pipe(
+                        switchMap((initialProgress) => {
+                            return from(addDoc(this.progressRef, initialProgress)).pipe(
+                                tap((docRef) => console.log('Progress seeded successfully with ID:', docRef.id)),
+                                switchMap((docRef) => docSnapshots(docRef).pipe(map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }) as IProgress))),
+                            );
+                        }),
                     );
                 }
             }),
@@ -184,18 +189,6 @@ export class ProgressService {
             console.error('Error updating lesson completion:', error);
             return Promise.reject(error);
         }
-    }
-
-    // Helper method to map category abbreviations to full category names
-    private mapCategoryName(category: string): string {
-        const categoryMap: { [key: string]: string } = {
-            bb: 'BB',
-            intro: 'Introductory',
-            intermediate: 'Intermediate',
-            advanced: 'Advanced',
-        };
-
-        return categoryMap[category.toLowerCase()] || category;
     }
 
     // Add this method to the ProgressService class
@@ -408,11 +401,11 @@ export class ProgressService {
 
             // Create a new progress object based on the template
             const resetProgressData: IProgress = {
-                ...progressData, // Template from init-data.ts
                 id: progressId,
                 email: userEmail,
                 userId: progressDoc.data()['userId'] || '',
                 classId: progressDoc.data()['classId'] || '',
+                categoryProgress: [],
             };
 
             // Update the document in Firestore
@@ -424,5 +417,121 @@ export class ProgressService {
             console.error('Error resetting progress:', error);
             return Promise.reject(error);
         }
+    }
+
+    /**
+     * Generates initial progress data structure based on lessons from LessonsService
+     * @param userEmail User's email address
+     * @returns Observable with the generated progress data
+     */
+    private generateInitialProgressData(userEmail: string): Observable<IProgress> {
+        // Define the categories we want to fetch lessons for
+        const categories = ['bb', 'intro', 'intermediate', 'advanced'];
+        const languages = ['en', 'ta', 'te', 'hi', 'or', 'ka'];
+
+        // Map category values to display names
+        const categoryDisplayNames: Record<string, 'BB' | 'Introductory' | 'Intermediate' | 'Advanced'> = {
+            bb: 'BB',
+            intro: 'Introductory',
+            intermediate: 'Intermediate',
+            advanced: 'Advanced',
+        };
+
+        // Create an array of observables for each category
+        const categoryObservables = categories.map((category) =>
+            this.lessonsService.getAllLessonsForCategory(category).pipe(
+                map((lessons) => {
+                    // Create language progress structure for this category
+                    const languageProgress: Record<string, LanguageProgress> = {};
+
+                    // Initialize language progress for each supported language
+                    languages.forEach((lang) => {
+                        // Map lessons to progress structure
+                        const lessonsProgress: LessonsProgress[] = lessons.map((lesson, index) => {
+                            return {
+                                id: lesson.id,
+                                name: lesson.names?.[lang] || lesson.names?.['en'] || `Lesson ${lesson.lessonNo}`,
+                                lessonNo: lesson.lessonNo,
+                                watchDuration: 0,
+                                progress: '0',
+                                completed: false,
+                                locked: index === 0 ? false : true, // First lesson is unlocked
+                                startDate: null,
+                                completedDate: null,
+                                postQuizId: null,
+                                quizAnswers: null,
+                            };
+                        });
+
+                        // Add language progress
+                        languageProgress[lang] = {
+                            progress: '0',
+                            lessons: lessonsProgress,
+                        };
+                    });
+
+                    // Create category progress
+                    return {
+                        categoryName: categoryDisplayNames[category],
+                        locked: category === 'bb' ? false : true, // Only BB is unlocked initially
+                        progress: '0',
+                        languageProgress,
+                    } as CategoryProgress;
+                }),
+            ),
+        );
+
+        // Combine all category observables
+        return combineLatest(categoryObservables).pipe(
+            map((categoryProgressArray) => {
+                // Create the initial progress structure
+                return {
+                    id: '',
+                    email: userEmail,
+                    classId: '',
+                    userId: '',
+                    categoryProgress: categoryProgressArray,
+                } as IProgress;
+            }),
+        );
+    }
+
+    /**
+     * Debug method to test the generation of initial progress data
+     * @param userEmail User's email address
+     * @returns Observable with the generated progress data
+     */
+    debugGenerateProgressData(userEmail: string = 'test@example.com'): Observable<IProgress> {
+        console.log('Starting debug generation of progress data...');
+        return this.generateInitialProgressData(userEmail).pipe(
+            tap((progressData) => {
+                console.log('Generated Progress Data:', JSON.stringify(progressData, null, 2));
+
+                // Log some statistics
+                const totalCategories = progressData.categoryProgress.length;
+                const totalLessons = progressData.categoryProgress.reduce((sum, category) => {
+                    const firstLanguage = Object.keys(category.languageProgress)[0] || 'en';
+                    return sum + (category.languageProgress[firstLanguage]?.lessons.length || 0);
+                }, 0);
+
+                console.log(`Statistics: ${totalCategories} categories, ${totalLessons} total lessons`);
+
+                // Log language support
+                const languages = Object.keys(progressData.categoryProgress[0]?.languageProgress || {});
+                console.log(`Supported languages: ${languages.join(', ')}`);
+            }),
+        );
+    }
+
+    // Helper method to map category abbreviations to full category names
+    private mapCategoryName(category: string): string {
+        const categoryMap: { [key: string]: string } = {
+            bb: 'BB',
+            intro: 'Introductory',
+            intermediate: 'Intermediate',
+            advanced: 'Advanced',
+        };
+
+        return categoryMap[category.toLowerCase()] || category;
     }
 }

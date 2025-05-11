@@ -115,7 +115,6 @@ export class VimeoService {
         const headers = this.getAuthHeaders();
         return this.http.get(`${this.apiUrl}/videos/${videoId}/pictures`, { headers }).pipe(
             map((response: any) => {
-                console.log('Vimeo API response for thumbnails:', response);
                 // Return the first thumbnail data object which contains sizes
                 if (response.data && response.data.length > 0) {
                     return response.data[0];

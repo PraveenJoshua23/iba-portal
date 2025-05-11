@@ -290,7 +290,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
         return this.vimeoService.getVideoThumbnail(videoId).pipe(
             map((thumbnailData: any) => {
-                console.log('Thumbnail data:', thumbnailData);
                 // Find the appropriate size thumbnail (medium or the first available)
                 const thumbnail = thumbnailData.sizes.find((size: any) => size.width >= 400 && size.width <= 800) || thumbnailData.sizes[0];
                 return thumbnail?.link || 'assets/images/video-placeholder.png';
@@ -302,31 +301,6 @@ export class HomeComponent implements OnInit, OnDestroy {
             }),
         );
     }
-
-    // private handleLessonSubscription(lessonsObservable: Observable<any>, category: string): void {
-    //     lessonsObservable
-    //         .pipe(
-    //             take(3),
-    //             tap((lessons) => {
-    //                 // Load thumbnails for lessons with videoId
-    //                 lessons.forEach((lesson: any) => {
-    //                     if (lesson.vimeoIds && !lesson.thumbnailUrl) {
-    //                         const result = this.loadThumbnail(lesson.vimeoIds?.[this.langCode]);
-    //                         if (typeof result === 'string') {
-    //                             // If it's a direct string (default image), use it directly
-    //                             this.lessonThumbnails[lesson.vimeoIds[0]] = result;
-    //                         } else {
-    //                             // If it's an Observable, subscribe to it
-    //                             result.subscribe((url) => {
-    //                                 this.lessonThumbnails[lesson.vimeoIds[0]] = url;
-    //                             });
-    //                         }
-    //                     }
-    //                 });
-    //             }),
-    //         )
-    //         .subscribe();
-    // }
 
     // Add this method to check completion of all categories
     checkAllCategoriesCompletion(progress: IProgress): void {
@@ -434,5 +408,21 @@ export class HomeComponent implements OnInit, OnDestroy {
         if (category === 'advanced') return this.categoryCompletion()['intermediate'];
 
         return false;
+    }
+
+    // Debug method to test progress data generation
+    debugProgressGeneration(): void {
+        console.log('Testing progress data generation...');
+        this.ps
+            .debugGenerateProgressData(this.email || 'test@example.com')
+            .pipe(take(1))
+            .subscribe({
+                next: (data) => {
+                    console.log('Debug completed successfully');
+                },
+                error: (err) => {
+                    console.error('Error in debug progress generation:', err);
+                },
+            });
     }
 }
