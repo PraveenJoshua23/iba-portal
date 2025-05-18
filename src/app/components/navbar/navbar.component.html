@@ -8,7 +8,7 @@
                     clip-rule="evenodd"
                 />
             </svg>
-            <span>{{ translationService.instant('support') || 'Support' }}</span>
+            <span class="text-sm">{{ translationService.instant('support') || 'Support' }}</span>
         </button>
     </div>
     <!-- Language Selector -->
@@ -20,18 +20,24 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
-            <div *ngIf="isLanguageDropdownOpen" class="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                <div class="py-1" role="menu" aria-orientation="vertical">
-                    <a *ngFor="let lang of availableLanguages" (click)="selectLanguage(lang.code)" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer" [class.font-medium]="currentLanguage === lang.code">
-                        {{ lang.name }}
-                    </a>
+            @if (isLanguageDropdownOpen) {
+                <div class="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                    <div class="py-1" role="menu" aria-orientation="vertical">
+                        <a *ngFor="let lang of availableLanguages" (click)="selectLanguage(lang.code)" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer" [class.font-medium]="currentLanguage === lang.code">
+                            {{ lang.name }}
+                        </a>
+                    </div>
                 </div>
-            </div>
+            }
         </div>
     </div>
 
     <!-- Sign Out Button -->
     <div class="flex items-center h-full">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        </svg>
+
         <a class="font-medium text-sm cursor-pointer" (click)="signOut()">
             {{ translationService.instant('signOut') }}
         </a>
