@@ -17,4 +17,5 @@ export const environment = {
         appId: '1:1075322656509:web:e5068ef4a0916646215094',
         measurementId: 'G-MV73KNE1PC',
     },
+    n8nWebhookUrl: 'https://primary-production-c02b.up.railway.app/webhook/iba-support-telegram',
 };

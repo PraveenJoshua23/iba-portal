@@ -1,7 +1,19 @@
 <div class="flex justify-end items-center w-full py-4 px-8 border-b gap-6 border-gray-100 h-[80px]">
+    <div class="flex items-center">
+        <button (click)="supportDialog.open()" class="flex items-center space-x-2 bg-golden-600 text-white rounded-md px-4 py-2 hover:bg-golden-700 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                    fill-rule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                    clip-rule="evenodd"
+                />
+            </svg>
+            <span>{{ translationService.instant('support') || 'Support' }}</span>
+        </button>
+    </div>
     <!-- Language Selector -->
     <div class="flex items-center">
-        <div class="relative" clickOutside (clickOutside)="closeDropdown()">
+        <div class="relative hidden" clickOutside (clickOutside)="closeDropdown()">
             <button (click)="toggleLanguageDropdown()" class="flex items-center space-x-2 bg-white rounded-md px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors">
                 <span>{{ this.currentLanguage }}</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -24,4 +36,7 @@
             {{ translationService.instant('signOut') }}
         </a>
     </div>
+
+    <!-- Support Dialog Component -->
+    <app-support-dialog #supportDialog (submit)="handleSupportSubmit($event)" />
 </div>
