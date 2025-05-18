@@ -1,5 +1,5 @@
 // src/app/components/support-dialog/support-dialog.component.ts
-import { Component, OnInit, EventEmitter, Output, inject } from '@angular/core';
+import { Component, OnInit, EventEmitter, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from 'src/app/shared/services/auth/auth.service';
@@ -90,7 +90,8 @@ import { TranslationService } from 'src/app/shared/services/language/language.se
                         <button
                             type="submit"
                             class="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-golden-600 border border-transparent rounded-md shadow-sm hover:bg-golden-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-golden-500"
-                            [disabled]="isSubmitting"
+                            [class.opacity-50]="supportForm.invalid || isSubmitting"
+                            [disabled]="supportForm.invalid || isSubmitting"
                         >
                             <span *ngIf="!isSubmitting">{{ translationService.instant('submit') || 'Submit' }}</span>
                             <span *ngIf="isSubmitting" class="flex items-center">
@@ -116,6 +117,9 @@ export class SupportDialogComponent implements OnInit {
     supportForm!: FormGroup;
     formError: string | null = null;
 
+    // Create signals for form state
+    formValid = signal(false);
+
     auth = inject(AuthService);
     notificationService = inject(NotificationService);
     translationService = inject(TranslationService);
@@ -128,6 +132,11 @@ export class SupportDialogComponent implements OnInit {
             issueType: ['', Validators.required],
             description: ['', [Validators.required, Validators.minLength(10)]],
             email: [this.auth.getUserEmail() || localStorage.getItem('email') || '', [Validators.required, Validators.email]],
+        });
+
+        // Subscribe to form status changes to update the formValid signal
+        this.supportForm.statusChanges.subscribe((status) => {
+            this.formValid.set(status === 'VALID');
         });
     }
 
@@ -152,8 +161,13 @@ export class SupportDialogComponent implements OnInit {
     }
 
     handleSubmit() {
+        // Mark all fields as touched to trigger validation messages
         if (!this.supportForm.valid) {
             this.formError = 'Please fill all required fields correctly';
+            Object.keys(this.supportForm.controls).forEach((key) => {
+                const control = this.supportForm.get(key);
+                control?.markAsTouched();
+            });
             return;
         }
 
