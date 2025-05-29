@@ -1,11 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, Input, Output, EventEmitter } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { DataService } from '../../shared/services/data.service';
 import { TranslationService } from 'src/app/shared/services/language/language.service';
-import { TranslatePipe } from 'src/app/shared/pipes/translation.pipe';
 
 interface MenuItem {
     label: string;
@@ -22,11 +21,14 @@ interface MenuItem {
     styleUrls: ['./sidebar.component.scss'],
 })
 export class SidebarComponent implements OnInit, OnDestroy {
+    @Input() isOpen: boolean = false;
+    @Output() closeSidebar = new EventEmitter<void>();
+
     usrEmail: string | null = '';
     userRole: string | null = null;
 
     translationService = inject(TranslationService);
-    currentLanguage: string = 'English'; // Default language
+    currentLanguage: string = 'English';
 
     menuItems: MenuItem[] = [
         {
@@ -50,21 +52,25 @@ export class SidebarComponent implements OnInit, OnDestroy {
     private subscriptions: Subscription[] = [];
     private dataService = inject(DataService);
 
-    constructor(private auth: AngularFireAuth) {}
+    constructor(
+        private auth: AngularFireAuth,
+        private router: Router,
+    ) {}
 
     ngOnInit(): void {
         this.currentLanguage = this.translationService.getCurrentLanguageValue();
         const authSub = this.auth.authState.subscribe((user) => {
             if (user) {
                 this.usrEmail = user.email;
-                // Fetch user details to get the role
                 this.getUserDetails(user.email);
             }
         });
-        this.translationService.getCurrentLanguage().subscribe((language) => {
+
+        const langSub = this.translationService.getCurrentLanguage().subscribe((language) => {
             this.currentLanguage = language;
         });
-        this.subscriptions.push(authSub);
+
+        this.subscriptions.push(authSub, langSub);
     }
 
     ngOnDestroy(): void {
@@ -84,12 +90,19 @@ export class SidebarComponent implements OnInit, OnDestroy {
         }
     }
 
-    // Helper method to determine if a menu item should be visible
     canShowMenuItem(item: MenuItem): boolean {
-        // If no required role is specified, show the item to everyone
         if (!item.requiredRole) return true;
-
-        // Otherwise, check if the user has the required role
         return this.userRole?.toLowerCase() === item.requiredRole;
+    }
+
+    onMenuItemClick(route: string): void {
+        // Navigate to the route
+        this.router.navigate([route]);
+        // Close sidebar on mobile
+        this.closeSidebar.emit();
+    }
+
+    onCloseSidebar(): void {
+        this.closeSidebar.emit();
     }
 }

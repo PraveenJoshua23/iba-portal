@@ -1,9 +1,8 @@
 // src/app/components/navbar/navbar.component.ts
-import { Component, OnInit, inject, OnDestroy, ViewChild } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnInit, inject, OnDestroy, ViewChild, Output, EventEmitter } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from 'src/app/shared/services/auth/auth.service';
-
 import { UserService } from 'src/app/shared/services/users/user.service';
 import { DataService } from 'src/app/shared/services/data.service';
 import { IUser } from 'src/app/shared/models/user.interface';
@@ -17,12 +16,14 @@ import { SupportDialogComponent } from '../support-dialog/support-dialog.compone
 @Component({
     selector: 'app-navbar',
     standalone: true,
-    imports: [CommonModule, ClickOutsideDirective, SupportDialogComponent],
+    imports: [CommonModule, ClickOutsideDirective, RouterModule, SupportDialogComponent],
     templateUrl: './navbar.component.html',
     styleUrls: ['./navbar.component.scss'],
 })
 export class NavbarComponent implements OnInit, OnDestroy {
     @ViewChild('supportDialog') supportDialog!: SupportDialogComponent;
+    @Output() toggleSidebar = new EventEmitter<void>();
+
     auth = inject(AuthService);
     userService = inject(UserService);
     dataService = inject(DataService);
@@ -137,6 +138,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     closeDropdown(): void {
         this.isLanguageDropdownOpen = false;
+    }
+
+    onToggleSidebar(): void {
+        this.toggleSidebar.emit();
     }
 
     // method to handle support form submission
