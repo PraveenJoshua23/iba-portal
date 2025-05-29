@@ -3,6 +3,7 @@ import { CollectionReference, Firestore, addDoc, getDocs, collection, collection
 import { Observable, combineLatest, first, firstValueFrom, from, map, switchMap, tap } from 'rxjs';
 import { CategoryProgress, IProgress, LanguageProgress, LessonsProgress } from '../../models/progress.interface';
 import { LessonsService } from '../lessons/lessons.service';
+import { DataService } from '../data.service';
 
 @Injectable({
     providedIn: 'root',
@@ -10,6 +11,7 @@ import { LessonsService } from '../lessons/lessons.service';
 export class ProgressService {
     fs = inject(Firestore);
     lessonsService = inject(LessonsService);
+    dataService = inject(DataService);
 
     progressRef!: CollectionReference;
 
@@ -382,36 +384,16 @@ export class ProgressService {
     }
 
     /**
-     * Resets a user's progress to the initial state using the template from init-data.ts
+     * Resets a user's progress to the initial state using the resetProgressStructure from DataService
      * @param userEmail Email of the user whose progress should be reset
      * @returns Promise that resolves when the progress has been reset
      */
     async resetProgress(userEmail: string): Promise<void> {
         try {
-            // First, get the progress document for this user
-            const q = query(this.progressRef, where('email', '==', userEmail));
-            const querySnapshot = await getDocs(q);
-
-            if (querySnapshot.empty) {
-                throw new Error(`No progress found for user ${userEmail}`);
-            }
-
-            const progressDoc = querySnapshot.docs[0];
-            const progressId = progressDoc.id;
-
-            // Create a new progress object based on the template
-            const resetProgressData: IProgress = {
-                id: progressId,
-                email: userEmail,
-                userId: progressDoc.data()['userId'] || '',
-                classId: progressDoc.data()['classId'] || '',
-                categoryProgress: [],
-            };
-
-            // Update the document in Firestore
-            const progressRef = doc(this.fs, 'progress', progressId);
-            await updateDoc(progressRef, { ...resetProgressData });
-
+            // Use the comprehensive resetProgressStructure method from DataService
+            // which properly initializes all lessons and language-specific progress
+            await this.dataService.resetProgressStructure(userEmail);
+            console.log(`Progress reset successfully for user: ${userEmail}`);
             return Promise.resolve();
         } catch (error) {
             console.error('Error resetting progress:', error);
