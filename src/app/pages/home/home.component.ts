@@ -126,23 +126,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
         loadLessonsAndProgress();
 
-        this.email = localStorage.getItem('email') ?? '';
-        if (this.email === '') {
-            console.error('Email not found');
-            this.email = this.as.getUserEmail();
-        }
-        this.ps.initializeProgressOnLoad(this.email!).subscribe({
-            next: (progress) => {
-                this.progress = progress;
-                this.getCategoryProgress(this.selectedCategory(), this.progress);
-                this.loadingProgress = false;
-            },
-            error: (error) => {
-                console.error(error);
-                this.loadingProgress = false;
-            },
-        });
-
         // Subscribe to lessons and load thumbnails
         // this.allBBLessons$
         //     .pipe(

@@ -30,7 +30,13 @@ export class ProgressService {
                     // Generate progress data dynamically based on lessons
                     return this.generateInitialProgressData(userEmail).pipe(
                         switchMap((initialProgress) => {
-                            return from(addDoc(this.progressRef, initialProgress)).pipe(
+                            // Sanitize the progress data to remove any undefined fields
+                            const sanitizedProgress = this.removeUndefinedFields(initialProgress);
+
+                            // Log the sanitized data for debugging
+                            console.log('Creating progress document for:', userEmail);
+
+                            return from(addDoc(this.progressRef, sanitizedProgress)).pipe(
                                 tap((docRef) => console.log('Progress seeded successfully with ID:', docRef.id)),
                                 switchMap((docRef) => docSnapshots(docRef).pipe(map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }) as IProgress))),
                             );
@@ -419,61 +425,74 @@ export class ProgressService {
             advanced: 'Advanced',
         };
 
-        // Create an array of observables for each category
-        const categoryObservables = categories.map((category) =>
-            this.lessonsService.getAllLessonsForCategory(category).pipe(
-                map((lessons) => {
-                    // Create language progress structure for this category
-                    const languageProgress: Record<string, LanguageProgress> = {};
+        // First, get user data to populate classId and userId
+        return from(this.dataService.getUserByEmail(userEmail)).pipe(
+            switchMap((user) => {
+                const classId = user?.classId || '';
+                const userId = user?.id || '';
 
-                    // Initialize language progress for each supported language
-                    languages.forEach((lang) => {
-                        // Map lessons to progress structure
-                        const lessonsProgress: LessonsProgress[] = lessons.map((lesson, index) => {
+                // Create an array of observables for each category
+                const categoryObservables = categories.map((category) =>
+                    this.lessonsService.getAllLessonsForCategory(category).pipe(
+                        map((lessons) => {
+                            // Log warning if no lessons found
+                            if (lessons.length === 0) {
+                                console.warn(`No lessons found for category: ${category}`);
+                            }
+
+                            // Create language progress structure for this category
+                            const languageProgress: Record<string, LanguageProgress> = {};
+
+                            // Initialize language progress for each supported language
+                            languages.forEach((lang) => {
+                                // Map lessons to progress structure
+                                const lessonsProgress: LessonsProgress[] = lessons.map((lesson, index) => {
+                                    return {
+                                        id: lesson.id || '',
+                                        name: lesson.names?.[lang] || lesson.names?.['en'] || `Lesson ${lesson.lessonNo || index + 1}`,
+                                        lessonNo: String(lesson.lessonNo || index + 1), // Convert to string as per interface
+                                        watchDuration: 0,
+                                        progress: '0',
+                                        completed: false,
+                                        locked: index === 0 ? false : true, // First lesson is unlocked
+                                        startDate: null,
+                                        completedDate: null,
+                                        postQuizId: null,
+                                        quizAnswers: null,
+                                    };
+                                });
+
+                                // Add language progress
+                                languageProgress[lang] = {
+                                    progress: '0',
+                                    lessons: lessonsProgress,
+                                };
+                            });
+
+                            // Create category progress
                             return {
-                                id: lesson.id,
-                                name: lesson.names?.[lang] || lesson.names?.['en'] || `Lesson ${lesson.lessonNo}`,
-                                lessonNo: lesson.lessonNo,
-                                watchDuration: 0,
+                                categoryName: categoryDisplayNames[category],
+                                locked: category === 'bb' ? false : true, // Only BB is unlocked initially
                                 progress: '0',
-                                completed: false,
-                                locked: index === 0 ? false : true, // First lesson is unlocked
-                                startDate: null,
-                                completedDate: null,
-                                postQuizId: null,
-                                quizAnswers: null,
-                            };
-                        });
+                                languageProgress,
+                            } as CategoryProgress;
+                        }),
+                    ),
+                );
 
-                        // Add language progress
-                        languageProgress[lang] = {
-                            progress: '0',
-                            lessons: lessonsProgress,
-                        };
-                    });
-
-                    // Create category progress
-                    return {
-                        categoryName: categoryDisplayNames[category],
-                        locked: category === 'bb' ? false : true, // Only BB is unlocked initially
-                        progress: '0',
-                        languageProgress,
-                    } as CategoryProgress;
-                }),
-            ),
-        );
-
-        // Combine all category observables
-        return combineLatest(categoryObservables).pipe(
-            map((categoryProgressArray) => {
-                // Create the initial progress structure
-                return {
-                    id: '',
-                    email: userEmail,
-                    classId: '',
-                    userId: '',
-                    categoryProgress: categoryProgressArray,
-                } as IProgress;
+                // Combine all category observables
+                return combineLatest(categoryObservables).pipe(
+                    map((categoryProgressArray) => {
+                        // Create the initial progress structure with actual user data
+                        return {
+                            id: '',
+                            email: userEmail,
+                            classId: classId,
+                            userId: userId,
+                            categoryProgress: categoryProgressArray,
+                        } as IProgress;
+                    }),
+                );
             }),
         );
     }
@@ -515,5 +534,36 @@ export class ProgressService {
         };
 
         return categoryMap[category.toLowerCase()] || category;
+    }
+
+    /**
+     * Recursively removes undefined fields from an object
+     * Firestore doesn't support undefined values, so we need to clean the data
+     * @param obj The object to sanitize
+     * @returns The sanitized object without undefined fields
+     */
+    private removeUndefinedFields(obj: any): any {
+        if (obj === null || obj === undefined) {
+            return null;
+        }
+
+        if (Array.isArray(obj)) {
+            return obj.map((item) => this.removeUndefinedFields(item));
+        }
+
+        if (typeof obj === 'object') {
+            const cleaned: any = {};
+            for (const key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    const value = obj[key];
+                    if (value !== undefined) {
+                        cleaned[key] = this.removeUndefinedFields(value);
+                    }
+                }
+            }
+            return cleaned;
+        }
+
+        return obj;
     }
 }
