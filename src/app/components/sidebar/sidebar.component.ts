@@ -5,6 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { DataService } from '../../shared/services/data.service';
 import { TranslationService } from 'src/app/shared/services/language/language.service';
+import { trigger, state, style, animate, transition } from '@angular/animations';
 
 interface MenuItem {
     label: string;
@@ -19,6 +20,17 @@ interface MenuItem {
     imports: [CommonModule, RouterModule],
     templateUrl: './sidebar.component.html',
     styleUrls: ['./sidebar.component.scss'],
+    animations: [
+        trigger('fadeInOut', [
+            state('void', style({
+                opacity: 0,
+            })),
+            state('*', style({
+                opacity: 1,
+            })),
+            transition('void <=> *', [animate('300ms ease-in-out')]),
+        ]),
+    ],
 })
 export class SidebarComponent implements OnInit, OnDestroy {
     @Input() isOpen: boolean = false;
