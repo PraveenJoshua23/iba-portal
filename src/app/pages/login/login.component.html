@@ -52,7 +52,7 @@
                 <div class="flex items-center justify-between">
                     <label for="password" class="block text-sm font-medium leading-6 text-gray-900">Password</label>
                     <div class="text-sm">
-                        <a href="#" class="font-semibold text-golden-600 hover:text-golden-500" (click)="forgotPassword()">Forgot password?</a>
+                        <a href="#" class="font-semibold text-golden-600 hover:text-golden-500" (click)="forgotPassword(); $event.preventDefault()">Forgot password?</a>
                     </div>
                 </div>
                 <div class="mt-2">
@@ -102,3 +102,75 @@
         }
     </div>
 </div>
+
+<!-- Forgot Password Dialog -->
+@if (showForgotPasswordDialog) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4" (click)="closeForgotPasswordDialog()">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative" (click)="$event.stopPropagation()">
+            <!-- Close Button -->
+            <button
+                type="button"
+                (click)="closeForgotPasswordDialog()"
+                class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Close"
+            >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+
+            <!-- Dialog Title -->
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">Reset your password</h3>
+            <p class="text-sm text-gray-600 mb-6">Enter your email address and we'll send you a link to reset your password.</p>
+
+            <!-- Email Input -->
+            <div class="mb-6">
+                <label for="reset-email" class="block text-sm font-medium leading-6 text-gray-900 mb-2">Email address</label>
+                <input
+                    id="reset-email"
+                    name="reset-email"
+                    type="email"
+                    [formControl]="forgotPasswordEmail"
+                    autocomplete="email"
+                    placeholder="you@example.com"
+                    class="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-golden-600 sm:text-sm sm:leading-6"
+                    [ngClass]="{ 'ring-red-500': forgotPasswordEmail.invalid && forgotPasswordEmail.touched }"
+                />
+                @if (forgotPasswordEmail.invalid && forgotPasswordEmail.touched) {
+                    <div class="mt-1 text-sm text-red-600">
+                        @if (forgotPasswordEmail.errors?.['required']) {
+                            <span>Email is required</span>
+                        }
+                        @if (forgotPasswordEmail.errors?.['email'] || forgotPasswordEmail.errors?.['pattern']) {
+                            <span>Please enter a valid email address</span>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3">
+                <button
+                    type="button"
+                    (click)="closeForgotPasswordDialog()"
+                    class="flex-1 rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors"
+                    [disabled]="isSubmittingReset"
+                >
+                    Cancel
+                </button>
+                <button
+                    type="button"
+                    (click)="submitPasswordReset()"
+                    [disabled]="isSubmittingReset"
+                    class="flex-1 rounded-md bg-golden-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-golden-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-golden-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                    @if (isSubmittingReset) {
+                        <span>Sending...</span>
+                    } @else {
+                        <span>Send reset link</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
