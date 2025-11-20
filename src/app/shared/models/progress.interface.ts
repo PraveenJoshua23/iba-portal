@@ -10,9 +10,7 @@ export interface CategoryProgress {
     categoryName: 'BB' | 'Introductory' | 'Intermediate' | 'Advanced';
     progress: string | number;
     locked: boolean;
-    languageProgress: {
-        [language: string]: LanguageProgress; // e.g., 'en', 'ta', 'te', 'hi', 'or'
-    };
+    languageProgress: Record<string, LanguageProgress>;
 }
 
 export interface LanguageProgress {

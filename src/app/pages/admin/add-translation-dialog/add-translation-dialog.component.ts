@@ -24,8 +24,8 @@ export interface TranslationDialogData {
   templateUrl: './add-translation-dialog.component.html',
 })
 export class AddTranslationDialogComponent {
-  translationKey: string = '';
-  translations: { [language: string]: string } = {};
+  translationKey = '';
+  translations: Record<string, string> = {};
 
   constructor(
     public dialogRef: MatDialogRef<AddTranslationDialogComponent>,

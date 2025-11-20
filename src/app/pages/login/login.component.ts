@@ -19,15 +19,15 @@ import { user } from '@angular/fire/auth';
 })
 export class LoginComponent implements OnInit {
     loginForm!: FormGroup;
-    isLoggingIn: boolean = false;
-    isForgotten: boolean = false;
+    isLoggingIn = false;
+    isForgotten = false;
     userData: any;
     auth = inject(Auth);
     ds = inject(DataService);
     errorMsg: string | null = null;
-    showForgotPasswordDialog: boolean = false;
+    showForgotPasswordDialog = false;
     forgotPasswordEmail: FormControl = new FormControl('', [Validators.required, Validators.email, Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$')]);
-    isSubmittingReset: boolean = false;
+    isSubmittingReset = false;
     notificationService = inject(NotificationService);
 
     constructor(

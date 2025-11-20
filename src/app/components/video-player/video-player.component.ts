@@ -25,21 +25,21 @@ export class VideoPlayerComponent implements OnDestroy, AfterViewInit, OnChanges
         return this._allowScrubbing;
     }
 
-    private _allowScrubbing: boolean = false;
+    private _allowScrubbing = false;
     @Output() videoEnded = new EventEmitter<void>();
     @Output() videoProgress = new EventEmitter<number>();
 
     @ViewChild('scrubBarContainer') scrubBarContainer!: ElementRef;
 
-    preload: string = 'auto';
+    preload = 'auto';
     api!: VgApiService;
 
-    currentTime: number = 0;
-    duration: number = 0;
-    progressRate: number = 0;
+    currentTime = 0;
+    duration = 0;
+    progressRate = 0;
 
     // Flag to track whether position has been restored
-    private positionRestored: boolean = false;
+    private positionRestored = false;
     private subscriptions: any[] = [];
     private readonly STORAGE_KEY_PREFIX = 'video_position_';
 

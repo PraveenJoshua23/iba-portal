@@ -136,7 +136,7 @@ export class LessonResolver implements Resolve<LessonResolverData> {
     }
 
     private mapCategoryName(category: string): string {
-        const categoryMap: { [key: string]: string } = {
+        const categoryMap: Record<string, string> = {
             bb: 'BB',
             intro: 'Introductory',
             intermediate: 'Intermediate',

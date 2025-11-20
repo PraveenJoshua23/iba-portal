@@ -1,8 +1,4 @@
-export interface TranslationMap {
-    [key: string]: {
-        [language: string]: string;
-    };
-}
+export type TranslationMap = Record<string, Record<string, string>>;
 
 export const translations: TranslationMap = {
     home: {

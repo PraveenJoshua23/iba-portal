@@ -39,7 +39,7 @@ export class FirebaseService {
   firestoreDb!: any;
   studentCol!: CollectionReference<DocumentData>;
   src!: any;
-  intNum: number = 0;
+  intNum = 0;
   s = inject(Storage);
 
   constructor(
@@ -72,7 +72,7 @@ export class FirebaseService {
     const userRef = ref(db, 'users/');
     onValue(userRef, (snapshot) => {
       const users = snapshot?.val();
-      let usersList = Object.values(users);
+      const usersList = Object.values(users);
       const userExists = usersList.find(
         (v: any) => v.email === currentUser.email
       );

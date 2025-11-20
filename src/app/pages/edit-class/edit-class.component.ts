@@ -17,7 +17,7 @@ import { classData } from 'src/app/shared/utils/init-data';
 export class EditClassComponent implements OnInit {
     displayedColumns: string[] = ['id', 'name', 'language', 'networker', 'instructor', 'class', 'progress', 'action'];
     cs = inject(ClassServiceService);
-    searchTerm: string = '';
+    searchTerm = '';
     originalData: any = [];
     dataSource = new MatTableDataSource<any>([]);
     appearance: MatFormFieldAppearance = 'fill';

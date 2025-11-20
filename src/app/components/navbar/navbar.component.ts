@@ -33,8 +33,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     errMsg: string | null = null;
     currentUser: IUser | null = null;
-    currentLanguage: string = 'English';
-    isLanguageDropdownOpen: boolean = false;
+    currentLanguage = 'English';
+    isLanguageDropdownOpen = false;
 
     availableLanguages: Language[] = [];
     private languageSubscription?: Subscription;

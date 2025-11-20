@@ -33,11 +33,11 @@ import { trigger, state, style, animate, transition } from '@angular/animations'
     ],
 })
 export class NotificationComponent implements OnInit {
-    @Input() message: string = '';
-    @Input() duration: number = 3000; // Default 3 seconds
+    @Input() message = '';
+    @Input() duration = 3000; // Default 3 seconds
     @Input() type: 'success' | 'error' | 'info' = 'info';
 
-    visible: boolean = false;
+    visible = false;
 
     ngOnInit() {
         this.show();

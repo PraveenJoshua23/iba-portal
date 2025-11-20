@@ -49,15 +49,15 @@ export class HomeComponent implements OnInit, OnDestroy {
     progress$!: Subscription;
     userData!: IUser | null;
     email!: string | null;
-    loadingProgress: boolean = true;
+    loadingProgress = true;
     selectedCategory = signal('bb');
     categoryProgress: LessonsProgress[] = [];
-    currentLanguage: string = 'English'; // Default language
-    langCode: string = 'en';
+    currentLanguage = 'English'; // Default language
+    langCode = 'en';
     languageSubscription!: Subscription;
-    lessonThumbnails: { [key: string]: string } = {};
+    lessonThumbnails: Record<string, string> = {};
     loading = signal(true);
-    categoryCompletion = signal<{ [key: string]: boolean }>({
+    categoryCompletion = signal<Record<string, boolean>>({
         bb: false,
         intro: false,
         intermediate: false,
@@ -290,7 +290,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         if (!progress || !progress.categoryProgress) return;
 
         const categories = ['BB', 'Introductory', 'Intermediate', 'Advanced'];
-        const completionState: { [key: string]: boolean } = {
+        const completionState: Record<string, boolean> = {
             bb: false,
             intro: false,
             intermediate: false,

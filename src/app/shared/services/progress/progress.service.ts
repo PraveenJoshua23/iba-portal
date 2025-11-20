@@ -102,7 +102,7 @@ export class ProgressService {
     }
 
     // Add this method to the ProgressService class
-    async updateLessonCompletion(userEmail: string, category: string, lessonId: string, language: string = 'en'): Promise<void> {
+    async updateLessonCompletion(userEmail: string, category: string, lessonId: string, language = 'en'): Promise<void> {
         try {
             // First, get the progress document for this user
             const q = query(this.progressRef, where('email', '==', userEmail));
@@ -200,7 +200,7 @@ export class ProgressService {
     }
 
     // Add this method to the ProgressService class
-    async updateQuizAnswers(userEmail: string, category: string, lessonId: string, quizAnswers: number[], language: string = 'en'): Promise<void> {
+    async updateQuizAnswers(userEmail: string, category: string, lessonId: string, quizAnswers: number[], language = 'en'): Promise<void> {
         try {
             // First, get the progress document for this user
             const q = query(this.progressRef, where('email', '==', userEmail));
@@ -261,7 +261,7 @@ export class ProgressService {
             return Promise.reject(error);
         }
     }
-    async saveVideoPosition(userEmail: string, category: string, lessonId: string, position: number, language: string = 'en'): Promise<void> {
+    async saveVideoPosition(userEmail: string, category: string, lessonId: string, position: number, language = 'en'): Promise<void> {
         if (!userEmail) {
             throw new Error('Cannot save position: No user email provided');
         }
@@ -330,7 +330,7 @@ export class ProgressService {
     /**
      * Get saved video position for a specific lesson
      */
-    async getVideoPosition(userEmail: string, category: string, lessonId: string, language: string = 'en'): Promise<number | undefined> {
+    async getVideoPosition(userEmail: string, category: string, lessonId: string, language = 'en'): Promise<number | undefined> {
         if (!userEmail) {
             throw new Error('Cannot get position: No user email provided');
         }
@@ -502,7 +502,7 @@ export class ProgressService {
      * @param userEmail User's email address
      * @returns Observable with the generated progress data
      */
-    debugGenerateProgressData(userEmail: string = 'test@example.com'): Observable<IProgress> {
+    debugGenerateProgressData(userEmail = 'test@example.com'): Observable<IProgress> {
         console.log('Starting debug generation of progress data...');
         return this.generateInitialProgressData(userEmail).pipe(
             tap((progressData) => {
@@ -526,7 +526,7 @@ export class ProgressService {
 
     // Helper method to map category abbreviations to full category names
     private mapCategoryName(category: string): string {
-        const categoryMap: { [key: string]: string } = {
+        const categoryMap: Record<string, string> = {
             bb: 'BB',
             intro: 'Introductory',
             intermediate: 'Intermediate',

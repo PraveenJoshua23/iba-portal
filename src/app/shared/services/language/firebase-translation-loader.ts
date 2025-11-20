@@ -10,7 +10,7 @@ export class FirestoreTranslateLoader implements TranslateLoader {
     private firestore = inject(Firestore);
 
     // Language name to code mapping
-    private languageMap: { [key: string]: string } = {
+    private languageMap: Record<string, string> = {
         English: 'en',
         Tamil: 'ta',
         Telugu: 'te',
@@ -19,7 +19,7 @@ export class FirestoreTranslateLoader implements TranslateLoader {
     };
 
     // Reverse mapping (code to name)
-    private codeToName: { [key: string]: string } = {
+    private codeToName: Record<string, string> = {
         en: 'English',
         ta: 'Tamil',
         te: 'Telugu',
@@ -37,11 +37,11 @@ export class FirestoreTranslateLoader implements TranslateLoader {
 
         return from(getDocs(query(translationsCollection))).pipe(
             map((querySnapshot) => {
-                const translations: { [key: string]: string } = {};
+                const translations: Record<string, string> = {};
 
                 querySnapshot.forEach((doc) => {
                     const key = doc.id;
-                    const data = doc.data() as { [language: string]: string };
+                    const data = doc.data() as Record<string, string>;
 
                     // Get language name from code
                     const langName = this.getLanguageNameFromCode(langCode);

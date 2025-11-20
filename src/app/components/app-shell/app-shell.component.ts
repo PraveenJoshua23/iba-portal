@@ -11,7 +11,7 @@ import { RouterModule } from '@angular/router';
     styleUrls: ['./app-shell.component.scss'],
 })
 export class AppShellComponent {
-    isSidebarOpen: boolean = false;
+    isSidebarOpen = false;
 
     toggleSidebar(): void {
         this.isSidebarOpen = !this.isSidebarOpen;

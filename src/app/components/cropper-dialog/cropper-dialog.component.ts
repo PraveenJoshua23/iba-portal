@@ -3,13 +3,13 @@ import { CommonModule } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { ImageCroppedEvent, ImageCropperModule } from 'ngx-image-cropper';
 
-export type CropperDialogData = {
+export interface CropperDialogData {
   image: File,
   width: number,
   height: number
 }
 
-export type CropperDialogResult = {
+export interface CropperDialogResult {
   blob: Blob,
   imageUrl: string
 }

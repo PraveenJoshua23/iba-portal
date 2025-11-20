@@ -26,7 +26,7 @@ export class EditAllUserComponent implements OnInit, AfterViewInit {
     displayedColumns: string[] = ['id', 'name', 'language', 'networker', 'instructor', 'class', 'progress', 'action'];
     dataSource = new MatTableDataSource<any>([]);
     visibleRowCount = 5; // Default number of visible rows
-    searchTerm: string = '';
+    searchTerm = '';
     originalData: any = [];
     appearance: MatFormFieldAppearance = 'fill';
 

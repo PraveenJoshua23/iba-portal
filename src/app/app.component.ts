@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { TranslationService } from './shared/services/language/language.service';
 
@@ -10,7 +10,7 @@ import { TranslationService } from './shared/services/language/language.service'
     imports: [CommonModule, RouterModule],
     styleUrls: ['./app.component.scss'],
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
     title = 'iba-portal';
     private translationService = inject(TranslationService);
     ngOnInit() {

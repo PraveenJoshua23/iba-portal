@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -23,7 +23,7 @@ import { TranslationService } from 'src/app/shared/services/language/language.se
     templateUrl: './edit-lesson.component.html',
     styleUrl: './edit-lesson.component.scss',
 })
-export class EditLessonComponent implements OnInit {
+export class EditLessonComponent implements OnInit, AfterViewInit {
     // Table configuration
     displayedColumns: string[] = ['lessonNo', 'name', 'language', 'vimeoIds', 'description', 'actions'];
 
@@ -45,7 +45,7 @@ export class EditLessonComponent implements OnInit {
     isTestingVimeo = false;
     vimeoTestMessage = '';
     vimeoTestType: 'success' | 'error' | 'info' = 'info';
-    currentTestingLang: string = '';
+    currentTestingLang = '';
 
     // Notification handling
     notification = {
@@ -73,7 +73,7 @@ export class EditLessonComponent implements OnInit {
     };
 
     // Map to store form controls for language-specific content
-    languageSpecificControls: { [lang: string]: FormGroup } = {};
+    languageSpecificControls: Record<string, FormGroup> = {};
 
     // Pagination and sorting for each table
     @ViewChild('bbPaginator') bbPaginator!: MatPaginator;
@@ -94,8 +94,8 @@ export class EditLessonComponent implements OnInit {
     fb = inject(FormBuilder);
     vimeoService = inject(VimeoService);
     translationService = inject(TranslationService);
-    currentLanguage: string = 'en';
-    langCode: string = 'en';
+    currentLanguage = 'en';
+    langCode = 'en';
 
     constructor(public dialog: MatDialog) {
         this.lessonForm = this.fb.group({
@@ -162,7 +162,7 @@ export class EditLessonComponent implements OnInit {
     }
 
     // Create a new vimeo entry form group
-    createVimeoEntry(language: string = '', vimeoId: string = ''): FormGroup {
+    createVimeoEntry(language = '', vimeoId = ''): FormGroup {
         return this.fb.group({
             language: [language, Validators.required],
             vimeoId: [vimeoId, Validators.required],
@@ -170,7 +170,7 @@ export class EditLessonComponent implements OnInit {
     }
 
     // Add a new vimeo entry to the form array
-    addVimeoEntry(language: string = '', vimeoId: string = ''): void {
+    addVimeoEntry(language = '', vimeoId = ''): void {
         this.vimeoEntries.push(this.createVimeoEntry(language, vimeoId));
     }
 
@@ -407,7 +407,7 @@ export class EditLessonComponent implements OnInit {
             }
 
             // Process the vimeoEntries into a vimeoIds object
-            const vimeoIds: { [key: string]: string } = {};
+            const vimeoIds: Record<string, string> = {};
             lessonData.vimeoEntries.forEach((entry: { language: string; vimeoId: string }) => {
                 // Convert language name to language code
                 const langCode = Object.prototype.hasOwnProperty.call(this.languageCodes, entry.language) ? this.languageCodes[entry.language as keyof typeof this.languageCodes] : entry.language.toLowerCase();
@@ -553,7 +553,7 @@ export class EditLessonComponent implements OnInit {
     }
 
     // Helper method to convert Vimeo IDs object to an array for display
-    getVimeoEntries(vimeoIds: { [key: string]: string }): { lang: string; id: string }[] {
+    getVimeoEntries(vimeoIds: Record<string, string>): { lang: string; id: string }[] {
         if (!vimeoIds) return [];
 
         // Convert language codes to readable names where possible

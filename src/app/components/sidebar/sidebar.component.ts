@@ -33,14 +33,14 @@ interface MenuItem {
     ],
 })
 export class SidebarComponent implements OnInit, OnDestroy {
-    @Input() isOpen: boolean = false;
+    @Input() isOpen = false;
     @Output() closeSidebar = new EventEmitter<void>();
 
     usrEmail: string | null = '';
     userRole: string | null = null;
 
     translationService = inject(TranslationService);
-    currentLanguage: string = 'English';
+    currentLanguage = 'English';
 
     menuItems: MenuItem[] = [
         {

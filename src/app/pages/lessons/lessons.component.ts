@@ -67,14 +67,14 @@ export class LessonsComponent implements OnInit, OnDestroy {
     geminiService = inject(GeminiService);
 
     title!: string;
-    isQuizOpen: boolean = false;
+    isQuizOpen = false;
     currentQuizIndex = 0;
     currentLesson = signal<ILesson | null>(null);
     userAnswers: number[] = [];
     showCorrectAnswer = false;
     videoSrc: any;
     questions: any[] = [];
-    isVideoCompleted: boolean = false;
+    isVideoCompleted = false;
     progressRate = signal(0);
     lessonId!: string;
     lessonNo!: number;
@@ -87,10 +87,10 @@ export class LessonsComponent implements OnInit, OnDestroy {
     imageArray: any[] = [];
     files: any[] = [];
     uploadCompleted = signal(false);
-    qualityMenuOpen: boolean = false;
+    qualityMenuOpen = false;
     currentQuality: 'sd' | 'hd' | 'highest' = 'highest';
-    currentLanguage: string = 'en';
-    lang: string = 'en';
+    currentLanguage = 'en';
+    lang = 'en';
     // AI Summary related properties
     lessonSummary: string | null = null;
     isGeneratingSummary = false;
@@ -216,7 +216,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
 
     // Helper method to map category abbreviations to full names
     private mapCategoryName(category: string): string {
-        const categoryMap: { [key: string]: string } = {
+        const categoryMap: Record<string, string> = {
             bb: 'BB',
             intro: 'Introductory',
             intermediate: 'Intermediate',
@@ -962,7 +962,7 @@ export class LessonsComponent implements OnInit, OnDestroy {
 
     getFileList() {
         const ref = this.storage.ref('materials/bb/english');
-        let myurlsubscription = ref.listAll().subscribe((data) => {
+        const myurlsubscription = ref.listAll().subscribe((data) => {
             data.items.forEach((item) => {
                 let metadata: fileMetadata;
                 item.getMetadata().then((meta) => {

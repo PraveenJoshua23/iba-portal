@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, inject } from '@angular/core';
+import { Component, OnDestroy, inject, OnInit } from '@angular/core';
 import { FormGroup, FormBuilder, Validators, ReactiveFormsModule, AbstractControlOptions } from '@angular/forms';
 import { AuthService } from 'src/app/shared/services/auth/auth.service';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
@@ -20,7 +20,7 @@ import { ProgressService } from 'src/app/shared/services/progress/progress.servi
     imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MatCheckboxModule],
     styleUrls: ['./sign-up.component.scss'],
 })
-export class SignUpComponent implements OnDestroy {
+export class SignUpComponent implements OnDestroy, OnInit {
     myForm!: FormGroup;
     auth = inject(AuthService);
     auth$!: Subscription;

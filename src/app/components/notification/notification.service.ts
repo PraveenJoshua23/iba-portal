@@ -12,7 +12,7 @@ export class NotificationService {
         private environmentInjector: EnvironmentInjector,
     ) {}
 
-    show(message: string, type: 'success' | 'error' | 'info' = 'info', duration: number = 3000): void {
+    show(message: string, type: 'success' | 'error' | 'info' = 'info', duration = 3000): void {
         // Clear any existing notification
         this.clear();
 

@@ -122,7 +122,7 @@ export class TranslationService {
     /**
      * Add or update a translation in Firestore
      */
-    updateTranslation(key: string, translations: { [language: string]: string }): Observable<boolean> {
+    updateTranslation(key: string, translations: Record<string, string>): Observable<boolean> {
         const translationRef = doc(collection(this.firestore, 'translations'), key);
 
         return from(setDoc(translationRef, translations)).pipe(
@@ -130,7 +130,7 @@ export class TranslationService {
                 // Update ngx-translate translations
                 Object.keys(translations).forEach((langName) => {
                     const langCode = this.getLanguageCodeByName(langName);
-                    const update: { [key: string]: string } = {};
+                    const update: Record<string, string> = {};
                     update[key] = translations[langName];
                     this.translate.setTranslation(langCode, update, true);
                 });

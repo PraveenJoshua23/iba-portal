@@ -51,15 +51,15 @@ export class AdminComponent implements OnInit {
     translations: TranslationMap = {};
     translationKeys: string[] = [];
     availableLanguages: string[] = [];
-    rightLanguage: string = 'Tamil'; // Default right-side language
-    editedTranslations: { [key: string]: string } = {};
-    isSaving: boolean = false;
-    isLoading: boolean = true;
-    saveMessage: string = '';
+    rightLanguage = 'Tamil'; // Default right-side language
+    editedTranslations: Record<string, string> = {};
+    isSaving = false;
+    isLoading = true;
+    saveMessage = '';
     displayedColumns: string[] = ['id', 'name', 'language', 'networker', 'instructor', 'class', 'progress', 'action'];
     dataSource = new MatTableDataSource<any>([]);
     visibleRowCount = 5; // Default number of visible rows
-    searchTerm: string = '';
+    searchTerm = '';
     originalData: any = [];
     appearance: MatFormFieldAppearance = 'fill';
     selectedTabIndex = 0;
@@ -165,7 +165,7 @@ export class AdminComponent implements OnInit {
     }
 
     // Helper method to get all translations for a language
-    getAllTranslationsForLanguage(language: string): { [key: string]: string } {
+    getAllTranslationsForLanguage(language: string): Record<string, string> {
         const langCode = this.translationService.getLanguageCodeByName(language);
         return this.translationService.translate?.store?.translations[langCode] || {};
     }

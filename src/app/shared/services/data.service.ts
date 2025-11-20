@@ -234,7 +234,7 @@ export class DataService {
 
             // Create language progress map
             const createLanguageProgressMap = () => {
-                const languageProgress: { [language: string]: any } = {};
+                const languageProgress: Record<string, any> = {};
 
                 supportedLanguages.forEach((lang) => {
                     languageProgress[lang] = {
@@ -296,7 +296,7 @@ export class DataService {
     }
 
     // Updated method to safely update lesson progress without losing data
-    async updateLessonProgress(userEmail: string, category: string, lessonId: string, progressRate: number, language: string = 'en'): Promise<void> {
+    async updateLessonProgress(userEmail: string, category: string, lessonId: string, progressRate: number, language = 'en'): Promise<void> {
         if (!userEmail) {
             console.error('Cannot update progress: No user email provided');
             return;
@@ -441,7 +441,7 @@ export class DataService {
     // Helper method to convert category path to proper category name
     private getCategoryName(category: string): string {
         // Map category paths to category names used in the IProgress interface
-        const categoryMap: { [key: string]: string } = {
+        const categoryMap: Record<string, string> = {
             bb: 'BB',
             intro: 'Introductory',
             intermediate: 'Intermediate',
@@ -453,7 +453,7 @@ export class DataService {
 
     // Helper method to convert language name to code
     private getLanguageCode(language: string): string {
-        const langMap: { [key: string]: string } = {
+        const langMap: Record<string, string> = {
             English: 'en',
             Tamil: 'ta',
             Telugu: 'te',

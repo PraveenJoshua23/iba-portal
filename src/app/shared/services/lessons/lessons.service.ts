@@ -12,7 +12,7 @@ export class LessonsService {
 
     constructor() {}
 
-    getLessonById(id: string, category: string, language: string = 'en'): Observable<ILesson | null> {
+    getLessonById(id: string, category: string, language = 'en'): Observable<ILesson | null> {
         console.log('[LessonsService] getLessonById:', id, category, language);
         const lessonsCollectionRef = collection(this.firestore, `lessons/${category}/lesson`);
         const q = query(lessonsCollectionRef, where('id', '==', id));
@@ -35,7 +35,7 @@ export class LessonsService {
     }
 
     // Add a method to get all lessons for a category with language-specific titles
-    getAllLessonsForCategory(category: string, language: string = 'en'): Observable<ILesson[]> {
+    getAllLessonsForCategory(category: string, language = 'en'): Observable<ILesson[]> {
         const lessonsCollectionRef = collection(this.firestore, `lessons/${category}/lesson`);
         return from(getDocs(lessonsCollectionRef)).pipe(
             map((querySnapshot) => {
