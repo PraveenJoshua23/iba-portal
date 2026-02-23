@@ -34,7 +34,7 @@ export class LoginComponent implements OnInit {
         private fb: FormBuilder,
         private route: Router,
         private firebase: FirebaseService,
-        private cdr: ChangeDetectorRef
+        private cdr: ChangeDetectorRef,
     ) {}
 
     ngOnInit() {
@@ -54,17 +54,29 @@ export class LoginComponent implements OnInit {
             this.isLoggingIn = true;
 
             this.auth.signIn(email, password).subscribe({
-                next: (user) => {
-                    // this.getUser();
-                    console.log(user);
-                    localStorage.setItem('email', email);
-                    this.route.navigateByUrl('/home');
+                next: async () => {
+                    try {
+                        const user = await this.ds.getUserByEmail(email);
+
+                        if (!user) {
+                            this.isLoggingIn = false;
+                            this.notificationService.show('Your account is missing some details. Please complete your profile to continue.', 'error', 5000);
+                            this.route.navigate(['/signup'], {
+                                queryParams: { email, mode: 'complete-profile' },
+                            });
+                            return;
+                        }
+
+                        console.log('Login successful, user document found:', user);
+                        localStorage.setItem('email', email);
+                        this.route.navigateByUrl('/home');
+                    } catch (err) {
+                        console.error('Error checking user document after login:', err);
+                        this.isLoggingIn = false;
+                        this.notificationService.show('An error occurred while loading your account. Please try again.', 'error', 5000);
+                    }
                 },
                 error: (error) => {
-                    console.log('Login error:', error);
-                    console.log('Error code:', error.code);
-                    console.log('Error message:', error.message);
-                    console.log(error);
                     this.isLoggingIn = false;
 
                     // Set appropriate error message based on error code
@@ -109,7 +121,7 @@ export class LoginComponent implements OnInit {
         this.isSubmittingReset = false;
     }
 
-    submitPasswordReset() {
+    async submitPasswordReset() {
         if (this.forgotPasswordEmail.invalid) {
             this.forgotPasswordEmail.markAsTouched();
             return;
@@ -118,33 +130,47 @@ export class LoginComponent implements OnInit {
         const email = this.forgotPasswordEmail.value;
         this.isSubmittingReset = true;
 
-        this.auth.forgotPassword(email).subscribe({
-            next: () => {
-                this.isSubmittingReset = false;
-                this.notificationService.show('Password reset email sent! Check your inbox.', 'success', 5000);
-                this.closeForgotPasswordDialog();
-            },
-            error: (error) => {
-                this.isSubmittingReset = false;
-                console.error('Password reset error:', error);
+        try {
+            const emailExists = await this.firebase.checkEmailExistence(email);
 
-                // Map Firebase error codes to user-friendly messages
-                let errorMessage = 'An error occurred. Please try again.';
-                switch (error.code) {
-                    case 'auth/user-not-found':
-                        errorMessage = 'No account found with this email address.';
-                        break;
-                    case 'auth/invalid-email':
-                        errorMessage = 'Invalid email address.';
-                        break;
-                    case 'auth/too-many-requests':
-                        errorMessage = 'Too many requests. Please try again later.';
-                        break;
-                }
+            if (!emailExists) {
+                this.isSubmittingReset = false;
+                this.notificationService.show('No account found with this email address.', 'error', 5000);
+                return;
+            }
 
-                this.notificationService.show(errorMessage, 'error', 5000);
-            },
-        });
+            this.auth.forgotPassword(email).subscribe({
+                next: () => {
+                    this.isSubmittingReset = false;
+                    this.notificationService.show('Password reset email sent! Check your inbox.', 'success', 5000);
+                    this.closeForgotPasswordDialog();
+                },
+                error: (error) => {
+                    this.isSubmittingReset = false;
+                    console.error('Password reset error:', error);
+
+                    // Map Firebase error codes to user-friendly messages
+                    let errorMessage = 'An error occurred. Please try again.';
+                    switch (error.code) {
+                        case 'auth/user-not-found':
+                            errorMessage = 'No account found with this email address.';
+                            break;
+                        case 'auth/invalid-email':
+                            errorMessage = 'Invalid email address.';
+                            break;
+                        case 'auth/too-many-requests':
+                            errorMessage = 'Too many requests. Please try again later.';
+                            break;
+                    }
+
+                    this.notificationService.show(errorMessage, 'error', 5000);
+                },
+            });
+        } catch (error) {
+            this.isSubmittingReset = false;
+            console.error('Error checking email existence before password reset:', error);
+            this.notificationService.show('An error occurred. Please try again.', 'error', 5000);
+        }
     }
 
     // async getUser(){

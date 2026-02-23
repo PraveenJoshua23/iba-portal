@@ -14,13 +14,15 @@ export class AuthService {
     authStateSubscription!: Subscription;
 
     getUserEmail(): string | null {
-        const user = localStorage.getItem('email');
-        if (user === '') {
-            const user = this.firebaseAuth.currentUser;
-            return user ? user.email : null;
-        } else {
-            return user;
+        const storedEmail = localStorage.getItem('email');
+
+        // If nothing is stored (null or empty string), fall back to Firebase auth user
+        if (!storedEmail) {
+            const currentUser = this.firebaseAuth.currentUser;
+            return currentUser ? currentUser.email : null;
         }
+
+        return storedEmail;
     }
 
     forgotPassword(email: string): Observable<void> {
@@ -39,10 +41,9 @@ export class AuthService {
 
     signIn(email: string, password: string): Observable<void> {
         // Don't catch the error here, let it propagate to the subscriber
-        const promise = signInWithEmailAndPassword(this.firebaseAuth, email, password)
-            .then(() => {
-                console.log('Signed In successfully!');
-            });
+        const promise = signInWithEmailAndPassword(this.firebaseAuth, email, password).then(() => {
+            console.log('Signed In successfully!');
+        });
         return from(promise);
     }
 

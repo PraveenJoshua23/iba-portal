@@ -8,7 +8,7 @@ export const adminGuard: CanActivateFn = (route, state) => {
     const userEmail = localStorage.getItem('email');
 
     // Check if user is logged in and is the admin
-    if (userEmail && userEmail === 'joshua23@gmail.com') {
+    if (userEmail && userEmail === 'praveenjoshua2394@gmail.com') {
         return true; // Allow access to the route
     } else {
         // Redirect to login if not authorized

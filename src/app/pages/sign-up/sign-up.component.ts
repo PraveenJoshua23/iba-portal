@@ -4,7 +4,7 @@ import { FormGroup, FormBuilder, Validators, ReactiveFormsModule, AbstractContro
 import { AuthService } from 'src/app/shared/services/auth/auth.service';
 import { FirebaseService } from 'src/app/shared/services/firebase.service';
 import { createPasswordStrengthValidator, passwordMatchValidator } from '../../shared/utils/validators';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TermsDialogComponent } from 'src/app/components/terms-dialog/terms-dialog.component';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -30,6 +30,7 @@ export class SignUpComponent implements OnDestroy, OnInit {
     errorMsg: string | null = null;
     readonly defaultRole: 'student' | 'instructor' | 'admin' = 'student';
     isSubmitting = false;
+    isProfileCompletionMode = false;
 
     // Occupation options
     occupationOptions = ['Office Worker', 'Student', 'Government Official', 'Teacher', 'Housewife', 'Other'];
@@ -38,6 +39,7 @@ export class SignUpComponent implements OnDestroy, OnInit {
         private fb: FormBuilder,
         private firebase: FirebaseService,
         private router: Router,
+        private route: ActivatedRoute,
         public dialog: MatDialog,
     ) {
         this.initializeForm();
@@ -68,7 +70,30 @@ export class SignUpComponent implements OnDestroy, OnInit {
         );
     }
 
-    ngOnInit(): void {}
+    ngOnInit(): void {
+        this.route.queryParams.subscribe((params) => {
+            const mode = params['mode'];
+            const email = params['email'];
+
+            if (mode === 'complete-profile') {
+                this.isProfileCompletionMode = true;
+
+                if (email) {
+                    this.myForm.get('email')?.setValue(email);
+                    this.myForm.get('email')?.disable();
+                }
+
+                const passwordControl = this.myForm.get('password');
+                const confirmPasswordControl = this.myForm.get('confirmPassword');
+
+                passwordControl?.clearValidators();
+                passwordControl?.updateValueAndValidity({ emitEvent: false });
+
+                confirmPasswordControl?.clearValidators();
+                confirmPasswordControl?.updateValueAndValidity({ emitEvent: false });
+            }
+        });
+    }
 
     ngOnDestroy(): void {
         if (this.auth$) {
@@ -82,7 +107,7 @@ export class SignUpComponent implements OnDestroy, OnInit {
         this.isSubmitting = true;
         this.errorMsg = null;
 
-        const formData = this.myForm.value;
+        const formData = this.myForm.getRawValue();
 
         const signUpData = {
             id: '',
@@ -107,6 +132,17 @@ export class SignUpComponent implements OnDestroy, OnInit {
         };
 
         try {
+            if (this.isProfileCompletionMode) {
+                await this.userService.addUser(signUpData);
+
+                // Persist email for other components relying on localStorage
+                localStorage.setItem('email', formData.email);
+
+                this.isSubmitting = false;
+                this.router.navigateByUrl('/home');
+                return;
+            }
+
             // First, add the user to Firestore
             this.userService
                 .addUser(signUpData)
